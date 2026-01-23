@@ -181,19 +181,36 @@ exports.getAppointmentsByDoctor = async (req, res) => {
 exports.getAppointmentsByPatient = async (req, res) => {
   try {
     const { patientId } = req.params;
+    const { filter } = req.query; // today, upcoming, past
+
+    let dateCondition = "";
+    const today = new Date().toISOString().split("T")[0];
+
+    if (filter === "today") {
+      dateCondition = `AND a.appt_date = '${today}'`;
+    } else if (filter === "upcoming") {
+      dateCondition = `AND a.appt_date > '${today}'`;
+    } else if (filter === "past") {
+      dateCondition = `AND a.appt_date < '${today}'`;
+    }
+
     const result = await db.query(
       `
       SELECT 
         a.*,
         u_doctor.full_name as doctor_name,
+        d.consultation_fee,
         h.name as hospital_name,
-        c.name as chamber_name
+        c.name as chamber_name,
+        COALESCE(h.location, c.location) as location,
+        t.symptoms, t.severity, t.notes as triage_notes
       FROM appointments a
       INNER JOIN doctors d ON a.doctor_id = d.user_id
       INNER JOIN users u_doctor ON d.user_id = u_doctor.user_id
       LEFT JOIN hospitals h ON a.hospital_id = h.hospital_id
       LEFT JOIN chambers c ON a.chamber_id = c.chamber_id
-      WHERE a.patient_id = $1
+      LEFT JOIN triage_notes t ON a.appointment_id = t.appointment_id
+      WHERE a.patient_id = $1 ${dateCondition}
       ORDER BY a.appt_date DESC, a.appt_time DESC
     `,
       [patientId],

@@ -9,6 +9,34 @@ const api = axios.create({
   },
 });
 
+// Add token to requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
+
+// Handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  },
+);
+
 // Users API
 export const usersAPI = {
   getAll: () => api.get("/users"),
@@ -41,7 +69,8 @@ export const appointmentsAPI = {
   getAll: () => api.get("/appointments"),
   getById: (id) => api.get(`/appointments/${id}`),
   getByDoctor: (doctorId) => api.get(`/appointments/doctor/${doctorId}`),
-  getByPatient: (patientId) => api.get(`/appointments/patient/${patientId}`),
+  getByPatient: (patientId, params = {}) =>
+    api.get(`/appointments/patient/${patientId}`, { params }),
   create: (data) => api.post("/appointments", data),
   update: (id, data) => api.put(`/appointments/${id}`, data),
   delete: (id) => api.delete(`/appointments/${id}`),
@@ -102,6 +131,35 @@ export const chambersAPI = {
   create: (data) => api.post("/chambers", data),
   update: (id, data) => api.put(`/chambers/${id}`, data),
   delete: (id) => api.delete(`/chambers/${id}`),
+};
+
+// Search API
+export const searchAPI = {
+  searchDoctors: (params) => api.get("/search/doctors", { params }),
+  getLocations: (params) => api.get("/search/locations", { params }),
+  getFacilities: (params) => api.get("/search/facilities", { params }),
+};
+
+// Schedules API
+export const schedulesAPI = {
+  getDoctorSchedules: (doctorId) => api.get(`/schedules/doctor/${doctorId}`),
+  createSchedule: (data) => api.post("/schedules", data),
+  getAvailableSlots: (doctorId, params) =>
+    api.get(`/schedules/slots/${doctorId}`, { params }),
+  generateSlots: (scheduleId) =>
+    api.post(`/schedules/${scheduleId}/generate-slots`),
+  bookSlot: (data) => api.post("/schedules/book-slot", data),
+  updateSlotStatus: (slotId, data) =>
+    api.put(`/schedules/slot/${slotId}`, data),
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getNotifications: (userId) => api.get(`/notifications/${userId}`),
+  getUnreadCount: (userId) => api.get(`/notifications/unread-count/${userId}`),
+  markAsRead: (notificationId) =>
+    api.put(`/notifications/${notificationId}/read`),
+  markAllAsRead: (userId) => api.put(`/notifications/${userId}/read-all`),
 };
 
 export default api;
