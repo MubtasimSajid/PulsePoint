@@ -10,6 +10,9 @@ export default function Login({ onLogin }) {
     password: "",
   });
   const [error, setError] = useState("");
+  const [showUserChoice, setShowUserChoice] = useState(false);
+  const [hideHospital, setHideHospital] = useState(false);
+  const [hideUser, setHideUser] = useState(false);
 
   const loginMutation = useMutation({
     mutationFn: async (data) => (await api.post("/auth/login", data)).data,
@@ -17,6 +20,13 @@ export default function Login({ onLogin }) {
       // Store token and user data
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      if (data.onboarding) {
+        localStorage.setItem("onboarding", JSON.stringify(data.onboarding));
+        if (data.onboarding.required) {
+          const missing = data.onboarding.missing_fields?.join(", ") || "profile information";
+          window.alert(`Please complete your profile: ${missing}`);
+        }
+      }
 
       // Call parent onLogin callback
       if (onLogin) onLogin(data.user);
@@ -24,6 +34,8 @@ export default function Login({ onLogin }) {
       // Redirect based on role
       if (data.user.role === "doctor") {
         navigate("/doctors");
+      } else if (data.user.role === "hospital_admin") {
+        navigate("/hospitals");
       } else if (data.user.role === "patient") {
         navigate("/my-appointments");
       } else {
@@ -128,13 +140,42 @@ export default function Login({ onLogin }) {
           </form>
 
           <div className="auth-demo-btns">
-            <button type="button" onClick={() => fillDemo("patient")} className="auth-secondary-btn">
-              Try as Patient
-            </button>
-            <button type="button" onClick={() => fillDemo("doctor")} className="auth-secondary-btn">
-              Try as Doctor
-            </button>
+            {!hideUser && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUserChoice((v) => !v);
+                  setHideHospital(true);
+                }}
+                className="auth-secondary-btn"
+              >
+                Login as User
+              </button>
+            )}
+            {!hideHospital && (
+              <button
+                type="button"
+                onClick={() => {
+                  fillDemo("admin");
+                  setHideUser(true);
+                }}
+                className="auth-secondary-btn"
+              >
+                Login as Hospital
+              </button>
+            )}
           </div>
+
+          {showUserChoice && (
+            <div className="auth-demo-btns" style={{ marginTop: "8px" }}>
+              <button type="button" onClick={() => fillDemo("patient")} className="auth-secondary-btn">
+                Patient
+              </button>
+              <button type="button" onClick={() => fillDemo("doctor")} className="auth-secondary-btn">
+                Doctor
+              </button>
+            </div>
+          )}
 
           <div className="auth-divider">
             <span>or</span>

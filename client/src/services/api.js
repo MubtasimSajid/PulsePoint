@@ -9,6 +9,30 @@ const api = axios.create({
   },
 });
 
+// Helper to ensure appointment payload respects backend rules
+function normalizeAppointmentPayload(data = {}) {
+  const hospitalId = data.hospital_id || null;
+  const chamberId = data.chamber_id || null;
+
+  if (hospitalId && chamberId) {
+    throw new Error("Choose either hospital_id or chamber_id, not both");
+  }
+
+  if (!hospitalId && !chamberId) {
+    throw new Error("hospital_id or chamber_id is required");
+  }
+
+  if (!data.department_id) {
+    throw new Error("department_id is required for appointments");
+  }
+
+  return {
+    ...data,
+    hospital_id: hospitalId,
+    chamber_id: chamberId,
+  };
+}
+
 // Add token to requests
 api.interceptors.request.use(
   (config) => {
@@ -71,8 +95,10 @@ export const appointmentsAPI = {
   getByDoctor: (doctorId) => api.get(`/appointments/doctor/${doctorId}`),
   getByPatient: (patientId, params = {}) =>
     api.get(`/appointments/patient/${patientId}`, { params }),
-  create: (data) => api.post("/appointments", data),
-  update: (id, data) => api.put(`/appointments/${id}`, data),
+  create: async (data) =>
+    api.post("/appointments", normalizeAppointmentPayload(data)),
+  update: (id, data) =>
+    api.put(`/appointments/${id}`, normalizeAppointmentPayload(data)),
   delete: (id) => api.delete(`/appointments/${id}`),
 };
 

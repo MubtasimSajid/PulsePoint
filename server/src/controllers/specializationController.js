@@ -31,11 +31,11 @@ exports.getSpecializationById = async (req, res) => {
 
 exports.createSpecialization = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { spec_name, name } = req.body;
 
     const result = await db.query(
-      "INSERT INTO specializations (name) VALUES ($1) RETURNING *",
-      [name],
+      "INSERT INTO specializations (spec_name) VALUES ($1) RETURNING *",
+      [spec_name || name],
     );
 
     res.status(201).json(result.rows[0]);
@@ -47,11 +47,11 @@ exports.createSpecialization = async (req, res) => {
 exports.updateSpecialization = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { spec_name, name } = req.body;
 
     const result = await db.query(
-      "UPDATE specializations SET name = $1 WHERE spec_id = $2 RETURNING *",
-      [name, id],
+      "UPDATE specializations SET spec_name = $1 WHERE spec_id = $2 RETURNING *",
+      [spec_name || name, id],
     );
 
     if (result.rows.length === 0) {

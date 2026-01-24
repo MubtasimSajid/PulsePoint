@@ -1,5 +1,5 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
+  console.error("Request failed:", err);
 
   // Handle specific error types
   if (err.name === "ValidationError") {

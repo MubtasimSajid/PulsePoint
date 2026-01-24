@@ -5,6 +5,27 @@ const pool = require("../config/database");
 const JWT_SECRET =
   process.env.JWT_SECRET || "your-secret-key-change-in-production";
 const JWT_EXPIRES_IN = "7d";
+const ALLOWED_ROLES = ["patient", "doctor", "hospital_admin", "admin"];
+
+function sanitizeHeightCm(value) {
+  const num = parseFloat(value);
+  if (!Number.isFinite(num)) return null;
+  return num >= 30 && num <= 300 ? num : null;
+}
+
+function sanitizeWeightKg(value) {
+  const num = parseFloat(value);
+  if (!Number.isFinite(num)) return null;
+  return num > 0 && num <= 500 ? num : null;
+}
+
+function normalizeDate(value) {
+  if (!value) return null;
+  // Reject empty-string or invalid dates
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return value;
+}
 
 // Register new user
 exports.register = async (req, res) => {
@@ -17,16 +38,23 @@ exports.register = async (req, res) => {
       full_name,
       phone,
       date_of_birth,
+      dob,
       gender,
       address,
       role = "patient",
     } = req.body;
+
+    const normalizedRole = (role || "patient").toLowerCase();
 
     // Validate required fields
     if (!email || !password || !full_name) {
       return res
         .status(400)
         .json({ error: "Email, password, and full name are required" });
+    }
+
+    if (!ALLOWED_ROLES.includes(normalizedRole)) {
+      return res.status(400).json({ error: "Invalid role supplied" });
     }
 
     // Check if user already exists
@@ -56,41 +84,112 @@ exports.register = async (req, res) => {
         hashedPassword,
         full_name,
         phone,
-        date_of_birth,
+        normalizeDate(date_of_birth || dob),
         gender,
         address,
-        role,
+        normalizedRole,
       ],
     );
 
     const user = userResult.rows[0];
 
     // If role is patient, create patient record
-    if (role === "patient") {
+    if (normalizedRole === "patient") {
+      const {
+        patient_code,
+        height_cm,
+        weight_kg,
+        blood_group,
+        medical_notes,
+        emergency_contact,
+      } = req.body;
+
+      const safeHeight = sanitizeHeightCm(height_cm);
+      const safeWeight = sanitizeWeightKg(weight_kg);
+
       await client.query(
-        "INSERT INTO patients (user_id, blood_group, emergency_contact) VALUES ($1, $2, $3)",
-        [user.user_id, null, phone],
+        "INSERT INTO patients (user_id, patient_code, height_cm, weight_kg, blood_group, medical_notes, emergency_contact) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        [
+          user.user_id,
+          patient_code || null,
+          safeHeight,
+          safeWeight,
+          blood_group,
+          medical_notes,
+          emergency_contact || phone,
+        ],
       );
     }
 
     // If role is doctor, create doctor record
-    if (role === "doctor") {
+    if (normalizedRole === "doctor") {
       const {
+        doctor_code,
+        consultation_fee,
         license_number,
         specialization_id,
+        specialization_ids,
+        specializations,
         experience_years,
         qualification,
       } = req.body;
+
+      const specializationListRaw =
+        specialization_ids || specializations || (specialization_id ? [specialization_id] : []);
+      const specializationList = Array.isArray(specializationListRaw)
+        ? specializationListRaw
+        : [specializationListRaw].filter(Boolean);
+      const primarySpecialization = specializationList.length > 0 ? specializationList[0] : null;
+
       await client.query(
-        "INSERT INTO doctors (user_id, license_number, specialization_id, experience_years, qualification) VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO doctors (user_id, doctor_code, consultation_fee, license_number, specialization_id, experience_years, qualification) VALUES ($1, $2, $3, $4, $5, $6, $7)",
         [
           user.user_id,
+          doctor_code,
+          consultation_fee,
           license_number,
-          specialization_id,
+          primarySpecialization,
           experience_years,
           qualification,
         ],
       );
+
+      if (specializationList.length > 0) {
+        for (const specId of specializationList) {
+          await client.query(
+            "INSERT INTO doctor_specializations (doctor_id, spec_id) VALUES ($1, $2)",
+            [user.user_id, specId],
+          );
+        }
+      }
+    }
+
+    // If role is hospital admin, create or defer hospital onboarding
+    if (normalizedRole === "hospital_admin") {
+      const {
+        hospital_name,
+        hospital_email,
+        hospital_phone,
+        hospital_address,
+        hospital_license_number,
+        hospital_est_year,
+      } = req.body;
+
+      if (hospital_name || hospital_license_number || hospital_address) {
+        await client.query(
+          `INSERT INTO hospitals (admin_user_id, name, est_year, email, phone, address, license_number)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            user.user_id,
+            hospital_name || `${full_name}'s Hospital`,
+            hospital_est_year,
+            hospital_email || email,
+            hospital_phone || phone,
+            hospital_address || address,
+            hospital_license_number,
+          ],
+        );
+      }
     }
 
     await client.query("COMMIT");
@@ -101,6 +200,8 @@ exports.register = async (req, res) => {
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN },
     );
+
+    const onboarding = await buildOnboardingStatus(user.user_id, user.role);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -114,6 +215,7 @@ exports.register = async (req, res) => {
         gender: user.gender,
         address: user.address,
       },
+      onboarding,
       token,
     });
   } catch (error) {
@@ -175,6 +277,8 @@ exports.login = async (req, res) => {
       { expiresIn: JWT_EXPIRES_IN },
     );
 
+    const onboarding = await buildOnboardingStatus(user.user_id, user.role);
+
     res.json({
       message: "Login successful",
       user: {
@@ -187,6 +291,7 @@ exports.login = async (req, res) => {
         gender: user.gender,
         address: user.address,
       },
+      onboarding,
       token,
     });
   } catch (error) {
@@ -215,7 +320,7 @@ exports.getProfile = async (req, res) => {
     // Get additional info based on role
     if (user.role === "patient") {
       const patientInfo = await pool.query(
-        "SELECT blood_group, emergency_contact FROM patients WHERE user_id = $1",
+        "SELECT patient_code, height_cm, weight_kg, bmi, blood_group, medical_notes, emergency_contact FROM patients WHERE user_id = $1",
         [userId],
       );
       if (patientInfo.rows.length > 0) {
@@ -225,14 +330,30 @@ exports.getProfile = async (req, res) => {
 
     if (user.role === "doctor") {
       const doctorInfo = await pool.query(
-        `SELECT d.*, s.spec_name 
+        `SELECT d.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification,
+                ARRAY_AGG(s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) AS specializations
          FROM doctors d
-         LEFT JOIN specializations s ON d.specialization_id = s.spec_id
-         WHERE d.user_id = $1`,
+         LEFT JOIN doctor_specializations ds ON ds.doctor_id = d.user_id
+         LEFT JOIN specializations s ON ds.spec_id = s.spec_id
+         WHERE d.user_id = $1
+         GROUP BY d.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification`,
         [userId],
       );
       if (doctorInfo.rows.length > 0) {
         user.doctor_info = doctorInfo.rows[0];
+      }
+    }
+
+    if (user.role === "hospital_admin") {
+      const hospitalInfo = await pool.query(
+        `SELECT hospital_id, name, est_year, email, phone, address, license_number
+         FROM hospitals
+         WHERE admin_user_id = $1`,
+        [userId],
+      );
+
+      if (hospitalInfo.rows.length > 0) {
+        user.hospital = hospitalInfo.rows[0];
       }
     }
 
@@ -340,3 +461,74 @@ exports.changePassword = async (req, res) => {
 exports.logout = async (req, res) => {
   res.json({ message: "Logout successful. Please remove token from client." });
 };
+
+// Determine whether the current user still owes onboarding/profile information
+async function buildOnboardingStatus(userId, role) {
+  const missing = [];
+  const normalizedRole = (role || "").toLowerCase();
+
+  if (normalizedRole === "patient") {
+    const [userResult, patientResult] = await Promise.all([
+      pool.query("SELECT date_of_birth FROM users WHERE user_id = $1", [userId]),
+      pool.query(
+        "SELECT height_cm, weight_kg, blood_group, emergency_contact FROM patients WHERE user_id = $1",
+        [userId],
+      ),
+    ]);
+
+    const patientRow = patientResult.rows[0];
+    const userRow = userResult.rows[0];
+
+    if (!patientRow) {
+      missing.push("patient_profile");
+    } else {
+      if (!patientRow.height_cm) missing.push("height_cm");
+      if (!patientRow.weight_kg) missing.push("weight_kg");
+      if (!patientRow.blood_group) missing.push("blood_group");
+      if (!patientRow.emergency_contact) missing.push("emergency_contact");
+    }
+
+    if (userRow && !userRow.date_of_birth) {
+      missing.push("date_of_birth");
+    }
+  }
+
+  if (normalizedRole === "doctor") {
+    const doctorResult = await pool.query(
+      "SELECT doctor_code, license_number, experience_years, qualification FROM doctors WHERE user_id = $1",
+      [userId],
+    );
+
+    const specCountResult = await pool.query(
+      "SELECT COUNT(*) FROM doctor_specializations WHERE doctor_id = $1",
+      [userId],
+    );
+
+    const doctorRow = doctorResult.rows[0];
+    if (!doctorRow) {
+      missing.push("doctor_profile");
+    } else {
+      if (!doctorRow.license_number) missing.push("license_number");
+      if (!doctorRow.qualification) missing.push("qualification");
+      if (!doctorRow.experience_years) missing.push("experience_years");
+      if (!doctorRow.doctor_code) missing.push("doctor_code");
+    }
+
+    if (parseInt(specCountResult.rows[0]?.count || "0", 10) === 0) {
+      missing.push("specializations");
+    }
+  }
+
+  if (normalizedRole === "hospital_admin") {
+    const hospitalResult = await pool.query(
+      "SELECT hospital_id FROM hospitals WHERE admin_user_id = $1",
+      [userId],
+    );
+
+    if (hospitalResult.rows.length === 0) {
+      missing.push("hospital_profile");
+    }
+  }
+
+  return { required: missing.length > 0, missing_fields: missing };
+}

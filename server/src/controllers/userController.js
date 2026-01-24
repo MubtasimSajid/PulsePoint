@@ -1,5 +1,12 @@
 const db = require("../config/database");
 
+function normalizeDate(value) {
+  if (!value) return null;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return value;
+}
+
 exports.getAllUsers = async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM users ORDER BY user_id DESC");
@@ -28,11 +35,11 @@ exports.getUserById = async (req, res) => {
 
 exports.createUser = async (req, res) => {
   try {
-    const { full_name, email, phone, dob, address } = req.body;
+    const { full_name, email, phone, date_of_birth, dob, address, gender } = req.body;
 
     const result = await db.query(
-      "INSERT INTO users (full_name, email, phone, dob, address) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [full_name, email, phone, dob, address],
+      "INSERT INTO users (full_name, email, phone, date_of_birth, gender, address) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [full_name, email, phone, normalizeDate(date_of_birth || dob), gender, address],
     );
 
     res.status(201).json(result.rows[0]);
@@ -44,11 +51,11 @@ exports.createUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { full_name, email, phone, dob, address } = req.body;
+    const { full_name, email, phone, date_of_birth, dob, address, gender } = req.body;
 
     const result = await db.query(
-      "UPDATE users SET full_name = $1, email = $2, phone = $3, dob = $4, address = $5 WHERE user_id = $6 RETURNING *",
-      [full_name, email, phone, dob, address, id],
+      "UPDATE users SET full_name = $1, email = $2, phone = $3, date_of_birth = $4, gender = $5, address = $6, updated_at = CURRENT_TIMESTAMP WHERE user_id = $7 RETURNING *",
+      [full_name, email, phone, normalizeDate(date_of_birth || dob), gender, address, id],
     );
 
     if (result.rows.length === 0) {

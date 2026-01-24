@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { appointmentsAPI, patientsAPI, doctorsAPI } from "../services/api";
+import {
+  appointmentsAPI,
+  patientsAPI,
+  doctorsAPI,
+  departmentsAPI,
+  hospitalsAPI,
+  chambersAPI,
+} from "../services/api";
 
 export default function Appointments() {
   const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
+  const [formError, setFormError] = useState("");
   const [formData, setFormData] = useState({
     patient_id: "",
     doctor_id: "",
+    department_id: "",
+    hospital_id: "",
+    chamber_id: "",
     appt_date: "",
     appt_time: "",
     status: "scheduled",
@@ -30,11 +41,29 @@ export default function Appointments() {
     queryFn: async () => (await doctorsAPI.getAll()).data,
   });
 
+  const { data: departments } = useQuery({
+    queryKey: ["departments"],
+    queryFn: async () => (await departmentsAPI.getAll()).data,
+  });
+
+  const { data: hospitals } = useQuery({
+    queryKey: ["hospitals"],
+    queryFn: async () => (await hospitalsAPI.getAll()).data,
+  });
+
+  const { data: chambers } = useQuery({
+    queryKey: ["chambers"],
+    queryFn: async () => (await chambersAPI.getAll()).data,
+  });
+
   const createMutation = useMutation({
     mutationFn: appointmentsAPI.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       closeModal();
+    },
+    onError: (error) => {
+      setFormError(error.message || error.response?.data?.error || "Failed to create appointment");
     },
   });
 
@@ -43,6 +72,9 @@ export default function Appointments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       closeModal();
+    },
+    onError: (error) => {
+      setFormError(error.message || error.response?.data?.error || "Failed to update appointment");
     },
   });
 
@@ -59,8 +91,11 @@ export default function Appointments() {
       setFormData({
         patient_id: appointment.patient_id,
         doctor_id: appointment.doctor_id,
+        department_id: appointment.department_id || "",
+        hospital_id: appointment.hospital_id || "",
+        chamber_id: appointment.chamber_id || "",
         appt_date: appointment.appt_date.split("T")[0],
-        appt_time: appointment.appt_time,
+        appt_time: appointment.appt_time?.slice(0, 5) || appointment.appt_time,
         status: appointment.status,
         note: appointment.note || "",
       });
@@ -69,12 +104,16 @@ export default function Appointments() {
       setFormData({
         patient_id: "",
         doctor_id: "",
+        department_id: "",
+        hospital_id: "",
+        chamber_id: "",
         appt_date: "",
         appt_time: "",
         status: "scheduled",
         note: "",
       });
     }
+    setFormError("");
     setIsModalOpen(true);
   };
 
@@ -85,6 +124,24 @@ export default function Appointments() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setFormError("");
+
+    if (!formData.department_id) {
+      setFormError("Please select a department.");
+      return;
+    }
+
+    const hasHospital = !!formData.hospital_id;
+    const hasChamber = !!formData.chamber_id;
+    if (hasHospital && hasChamber) {
+      setFormError("Choose either Hospital or Chamber, not both.");
+      return;
+    }
+    if (!hasHospital && !hasChamber) {
+      setFormError("Select a Hospital or a Chamber.");
+      return;
+    }
+
     if (editingAppointment) {
       updateMutation.mutate({
         id: editingAppointment.appointment_id,
@@ -141,6 +198,12 @@ export default function Appointments() {
                 Doctor
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Department
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Facility
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Date
               </th>
               <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -176,6 +239,12 @@ export default function Appointments() {
                       {appointment.doctor_name}
                     </span>
                   </div>
+                </td>
+                <td className="px-6 py-5 text-slate-600 font-medium">
+                  {appointment.department_name || "—"}
+                </td>
+                <td className="px-6 py-5 text-slate-600 font-medium">
+                  {appointment.hospital_name || appointment.chamber_name || "—"}
                 </td>
                 <td className="px-6 py-5 text-slate-600 font-medium">
                   {new Date(appointment.appt_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -255,6 +324,11 @@ export default function Appointments() {
               </div>
             </div>
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              {formError && (
+                <div className="px-4 py-3 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-sm font-semibold">
+                  {formError}
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Patient</label>
@@ -291,6 +365,66 @@ export default function Appointments() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Department</label>
+                  <select
+                    value={formData.department_id}
+                    onChange={(e) =>
+                      setFormData({ ...formData, department_id: e.target.value })
+                    }
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
+                    required
+                  >
+                    <option value="">Select Department</option>
+                    {departments?.map((dept) => (
+                      <option key={dept.dept_id} value={dept.dept_id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700">Facility</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <select
+                      value={formData.hospital_id}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          hospital_id: e.target.value,
+                          chamber_id: "",
+                        })
+                      }
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
+                    >
+                      <option value="">Hospital</option>
+                      {hospitals?.map((hosp) => (
+                        <option key={hosp.hospital_id} value={hosp.hospital_id}>
+                          {hosp.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={formData.chamber_id}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          chamber_id: e.target.value,
+                          hospital_id: "",
+                        })
+                      }
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
+                    >
+                      <option value="">Chamber / Clinic</option>
+                      {chambers?.map((ch) => (
+                        <option key={ch.chamber_id} value={ch.chamber_id}>
+                          {ch.name || `Chamber ${ch.chamber_id}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <p className="text-xs text-slate-500">Pick exactly one facility.</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Date</label>
