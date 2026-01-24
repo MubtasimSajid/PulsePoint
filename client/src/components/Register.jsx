@@ -86,269 +86,226 @@ export default function Register({ onRegister }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-500 to-blue-600 px-4 py-12">
-      <div className="max-w-2xl w-full bg-white rounded-lg shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            🏥 PulsePoint
-          </h1>
-          <h2 className="text-2xl font-semibold text-gray-700">
-            Create Account
-          </h2>
-          <p className="text-gray-500 mt-2">
-            Join our healthcare community today
+    <div className="auth-page">
+      <div className="auth-shell">
+        <div className="auth-hero">
+          <span className="auth-badge">PulsePoint</span>
+          <h1 className="auth-title">Create your account</h1>
+          <p className="auth-subtitle">
+            Join the PulsePoint network to manage appointments, records, and communication in one secure place.
           </p>
+          <div className="auth-highlights">
+            <span className="auth-pill">Patients & doctors</span>
+            <span className="auth-pill">Secure by default</span>
+            <span className="auth-pill">Fast scheduling</span>
+          </div>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Role Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Register as <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: "patient" })}
-                className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                  formData.role === "patient"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                👤 Patient
-              </button>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, role: "doctor" })}
-                className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                  formData.role === "doctor"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                👨‍⚕️ Doctor
-              </button>
+        <div className="auth-card">
+          <div className="auth-card-header">
+            <div>
+              <p className="auth-eyebrow">Get started</p>
+              <h2>Set up your profile</h2>
             </div>
           </div>
 
-          {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
-              </label>
+          {error && <div className="auth-error">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <label className="auth-field">
+              <span>Full name</span>
               <input
                 type="text"
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="auth-input"
+                placeholder="Dr. Jane Smith"
                 required
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email <span className="text-red-500">*</span>
-              </label>
+            <label className="auth-field">
+              <span>Email</span>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="auth-input"
+                placeholder="you@example.com"
                 required
               />
-            </div>
+            </label>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone <span className="text-red-500">*</span>
-              </label>
+            <label className="auth-field">
+              <span>Phone</span>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="auth-input"
+                placeholder="+1 (555) 123-4567"
                 required
               />
+            </label>
+
+            <div className="auth-form" style={{ gap: "10px" }}>
+              <label className="auth-field">
+                <span>Date of birth</span>
+                <input
+                  type="date"
+                  name="date_of_birth"
+                  value={formData.date_of_birth}
+                  onChange={handleChange}
+                  className="auth-input"
+                />
+              </label>
+
+              <label className="auth-field">
+                <span>Gender</span>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="auth-input"
+                >
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date of Birth
-              </label>
-              <input
-                type="date"
-                name="date_of_birth"
-                value={formData.date_of_birth}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Gender
-              </label>
-              <select
-                name="gender"
-                value={formData.gender}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select Gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
-              </label>
+            <label className="auth-field">
+              <span>Address</span>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="auth-input"
+                placeholder="Street, City"
               />
-            </div>
-          </div>
+            </label>
 
-          {/* Doctor Specific Fields */}
-          {formData.role === "doctor" && (
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-700 mb-4">
-                Doctor Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    License Number
-                  </label>
+            <label className="auth-field">
+              <span>Role</span>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="auth-input"
+              >
+                <option value="patient">Patient</option>
+                <option value="doctor">Doctor</option>
+              </select>
+            </label>
+
+            {formData.role === "doctor" && (
+              <div className="auth-form" style={{ gap: "10px" }}>
+                <label className="auth-field">
+                  <span>License number</span>
                   <input
                     type="text"
                     name="license_number"
                     value={formData.license_number}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="auth-input"
                   />
-                </div>
+                </label>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Specialization
-                  </label>
+                <label className="auth-field">
+                  <span>Specialization</span>
                   <select
                     name="specialization_id"
                     value={formData.specialization_id}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="auth-input"
                   >
-                    <option value="">Select Specialization</option>
+                    <option value="">Select specialization</option>
                     {specializations?.map((spec) => (
                       <option key={spec.spec_id} value={spec.spec_id}>
                         {spec.spec_name}
                       </option>
                     ))}
                   </select>
-                </div>
+                </label>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Experience (years)
-                  </label>
+                <label className="auth-field">
+                  <span>Experience (years)</span>
                   <input
                     type="number"
                     name="experience_years"
                     value={formData.experience_years}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="auth-input"
                     min="0"
                   />
-                </div>
+                </label>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Qualification
-                  </label>
+                <label className="auth-field">
+                  <span>Qualification</span>
                   <input
                     type="text"
                     name="qualification"
                     value={formData.qualification}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="auth-input"
                     placeholder="e.g., MBBS, MD"
                   />
-                </div>
+                </label>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Password Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password <span className="text-red-500">*</span>
+            <div className="auth-form" style={{ gap: "10px" }}>
+              <label className="auth-field">
+                <span>Password</span>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="auth-input"
+                  placeholder="Min. 6 characters"
+                  required
+                />
               </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                placeholder="Min. 6 characters"
-                required
-              />
+
+              <label className="auth-field">
+                <span>Confirm password</span>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="auth-input"
+                  required
+                />
+              </label>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+            <button
+              type="submit"
+              disabled={registerMutation.isPending}
+              className="auth-primary-btn"
+            >
+              {registerMutation.isPending ? "Creating account..." : "Create account"}
+            </button>
+          </form>
+
+          <div className="auth-divider">
+            <span>or</span>
           </div>
 
-          <button
-            type="submit"
-            disabled={registerMutation.isPending}
-            className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-          >
-            {registerMutation.isPending
-              ? "Creating Account..."
-              : "Create Account"}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-gray-600">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-blue-600 hover:text-blue-700 font-semibold"
-            >
-              Login here
+          <div className="auth-footer">
+            <p className="auth-demo-note">Already registered?</p>
+            <Link to="/login" className="auth-link-btn">
+              Go to login
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

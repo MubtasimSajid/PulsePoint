@@ -1,6 +1,6 @@
 -- Demo Users for PulsePoint HMS
 -- Password for all demo users: password123
--- Hashed with bcrypt (10 rounds): $2b$10$XqQjZVJZkXvW5YmN.YXrfeO6F0YY5YQqC5.Z0i6zF9aYhKvGxYmIe
+-- Hashed with bcrypt (10 rounds): $2b$10$nNrLedfhhYCHOEzeM8mr2.wA3szb6ZIFmEx1Fbnt3C.yLmnqSN26G
 
 -- Insert demo specializations if not exist
 INSERT INTO specializations (spec_name, dept_id) 

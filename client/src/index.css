@@ -1,21 +1,43 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply antialiased;
+  }
 }
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-semibold text-sm rounded-xl transition-all duration-200;
+  }
+  
+  .input {
+    @apply w-full px-4 py-3 text-sm border-2 border-slate-200 rounded-xl bg-white transition-all duration-200;
+    @apply hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl shadow-lg border border-white/80 transition-all duration-300;
+    @apply hover:shadow-xl hover:-translate-y-1;
+  }
+}
+
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: #1e293b;
+    background-color: #f8fafc;
   }
   a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
+    color: #6366f1;
   }
 }
