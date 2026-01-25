@@ -484,8 +484,6 @@ async function buildOnboardingStatus(userId, role) {
     } else {
       if (!patientRow.height_cm) missing.push("height_cm");
       if (!patientRow.weight_kg) missing.push("weight_kg");
-      if (!patientRow.blood_group) missing.push("blood_group");
-      if (!patientRow.emergency_contact) missing.push("emergency_contact");
     }
 
     if (userRow && !userRow.date_of_birth) {

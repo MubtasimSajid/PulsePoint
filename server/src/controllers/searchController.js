@@ -20,7 +20,7 @@ exports.searchDoctors = async (req, res) => {
         u.phone,
         d.doctor_code,
         d.consultation_fee,
-        ARRAY_AGG(DISTINCT s.name) FILTER (WHERE s.name IS NOT NULL) as specializations,
+        ARRAY_AGG(DISTINCT s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) as specializations,
         ARRAY_AGG(DISTINCT jsonb_build_object(
           'facility_id', COALESCE(h.hospital_id, c.chamber_id),
           'facility_name', COALESCE(h.name, c.name),
@@ -43,7 +43,7 @@ exports.searchDoctors = async (req, res) => {
 
     // Filter by specialization
     if (specialization) {
-      query += ` AND s.name ILIKE $${paramIndex}`;
+      query += ` AND s.spec_name ILIKE $${paramIndex}`;
       params.push(`%${specialization}%`);
       paramIndex++;
     }

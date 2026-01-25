@@ -11,6 +11,13 @@ import {
 
 export default function Appointments() {
   const queryClient = useQueryClient();
+  const currentUser = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  })();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [formError, setFormError] = useState("");
@@ -20,6 +27,7 @@ export default function Appointments() {
     department_id: "",
     hospital_id: "",
     chamber_id: "",
+    facility_choice: "",
     appt_date: "",
     appt_time: "",
     status: "scheduled",
@@ -56,6 +64,8 @@ export default function Appointments() {
     queryFn: async () => (await chambersAPI.getAll()).data,
   });
 
+  const hasFacilities = (hospitals?.length || 0) + (chambers?.length || 0) > 0;
+
   const createMutation = useMutation({
     mutationFn: appointmentsAPI.create,
     onSuccess: () => {
@@ -85,6 +95,22 @@ export default function Appointments() {
     },
   });
 
+  const createChamberMutation = useMutation({
+    mutationFn: chambersAPI.create,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["chambers"] });
+      setFormData((prev) => ({
+        ...prev,
+        facility_choice: `chamber:${data.chamber_id}`,
+        chamber_id: String(data.chamber_id),
+        hospital_id: "",
+      }));
+    },
+    onError: (error) => {
+      setFormError(error.message || error.response?.data?.error || "Failed to create a clinic");
+    },
+  });
+
   const openModal = (appointment = null) => {
     if (appointment) {
       setEditingAppointment(appointment);
@@ -94,6 +120,11 @@ export default function Appointments() {
         department_id: appointment.department_id || "",
         hospital_id: appointment.hospital_id || "",
         chamber_id: appointment.chamber_id || "",
+        facility_choice: appointment.hospital_id
+          ? `hospital:${appointment.hospital_id}`
+          : appointment.chamber_id
+            ? `chamber:${appointment.chamber_id}`
+            : "",
         appt_date: appointment.appt_date.split("T")[0],
         appt_time: appointment.appt_time?.slice(0, 5) || appointment.appt_time,
         status: appointment.status,
@@ -102,11 +133,12 @@ export default function Appointments() {
     } else {
       setEditingAppointment(null);
       setFormData({
-        patient_id: "",
-        doctor_id: "",
+        patient_id: currentUser?.role === "patient" ? currentUser.user_id : "",
+        doctor_id: currentUser?.role === "doctor" ? currentUser.user_id : "",
         department_id: "",
         hospital_id: "",
         chamber_id: "",
+        facility_choice: "",
         appt_date: "",
         appt_time: "",
         status: "scheduled",
@@ -122,12 +154,45 @@ export default function Appointments() {
     setEditingAppointment(null);
   };
 
+  const handleQuickClinic = () => {
+    if (!currentUser?.user_id) {
+      setFormError("You must be logged in to add a clinic.");
+      return;
+    }
+
+    const clinicName = currentUser?.full_name
+      ? `${currentUser.full_name} Clinic`
+      : "My Clinic";
+
+    createChamberMutation.mutate({
+      doctor_id: currentUser.user_id,
+      name: clinicName,
+      phone: "",
+      address: "",
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setFormError("");
 
+    if (!formData.patient_id) {
+      setFormError("Please select a patient.");
+      return;
+    }
+
+    if (!formData.doctor_id) {
+      setFormError("Please select a doctor.");
+      return;
+    }
+
     if (!formData.department_id) {
       setFormError("Please select a department.");
+      return;
+    }
+
+    if (!hasFacilities) {
+      setFormError("Add a hospital or clinic before scheduling.");
       return;
     }
 
@@ -139,6 +204,16 @@ export default function Appointments() {
     }
     if (!hasHospital && !hasChamber) {
       setFormError("Select a Hospital or a Chamber.");
+      return;
+    }
+
+    if (!formData.appt_date) {
+      setFormError("Please select an appointment date.");
+      return;
+    }
+
+    if (!formData.appt_time) {
+      setFormError("Please select an appointment time.");
       return;
     }
 
@@ -299,8 +374,8 @@ export default function Appointments() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-11/12 max-w-4xl my-6 max-h-none overflow-visible animate-scale-in">
             <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
@@ -338,7 +413,7 @@ export default function Appointments() {
                       setFormData({ ...formData, patient_id: e.target.value })
                     }
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    required
+                    disabled={currentUser?.role === "patient"}
                   >
                     <option value="">Select Patient</option>
                     {patients?.map((patient) => (
@@ -356,7 +431,7 @@ export default function Appointments() {
                       setFormData({ ...formData, doctor_id: e.target.value })
                     }
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    required
+                    disabled={currentUser?.role === "doctor"}
                   >
                     <option value="">Select Doctor</option>
                     {doctors?.map((doctor) => (
@@ -374,7 +449,6 @@ export default function Appointments() {
                       setFormData({ ...formData, department_id: e.target.value })
                     }
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    required
                   >
                     <option value="">Select Department</option>
                     {departments?.map((dept) => (
@@ -386,45 +460,69 @@ export default function Appointments() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Facility</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <select
-                      value={formData.hospital_id}
-                      onChange={(e) =>
+                  <select
+                    value={formData.facility_choice}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (!value) {
                         setFormData({
                           ...formData,
-                          hospital_id: e.target.value,
-                          chamber_id: "",
-                        })
-                      }
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    >
-                      <option value="">Hospital</option>
-                      {hospitals?.map((hosp) => (
-                        <option key={hosp.hospital_id} value={hosp.hospital_id}>
-                          {hosp.name}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={formData.chamber_id}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          chamber_id: e.target.value,
+                          facility_choice: "",
                           hospital_id: "",
-                        })
+                          chamber_id: "",
+                        });
+                        return;
                       }
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    >
-                      <option value="">Chamber / Clinic</option>
-                      {chambers?.map((ch) => (
-                        <option key={ch.chamber_id} value={ch.chamber_id}>
-                          {ch.name || `Chamber ${ch.chamber_id}`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <p className="text-xs text-slate-500">Pick exactly one facility.</p>
+                      const [type, id] = value.split(":");
+                      setFormData({
+                        ...formData,
+                        facility_choice: value,
+                        hospital_id: type === "hospital" ? id : "",
+                        chamber_id: type === "chamber" ? id : "",
+                      });
+                    }}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200 disabled:bg-slate-50 disabled:text-slate-400"
+                    disabled={!hasFacilities}
+                  >
+                    <option value="">Select Hospital or Clinic</option>
+                    {hospitals?.length > 0 && (
+                      <optgroup label="Hospitals">
+                        {hospitals.map((hosp) => (
+                          <option key={`hospital-${hosp.hospital_id}`} value={`hospital:${hosp.hospital_id}`}>
+                            {hosp.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {chambers?.length > 0 && (
+                      <optgroup label="Clinics / Chambers">
+                        {chambers.map((ch) => (
+                          <option key={`chamber-${ch.chamber_id}`} value={`chamber:${ch.chamber_id}`}>
+                            {ch.name || `Chamber ${ch.chamber_id}`}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  {hasFacilities ? (
+                    <p className="text-xs text-slate-500">Pick one facility.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        No hospitals or clinics exist yet. Add one to continue scheduling.
+                      </div>
+                      {currentUser?.role === "doctor" && (
+                        <button
+                          type="button"
+                          onClick={handleQuickClinic}
+                          disabled={createChamberMutation.isLoading}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white text-sm font-semibold rounded-lg shadow-md shadow-violet-400/30 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                        >
+                          {createChamberMutation.isLoading ? "Creating clinic..." : "Create my clinic"}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-slate-700">Date</label>
@@ -435,7 +533,6 @@ export default function Appointments() {
                       setFormData({ ...formData, appt_date: e.target.value })
                     }
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -447,7 +544,6 @@ export default function Appointments() {
                       setFormData({ ...formData, appt_time: e.target.value })
                     }
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200"
-                    required
                   />
                 </div>
                 <div className="space-y-2 col-span-2">
