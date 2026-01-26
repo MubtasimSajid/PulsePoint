@@ -10,9 +10,8 @@ export default function Login({ onLogin }) {
     password: "",
   });
   const [error, setError] = useState("");
-  const [showUserChoice, setShowUserChoice] = useState(false);
-  const [hideHospital, setHideHospital] = useState(false);
-  const [hideUser, setHideUser] = useState(false);
+  const [step, setStep] = useState('initial'); // 'initial', 'user_select'
+  const [showForm, setShowForm] = useState(false);
 
   const loginMutation = useMutation({
     mutationFn: async (data) => (await api.post("/auth/login", data)).data,
@@ -33,11 +32,11 @@ export default function Login({ onLogin }) {
 
       // Redirect based on role
       if (data.user.role === "doctor") {
-        navigate("/doctors");
+        navigate("/doctor-dashboard");
       } else if (data.user.role === "hospital_admin") {
-        navigate("/hospitals");
+        navigate("/hospital-dashboard");
       } else if (data.user.role === "patient") {
-        navigate("/my-appointments");
+        navigate("/patient-dashboard");
       } else {
         navigate("/");
       }
@@ -90,14 +89,11 @@ export default function Login({ onLogin }) {
             Connect with your care team, manage appointments, and stay on top of your health without the clutter.
           </p>
 
-          <div className="auth-highlights">
-            <span className="auth-pill">Instant scheduling</span>
-            <span className="auth-pill">Personalized updates</span>
-            <span className="auth-pill">Secure records</span>
-          </div>
+
         </div>
 
         <div className="auth-card">
+
           <div className="auth-card-header">
             <div>
               <p className="auth-eyebrow">Welcome back</p>
@@ -108,74 +104,112 @@ export default function Login({ onLogin }) {
           {error && <div className="auth-error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <label className="auth-field">
-              <span>Email</span>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="auth-input"
-                placeholder="you@example.com"
-                required
-              />
-            </label>
+            {!showForm ? (
+              <div className="space-y-4">
+                {step === 'initial' && (
+                  <div className="grid gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setStep('user_select')}
+                      className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                    >
+                      <span className="text-2xl">👤</span> Login as User
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForm(true);
+                        fillDemo('admin'); // Optional: pre-fill for demo convenience, or remove if strictly manual
+                      }}
+                      className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                    >
+                      <span className="text-2xl">🏥</span> Login as Hospital
+                    </button>
+                  </div>
+                )}
 
-            <label className="auth-field">
-              <span>Password</span>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="auth-input"
-                placeholder="••••••••"
-                required
-              />
-            </label>
+                {step === 'user_select' && (
+                  <div className="grid gap-3 animate-fade-in">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForm(true);
+                        fillDemo('patient');
+                      }}
+                      className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                    >
+                      <span className="text-2xl">🤒</span> Patient
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForm(true);
+                        fillDemo('doctor');
+                      }}
+                      className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                    >
+                      <span className="text-2xl">👨‍⚕️</span> Doctor
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStep('initial')}
+                      className="text-slate-500 hover:text-indigo-600 text-sm font-medium pt-2"
+                    >
+                      ← Back
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="animate-fade-in">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowForm(false);
+                    setError("");
+                  }}
+                  className="mb-6 text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-sm group w-fit"
+                >
+                  <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Change Role
+                </button>
 
-            <button type="submit" disabled={loginMutation.isPending} className="auth-primary-btn">
-              {loginMutation.isPending ? "Signing in..." : "Sign in"}
-            </button>
+                <label className="auth-field">
+                  <span>Email</span>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="auth-input"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </label>
+
+                <label className="auth-field">
+                  <span>Password</span>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="auth-input"
+                    placeholder="••••••••"
+                    required
+                  />
+                </label>
+
+                <button type="submit" disabled={loginMutation.isPending} className="auth-primary-btn">
+                  {loginMutation.isPending ? "Signing in..." : "Sign in"}
+                </button>
+              </div>
+            )}
           </form>
 
-          <div className="auth-demo-btns">
-            {!hideUser && (
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUserChoice((v) => !v);
-                  setHideHospital(true);
-                }}
-                className="auth-secondary-btn"
-              >
-                Login as User
-              </button>
-            )}
-            {!hideHospital && (
-              <button
-                type="button"
-                onClick={() => {
-                  fillDemo("admin");
-                  setHideUser(true);
-                }}
-                className="auth-secondary-btn"
-              >
-                Login as Hospital
-              </button>
-            )}
-          </div>
 
-          {showUserChoice && (
-            <div className="auth-demo-btns" style={{ marginTop: "8px" }}>
-              <button type="button" onClick={() => fillDemo("patient")} className="auth-secondary-btn">
-                Patient
-              </button>
-              <button type="button" onClick={() => fillDemo("doctor")} className="auth-secondary-btn">
-                Doctor
-              </button>
-            </div>
-          )}
 
           <div className="auth-divider">
             <span>or</span>

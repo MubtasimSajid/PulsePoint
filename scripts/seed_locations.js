@@ -1,4 +1,11 @@
 require('dotenv').config({ path: 'server/.env' });
+try {
+    require('dotenv'); // Check if it can be found normally
+} catch (e) {
+    // If not found, try to add server/node_modules to the path
+    module.paths.push(require('path').join(__dirname, '../server/node_modules'));
+}
+
 const db = require('../server/src/config/database');
 const fs = require('fs');
 

@@ -173,8 +173,8 @@ export const schedulesAPI = {
   createSchedule: (data) => api.post("/schedules", data),
   getAvailableSlots: (doctorId, params) =>
     api.get(`/schedules/slots/${doctorId}`, { params }),
-  generateSlots: (scheduleId) =>
-    api.post(`/schedules/${scheduleId}/generate-slots`),
+  generateSlots: (data) =>
+    api.post("/schedules/generate-slots", data),
   bookSlot: (data) => api.post("/schedules/book-slot", data),
   updateSlotStatus: (slotId, data) =>
     api.put(`/schedules/slot/${slotId}`, data),

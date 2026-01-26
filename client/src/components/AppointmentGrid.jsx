@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { schedulesAPI } from "../services/api";
 
-export default function AppointmentGrid({ doctor, patientId }) {
+export default function AppointmentGrid({ doctor, patientId, compact = false }) {
   const queryClient = useQueryClient();
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -85,37 +85,41 @@ export default function AppointmentGrid({ doctor, patientId }) {
     return acc;
   }, {});
 
-  if (isLoading) return <div>Loading slots...</div>;
+  if (isLoading) return <div className="text-sm text-slate-400">Loading slots...</div>;
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold mb-4">
-        Available Slots for Dr. {doctor.full_name}
-      </h2>
+    <div className={`bg-white rounded-lg shadow-sm ${compact ? 'p-2 border border-slate-100' : 'p-6 shadow-md'}`}>
+      {!compact && (
+        <>
+          <h2 className="text-2xl font-bold mb-4">
+            Available Slots for Dr. {doctor.full_name}
+          </h2>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-6 text-sm">
-        <div className="flex items-center">
-          <div className="w-6 h-6 bg-green-400 rounded mr-2"></div>
-          <span>Hospital - Free</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-6 h-6 bg-blue-400 rounded mr-2"></div>
-          <span>Clinic - Free</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-6 h-6 bg-red-400 rounded mr-2"></div>
-          <span>Hospital - Booked</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-6 h-6 bg-orange-400 rounded mr-2"></div>
-          <span>Clinic - Booked</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-6 h-6 bg-gray-400 rounded mr-2"></div>
-          <span>Blocked</span>
-        </div>
-      </div>
+          {/* Legend */}
+          <div className="flex flex-wrap gap-4 mb-6 text-sm">
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-green-400 rounded mr-2"></div>
+              <span>Hospital - Free</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-blue-400 rounded mr-2"></div>
+              <span>Clinic - Free</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-red-400 rounded mr-2"></div>
+              <span>Hospital - Booked</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-orange-400 rounded mr-2"></div>
+              <span>Clinic - Booked</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-6 h-6 bg-gray-400 rounded mr-2"></div>
+              <span>Blocked</span>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Slot Grid by Date */}
       <div className="space-y-6 max-h-96 overflow-y-auto">

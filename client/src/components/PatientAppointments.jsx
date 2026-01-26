@@ -29,15 +29,15 @@ export default function PatientAppointments({ userId }) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Tabs */}
-      <div className="flex p-1 bg-slate-100 rounded-xl w-fit">
+      <div className="flex p-1 bg-slate-900/60 border border-white/10 rounded-xl w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? "bg-white text-indigo-600 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-[#A38D5D] text-white shadow-lg shadow-[#A38D5D]/20"
+                : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
             }`}
           >
             {tab.label}
@@ -46,38 +46,38 @@ export default function PatientAppointments({ userId }) {
       </div>
 
       {!appointments || appointments.length === 0 ? (
-        <div className="text-center p-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-          <p className="text-slate-500">No {activeTab} appointments found.</p>
+        <div className="text-center p-12 bg-slate-800/30 rounded-2xl border border-dashed border-slate-700">
+          <p className="text-slate-400">No {activeTab} appointments found.</p>
         </div>
       ) : (
         <div className="grid gap-4">
           {appointments.map((appt) => (
             <div
               key={appt.appointment_id}
-              className="bg-white p-5 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-shadow"
+              className="bg-slate-800/40 p-5 rounded-xl shadow-sm border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-800/60 transition-all hover:border-white/10 hover:translate-y-[-2px]"
             >
               <div className="flex items-start gap-4">
-                <div className="bg-indigo-50 p-3 rounded-lg text-center min-w-[70px]">
-                  <div className="text-xs font-bold text-indigo-600 uppercase">
+                <div className="bg-indigo-500/10 p-3 rounded-lg text-center min-w-[70px] border border-indigo-500/20">
+                  <div className="text-xs font-bold text-indigo-300 uppercase">
                     {new Date(appt.appt_date).toLocaleDateString("en-US", {
                       month: "short",
                     })}
                   </div>
-                  <div className="text-xl font-bold text-slate-800">
+                  <div className="text-xl font-bold text-white">
                     {new Date(appt.appt_date).getDate()}
                   </div>
-                  <div className="text-xs text-slate-500">{appt.appt_time}</div>
+                  <div className="text-xs text-indigo-200/70">{appt.appt_time}</div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-800 text-lg">
+                  <h3 className="font-bold text-slate-100 text-lg">
                     Dr. {appt.doctor_name}
                   </h3>
-                  <p className="text-sm text-indigo-600 font-medium mb-1">
+                  <p className="text-sm text-[#A38D5D] font-medium mb-1">
                     {appt.department_name}
                   </p>
-                  <p className="text-xs text-slate-500 flex items-center gap-1">
-                    <span className="font-semibold">{appt.hospital_name || appt.chamber_name}</span>
-                    <span className="text-slate-300 mx-1">•</span>
+                  <p className="text-xs text-slate-400 flex items-center gap-1">
+                    <span className="font-semibold text-slate-300">{appt.hospital_name || appt.chamber_name}</span>
+                    <span className="text-slate-600 mx-1">•</span>
                     {appt.facility_address}
                   </p>
                 </div>
@@ -86,10 +86,10 @@ export default function PatientAppointments({ userId }) {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
                     appt.status === "completed"
-                      ? "bg-emerald-100 text-emerald-700"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
                       : appt.status === "cancelled"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-blue-100 text-blue-700"
+                      ? "bg-red-500/20 text-red-300 border border-red-500/20"
+                      : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                   }`}
                 >
                   {appt.status}

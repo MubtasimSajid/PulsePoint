@@ -34,8 +34,7 @@ export default function Register({ onRegister }) {
     hospital_est_year: "",
   });
   const [error, setError] = useState("");
-  const [showUserChoice, setShowUserChoice] = useState(false);
-  const [hideHospital, setHideHospital] = useState(false);
+  const [step, setStep] = useState('initial'); // 'initial', 'user_select', 'form'
 
   const { data: specializations } = useQuery({
     queryKey: ["specializations"],
@@ -68,9 +67,9 @@ export default function Register({ onRegister }) {
       }
     },
     onError: (error) => {
-      setError(
-        error.response?.data?.error || "Registration failed. Please try again.",
-      );
+      const msg = error.response?.data?.error || "Registration failed.";
+      const details = error.response?.data?.details ? ` (${error.response.data.details})` : "";
+      setError(msg + details);
     },
   });
 
@@ -133,6 +132,10 @@ export default function Register({ onRegister }) {
       delete dataToSend.gender;
     }
 
+    // Sanitize numeric fields before sending
+    if (dataToSend.experience_years === "") dataToSend.experience_years = null;
+    if (dataToSend.hospital_est_year === "") dataToSend.hospital_est_year = null;
+
     registerMutation.mutate(dataToSend);
   };
 
@@ -153,11 +156,7 @@ export default function Register({ onRegister }) {
           <p className="auth-subtitle">
             Join the PulsePoint network to manage appointments, records, and communication in one secure place.
           </p>
-          <div className="auth-highlights">
-            <span className="auth-pill">Patients & doctors</span>
-            <span className="auth-pill">Secure by default</span>
-            <span className="auth-pill">Fast scheduling</span>
-          </div>
+
         </div>
 
         <div className="auth-card">
@@ -171,50 +170,75 @@ export default function Register({ onRegister }) {
           {error && <div className="auth-error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="auth-form">
-            <div className="auth-demo-btns" style={{ marginBottom: "12px" }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUserChoice((v) => !v);
-                  setHideHospital(true);
-                }}
-                className="auth-secondary-btn"
-              >
-                Register as User
-              </button>
-              {!hideHospital && (
+            {step === 'initial' && (
+              <div className="grid gap-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setStep('user_select')}
+                  className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                >
+                  <span className="text-2xl">👤</span> Register as User
+                </button>
                 <button
                   type="button"
                   onClick={() => {
-                    setHideHospital(false);
-                    setShowUserChoice(false);
+                    setStep('form');
                     setFormData({ ...formData, role: "hospital_admin" });
                   }}
-                  className="auth-secondary-btn"
+                  className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                 >
-                  Register as Hospital
-                </button>
-              )}
-            </div>
-
-            {showUserChoice && (
-              <div className="auth-demo-btns" style={{ marginTop: "8px", marginBottom: "12px" }}>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: "patient" })}
-                  className="auth-secondary-btn"
-                >
-                  Patient
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, role: "doctor" })}
-                  className="auth-secondary-btn"
-                >
-                  Doctor
+                  <span className="text-2xl">🏥</span> Register as Hospital
                 </button>
               </div>
             )}
+
+            {step === 'user_select' && (
+              <div className="grid gap-3 mb-6 animate-fade-in">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('form');
+                    setFormData({ ...formData, role: "patient" });
+                  }}
+                  className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                >
+                    <span className="text-2xl">🤒</span> Patient
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep('form');
+                    setFormData({ ...formData, role: "doctor" });
+                  }}
+                  className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
+                >
+                    <span className="text-2xl">👨‍⚕️</span> Doctor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep('initial')}
+                  className="text-slate-500 hover:text-indigo-600 text-sm font-medium pt-2"
+                >
+                  ← Back
+                </button>
+              </div>
+            )}
+
+            {step === 'form' && (
+              <div className="animate-fade-in">
+                <button
+                  type="button"
+                  onClick={() => {
+                     setStep('initial');
+                     setError("");
+                  }}
+                  className="mb-6 text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-sm group w-fit"
+                >
+                  <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Change Role
+                </button>
 
             <label className="auth-field">
               <span>Full name</span>
@@ -519,6 +543,8 @@ export default function Register({ onRegister }) {
             >
               {registerMutation.isPending ? "Creating account..." : "Create account"}
             </button>
+              </div>
+            )}
           </form>
 
           <div className="auth-divider">
