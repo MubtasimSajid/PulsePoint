@@ -203,7 +203,6 @@ export default function Profile({ userId, onUserUpdate }) {
             onChange={handleChange}
             rows={2}
             className="input-premium"
-            readOnly
           />
         </div>
 
@@ -238,7 +237,6 @@ export default function Profile({ userId, onUserUpdate }) {
             value={form.blood_group}
             onChange={handleChange}
             className="input-premium"
-            readOnly
           />
         </div>
 
@@ -249,7 +247,6 @@ export default function Profile({ userId, onUserUpdate }) {
             value={form.emergency_contact}
             onChange={handleChange}
             className="input-premium"
-            readOnly
           />
         </div>
 

@@ -38,6 +38,52 @@ exports.getPrescriptionById = async (req, res) => {
   }
 };
 
+exports.getPrescriptionsByPatient = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const result = await db.query(
+      `SELECT p.*, a.appt_date, 
+        u_doctor.full_name as doctor_name
+      FROM prescriptions p
+      INNER JOIN appointments a ON p.appointment_id = a.appointment_id
+      INNER JOIN doctors d ON a.doctor_id = d.user_id
+      INNER JOIN users u_doctor ON d.user_id = u_doctor.user_id
+      WHERE a.patient_id = $1
+      ORDER BY a.appt_date DESC`,
+      [patientId]
+    );
+
+    // Calculate status (Ongoing/Past) and time left
+    const prescriptions = result.rows.map(p => {
+      const startDate = new Date(p.appt_date);
+      const durationDays = p.duration_days || 0;
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + durationDays);
+      
+      const today = new Date();
+      // Reset time parts for accurate day comparison
+      today.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+
+      const isOngoing = today <= endDate;
+      const daysLeft = isOngoing 
+        ? Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)) 
+        : 0;
+
+      return {
+        ...p,
+        status: isOngoing ? 'ongoing' : 'past',
+        days_left: daysLeft,
+        end_date: endDate.toISOString().split('T')[0]
+      };
+    });
+
+    res.json(prescriptions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getPrescriptionsByAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.params;

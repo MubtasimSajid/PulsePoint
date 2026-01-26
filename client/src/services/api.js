@@ -118,6 +118,7 @@ export const prescriptionsAPI = {
   getById: (id) => api.get(`/prescriptions/${id}`),
   getByAppointment: (appointmentId) =>
     api.get(`/prescriptions/appointment/${appointmentId}`),
+  getByPatient: (patientId) => api.get(`/prescriptions/patient/${patientId}`),
   create: (data) => api.post("/prescriptions", data),
   update: (id, data) => api.put(`/prescriptions/${id}`, data),
   delete: (id) => api.delete(`/prescriptions/${id}`),

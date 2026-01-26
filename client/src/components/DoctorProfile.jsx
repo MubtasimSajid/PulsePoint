@@ -206,7 +206,6 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             onChange={handleChange}
             rows={2}
             className="input-premium"
-            readOnly
           />
         </div>
 
