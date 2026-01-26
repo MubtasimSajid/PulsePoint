@@ -106,15 +106,7 @@ export default function Doctors() {
           </h1>
           <p className="text-slate-500 mt-2">Manage medical staff and specialists</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all duration-300"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-          Add Doctor
-        </button>
+
       </div>
 
       <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-white/50 overflow-hidden">

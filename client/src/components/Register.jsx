@@ -24,6 +24,7 @@ export default function Register({ onRegister }) {
     license_number: "",
     specialization_id: "",
     experience_years: "",
+    consultation_fee: "",
     qualification: "",
     // Hospital admin specific
     hospital_name: "",
@@ -59,7 +60,7 @@ export default function Register({ onRegister }) {
 
       // Redirect based on role
       if (data.user.role === "doctor") {
-        navigate("/doctors");
+        navigate("/doctor-dashboard");
       } else if (data.user.role === "hospital_admin") {
         navigate("/hospitals");
       } else {
@@ -122,7 +123,7 @@ export default function Register({ onRegister }) {
       delete dataToSend.hospital_email;
       delete dataToSend.hospital_est_year;
     }
-    if (dataToSend.role !== "patient") {
+    if (dataToSend.role === "hospital_admin") {
       delete dataToSend.height_cm;
       delete dataToSend.weight_kg;
       delete dataToSend.blood_group;
@@ -130,6 +131,11 @@ export default function Register({ onRegister }) {
       delete dataToSend.date_of_birth;
       delete dataToSend.address;
       delete dataToSend.gender;
+    } else if (dataToSend.role === "doctor") {
+      delete dataToSend.height_cm;
+      delete dataToSend.weight_kg;
+      delete dataToSend.blood_group;
+      delete dataToSend.emergency_contact;
     }
 
     // Sanitize numeric fields before sending
@@ -177,7 +183,7 @@ export default function Register({ onRegister }) {
                   onClick={() => setStep('user_select')}
                   className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                 >
-                  <span className="text-2xl">👤</span> Register as User
+                  Register as User
                 </button>
                 <button
                   type="button"
@@ -187,7 +193,7 @@ export default function Register({ onRegister }) {
                   }}
                   className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                 >
-                  <span className="text-2xl">🏥</span> Register as Hospital
+                  Register as Hospital
                 </button>
               </div>
             )}
@@ -202,7 +208,7 @@ export default function Register({ onRegister }) {
                   }}
                   className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                 >
-                    <span className="text-2xl">🤒</span> Patient
+                    Patient
                 </button>
                 <button
                   type="button"
@@ -212,7 +218,7 @@ export default function Register({ onRegister }) {
                   }}
                   className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                 >
-                    <span className="text-2xl">👨‍⚕️</span> Doctor
+                    Doctor
                 </button>
                 <button
                   type="button"
@@ -303,9 +309,9 @@ export default function Register({ onRegister }) {
                       className="auth-input"
                     >
                       <option value="">Select</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
                     </select>
                   </label>
                 </div>
@@ -379,6 +385,48 @@ export default function Register({ onRegister }) {
 
             {formData.role === "doctor" && (
               <div className="auth-form" style={{ gap: "10px" }}>
+                <div className="auth-form" style={{ gap: "10px" }}>
+                  <label className="auth-field">
+                    <span>Date of birth</span>
+                    <input
+                      type="date"
+                      name="date_of_birth"
+                      value={formData.date_of_birth}
+                      onChange={handleChange}
+                      className="auth-input"
+                      required
+                    />
+                  </label>
+
+                  <label className="auth-field">
+                    <span>Gender</span>
+                    <select
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="auth-input"
+                    >
+                      <option value="">Select</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label className="auth-field">
+                  <span>Address</span>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    className="auth-input"
+                    placeholder="Street, City"
+                    required
+                  />
+                </label>
+
                 <label className="auth-field">
                   <span>License number</span>
                   <input
@@ -413,6 +461,19 @@ export default function Register({ onRegister }) {
                     type="number"
                     name="experience_years"
                     value={formData.experience_years}
+                    onChange={handleChange}
+                    className="auth-input"
+                    min="0"
+                  />
+                </label>
+
+                <label className="auth-field">
+                  <span>Consultation Fee ($)</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="consultation_fee"
+                    value={formData.consultation_fee}
                     onChange={handleChange}
                     className="auth-input"
                     min="0"

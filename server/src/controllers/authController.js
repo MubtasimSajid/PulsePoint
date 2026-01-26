@@ -509,7 +509,6 @@ async function buildOnboardingStatus(userId, role) {
       if (!doctorRow.license_number) missing.push("license_number");
       if (!doctorRow.qualification) missing.push("qualification");
       if (!doctorRow.experience_years) missing.push("experience_years");
-      if (!doctorRow.doctor_code) missing.push("doctor_code");
     }
 
     if (parseInt(specCountResult.rows[0]?.count || "0", 10) === 0) {

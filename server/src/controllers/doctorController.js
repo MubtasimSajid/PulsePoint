@@ -1,5 +1,15 @@
 const db = require("../config/database");
 
+function isAdmin(user) {
+  return user?.role === "admin";
+}
+
+function canActOnUser(reqUser, targetUserId) {
+  if (!reqUser) return false;
+  if (isAdmin(reqUser)) return true;
+  return String(reqUser.userId) === String(targetUserId);
+}
+
 exports.getAllDoctors = async (req, res) => {
   try {
     const result = await db.query(`
@@ -96,7 +106,14 @@ exports.createDoctor = async (req, res) => {
     // Create doctor
     await client.query(
       "INSERT INTO doctors (user_id, doctor_code, consultation_fee, license_number, experience_years, qualification) VALUES ($1, $2, $3, $4, $5, $6)",
-      [userId, doctor_code, consultation_fee, license_number, experience_years, qualification],
+      [
+        userId,
+        doctor_code,
+        consultation_fee,
+        license_number,
+        experience_years,
+        qualification,
+      ],
     );
 
     // Add specializations
@@ -152,6 +169,12 @@ exports.updateDoctor = async (req, res) => {
     await client.query("BEGIN");
 
     const { id } = req.params;
+
+    if (!canActOnUser(req.user, id)) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Access denied" });
+    }
+
     const {
       full_name,
       email,
@@ -174,21 +197,97 @@ exports.updateDoctor = async (req, res) => {
         ? [specializations]
         : [];
 
+    // Fetch existing user to preserve values when not provided
+    const existingUser = await client.query(
+      "SELECT full_name, email, phone, date_of_birth, gender, address FROM users WHERE user_id = $1",
+      [id],
+    );
+
+    if (existingUser.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const current = existingUser.rows[0];
+    // Non-admin doctors: only address and consultation_fee are editable.
+    const nextFullName = isAdmin(req.user)
+      ? (full_name ?? current.full_name)
+      : current.full_name;
+    const nextEmail = isAdmin(req.user)
+      ? (email ?? current.email)
+      : current.email;
+    const nextPhone = isAdmin(req.user)
+      ? (phone ?? current.phone)
+      : current.phone;
+    const nextDob = isAdmin(req.user)
+      ? ((date_of_birth || dob) ?? current.date_of_birth)
+      : current.date_of_birth;
+    const nextGender = isAdmin(req.user)
+      ? (gender ?? current.gender)
+      : current.gender;
+    const nextAddress = address ?? current.address;
+
     // Update user
     await client.query(
       "UPDATE users SET full_name = $1, email = $2, phone = $3, date_of_birth = $4, gender = $5, address = $6, updated_at = CURRENT_TIMESTAMP WHERE user_id = $7",
-      [full_name, email, phone, date_of_birth || dob, gender, address, id],
+      [
+        nextFullName,
+        nextEmail,
+        nextPhone,
+        nextDob,
+        nextGender,
+        nextAddress,
+        id,
+      ],
     );
 
-    // Update doctor
-    await client.query(
-      "UPDATE doctors SET doctor_code = $1, consultation_fee = $2, license_number = $3, experience_years = $4, qualification = $5 WHERE user_id = $6",
-      [doctor_code, consultation_fee, license_number, experience_years, qualification, id],
+    // Fetch existing doctor
+    const existingDoctor = await client.query(
+      "SELECT doctor_code, consultation_fee, license_number, experience_years, qualification FROM doctors WHERE user_id = $1",
+      [id],
     );
+
+    if (existingDoctor.rows.length === 0) {
+      // If doctor record is missing, create it
+      const safeDocCode = isAdmin(req.user) ? doctor_code : null;
+      const safeFee = consultation_fee ?? null;
+      const safeLicense = isAdmin(req.user) ? license_number : null;
+      const safeExp = isAdmin(req.user) ? experience_years : null;
+      const safeQual = isAdmin(req.user) ? qualification : null;
+
+      await client.query(
+        "INSERT INTO doctors (user_id, doctor_code, consultation_fee, license_number, experience_years, qualification) VALUES ($1, $2, $3, $4, $5, $6)",
+        [id, safeDocCode, safeFee, safeLicense, safeExp, safeQual],
+      );
+    } else {
+      const docCurrent = existingDoctor.rows[0];
+      const nextDocCode = isAdmin(req.user)
+        ? (doctor_code ?? docCurrent.doctor_code)
+        : docCurrent.doctor_code;
+      const nextFee = consultation_fee ?? docCurrent.consultation_fee;
+      const nextLicense = isAdmin(req.user)
+        ? (license_number ?? docCurrent.license_number)
+        : docCurrent.license_number;
+      const nextExp = isAdmin(req.user)
+        ? (experience_years ?? docCurrent.experience_years)
+        : docCurrent.experience_years;
+      const nextQual = isAdmin(req.user)
+        ? (qualification ?? docCurrent.qualification)
+        : docCurrent.qualification;
+
+      // Update doctor
+      await client.query(
+        "UPDATE doctors SET doctor_code = $1, consultation_fee = $2, license_number = $3, experience_years = $4, qualification = $5 WHERE user_id = $6",
+        [nextDocCode, nextFee, nextLicense, nextExp, nextQual, id],
+      );
+    }
 
     // Replace specializations if provided
-    if (specializationIds.length > 0) {
-      await client.query("DELETE FROM doctor_specializations WHERE doctor_id = $1", [id]);
+    if (isAdmin(req.user) && specializationIds.length > 0) {
+      await client.query(
+        "DELETE FROM doctor_specializations WHERE doctor_id = $1",
+        [id],
+      );
       for (const specId of specializationIds) {
         await client.query(
           "INSERT INTO doctor_specializations (doctor_id, spec_id) VALUES ($1, $2)",
@@ -221,6 +320,11 @@ exports.updateDoctor = async (req, res) => {
 exports.deleteDoctor = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!canActOnUser(req.user, id)) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
     await db.query("DELETE FROM doctors WHERE user_id = $1", [id]);
     await db.query("DELETE FROM users WHERE user_id = $1", [id]);
 

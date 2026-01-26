@@ -128,7 +128,8 @@ BEGIN
   v_current_date := p_start_date;
   WHILE v_current_date <= p_end_date LOOP
     -- Check if current date matches the day of week
-    IF TO_CHAR(v_current_date, 'Day') = TRIM(v_schedule.day_of_week) THEN
+    -- Use FMDay to avoid trailing spaces from the 'Day' format.
+    IF TRIM(TO_CHAR(v_current_date, 'FMDay')) = TRIM(v_schedule.day_of_week) THEN
       -- Generate slots for this day
       v_current_time := v_schedule.start_time;
       WHILE v_current_time < v_schedule.end_time LOOP

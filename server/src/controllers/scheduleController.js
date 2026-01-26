@@ -55,6 +55,11 @@ exports.createDoctorSchedule = async (req, res) => {
       slot_duration_minutes,
     } = req.body;
 
+    const doctorId = req.user?.userId ?? doctor_id;
+    if (!doctorId) {
+      return res.status(400).json({ error: "doctor_id is required" });
+    }
+
     const result = await db.query(
       `
       INSERT INTO doctor_schedules (doctor_id, facility_id, facility_type, day_of_week, start_time, end_time, slot_duration_minutes)
@@ -62,7 +67,7 @@ exports.createDoctorSchedule = async (req, res) => {
       RETURNING *
     `,
       [
-        doctor_id,
+        doctorId,
         facility_id,
         facility_type,
         day_of_week,
@@ -84,13 +89,57 @@ exports.getAvailableSlots = async (req, res) => {
     const { doctorId } = req.params;
     const { start_date, end_date, facility_type } = req.query;
 
+    if (!start_date || !end_date) {
+      return res
+        .status(400)
+        .json({ error: "start_date and end_date are required" });
+    }
+
+    const startDateObj = new Date(String(start_date));
+    const endDateObj = new Date(String(end_date));
+    if (
+      Number.isNaN(startDateObj.getTime()) ||
+      Number.isNaN(endDateObj.getTime())
+    ) {
+      return res.status(400).json({ error: "Invalid start_date or end_date" });
+    }
+    if (endDateObj < startDateObj) {
+      return res
+        .status(400)
+        .json({ error: "end_date must be on/after start_date" });
+    }
+    const maxDays = 90;
+    const diffDays = Math.ceil(
+      (endDateObj - startDateObj) / (1000 * 60 * 60 * 24),
+    );
+    if (diffDays > maxDays) {
+      return res
+        .status(400)
+        .json({ error: `Date range too large (max ${maxDays} days)` });
+    }
+
+    // Ensure slots exist for the requested range.
+    // This is idempotent because the DB function uses ON CONFLICT DO NOTHING.
+    await db.query(
+      `
+      SELECT generate_slots_for_schedule(ds.schedule_id, $2, $3)
+      FROM doctor_schedules ds
+      WHERE ds.doctor_id = $1 AND ds.is_active = TRUE
+    `,
+      [doctorId, start_date, end_date],
+    );
+
     let query = `
       SELECT 
         s.*,
         CASE 
           WHEN s.facility_type = 'hospital' THEN h.name
           ELSE c.name
-        END as facility_name
+        END as facility_name,
+        CASE 
+          WHEN s.facility_type = 'hospital' THEN h.location
+          ELSE c.location
+        END as location
       FROM appointment_slots s
       LEFT JOIN hospitals h ON s.facility_id = h.hospital_id AND s.facility_type = 'hospital'
       LEFT JOIN chambers c ON s.facility_id = c.chamber_id AND s.facility_type = 'chamber'
@@ -120,6 +169,19 @@ exports.generateSlots = async (req, res) => {
   try {
     const { schedule_id, start_date, end_date } = req.body;
 
+    const doctorId = req.user?.userId;
+    if (doctorId) {
+      const owned = await db.query(
+        "SELECT 1 FROM doctor_schedules WHERE schedule_id = $1 AND doctor_id = $2",
+        [schedule_id, doctorId],
+      );
+      if (owned.rows.length === 0) {
+        return res.status(403).json({
+          error: "You can only generate slots for your own schedules",
+        });
+      }
+    }
+
     await db.query(`SELECT generate_slots_for_schedule($1, $2, $3)`, [
       schedule_id,
       start_date,
@@ -138,7 +200,19 @@ exports.bookSlot = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const { slot_id, patient_id, doctor_id, triage_notes, payment_method } = req.body;
+    const { slot_id, triage_notes, payment_method, mfs_transaction_id } =
+      req.body;
+    const patientUserId = req.user?.userId;
+
+    if (!patientUserId) {
+      await client.query("ROLLBACK");
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (!slot_id) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "slot_id is required" });
+    }
 
     // Check if slot is still free
     const slotCheck = await client.query(
@@ -147,7 +221,7 @@ exports.bookSlot = async (req, res) => {
        FROM appointment_slots s
        LEFT JOIN hospitals h ON s.facility_id = h.hospital_id AND s.facility_type = 'hospital'
        LEFT JOIN chambers c ON s.facility_id = c.chamber_id AND s.facility_type = 'chamber'
-       WHERE s.slot_id = $1 AND s.status = 'free' FOR UPDATE`,
+       WHERE s.slot_id = $1 AND s.status = 'free' FOR UPDATE OF s`,
       [slot_id],
     );
 
@@ -158,37 +232,15 @@ exports.bookSlot = async (req, res) => {
 
     const slot = slotCheck.rows[0];
 
+    const doctorUserId = slot.doctor_id;
+
     // Get Doctor Fee
     const doctorCheck = await client.query(
       "SELECT consultation_fee, full_name, email FROM doctors d JOIN users u ON d.user_id = u.user_id WHERE d.user_id = $1",
-      [doctor_id]
+      [doctorUserId],
     );
     const doctor = doctorCheck.rows[0];
     const fee = doctor.consultation_fee || 0;
-
-    // Process Payment
-    if (payment_method === "wallet" && fee > 0) {
-      try {
-        const { processTransfer } = require("./paymentController");
-        await processTransfer(
-          patient_id, 
-          doctor_id, 
-          fee, 
-          "appointment", 
-          slot_id, // temporarily using slot_id as ref, will update to appt_id later or ignore
-          client
-        );
-      } catch (err) {
-        await client.query("ROLLBACK");
-        return res.status(400).json({ error: "Payment failed: " + err.message });
-      }
-    } else if (payment_method === "mfs") {
-      // For MFS, we assume external gateway verification happened on frontend
-      // In a real app, we'd verify the transaction ID here. 
-      // For now, we simulate 'adding funds' then 'transferring' or just log it.
-      // Let's assume MFS results in direct balance update (deposit + pay)
-      // Implementation omitted for brevity, focusing on Wallet as requested "deduct deducted"
-    }
 
     // Create appointment
     const appointmentResult = await client.query(
@@ -198,8 +250,8 @@ exports.bookSlot = async (req, res) => {
       RETURNING *
     `,
       [
-        patient_id,
-        doctor_id,
+        patientUserId,
+        doctorUserId,
         slot.facility_type === "hospital" ? slot.facility_id : null,
         slot.facility_type === "chamber" ? slot.facility_id : null,
         slot.slot_date,
@@ -208,6 +260,69 @@ exports.bookSlot = async (req, res) => {
     );
 
     const appointment = appointmentResult.rows[0];
+
+    // Process Payment (now we have appointment_id for reference)
+    const method = (payment_method || "wallet").toLowerCase();
+    if (fee > 0) {
+      const {
+        processTransfer,
+        processDeposit,
+      } = require("./paymentController");
+
+      if (method === "wallet") {
+        try {
+          await processTransfer(
+            patientUserId,
+            doctorUserId,
+            fee,
+            "appointment",
+            appointment.appointment_id,
+            client,
+            {
+              description: `Appointment payment for appointment ${appointment.appointment_id}`,
+            },
+          );
+        } catch (err) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "Payment failed: " + err.message });
+        }
+      } else if (method === "mfs") {
+        try {
+          const txnId = mfs_transaction_id ? String(mfs_transaction_id) : "";
+          await processDeposit(
+            patientUserId,
+            fee,
+            "appointment",
+            appointment.appointment_id,
+            client,
+            {
+              description: `MFS top-up for appointment ${appointment.appointment_id}${txnId ? ` (${txnId})` : ""}`,
+            },
+          );
+          await processTransfer(
+            patientUserId,
+            doctorUserId,
+            fee,
+            "appointment",
+            appointment.appointment_id,
+            client,
+            {
+              description: `Appointment payment for appointment ${appointment.appointment_id}`,
+            },
+          );
+        } catch (err) {
+          await client.query("ROLLBACK");
+          return res
+            .status(400)
+            .json({ error: "MFS payment failed: " + err.message });
+        }
+      } else {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Invalid payment_method" });
+      }
+    }
 
     // Update slot status
     await client.query(
@@ -224,7 +339,7 @@ exports.bookSlot = async (req, res) => {
       `,
         [
           appointment.appointment_id,
-          patient_id,
+          patientUserId,
           triage_notes.symptoms,
           triage_notes.severity || "low",
           triage_notes.notes || "",
@@ -236,32 +351,35 @@ exports.bookSlot = async (req, res) => {
 
     // Email Notification (After Commit)
     try {
-        const { sendAppointmentEmail } = require("../services/emailService");
-        
-        // Fetch patient details for email
-        const patientRes = await db.query("SELECT full_name FROM users WHERE user_id = $1", [patient_id]);
-        const patientName = patientRes.rows[0]?.full_name || "Patient";
+      const { sendAppointmentEmail } = require("../services/emailService");
 
-        const subject = `New Appointment: ${slot.slot_date} at ${slot.slot_time}`;
-        const text = `Hello Dr. ${doctor.full_name},
+      // Fetch patient details for email
+      const patientRes = await db.query(
+        "SELECT full_name FROM users WHERE user_id = $1",
+        [patientUserId],
+      );
+      const patientName = patientRes.rows[0]?.full_name || "Patient";
+
+      const subject = `New Appointment: ${slot.slot_date} at ${slot.slot_time}`;
+      const text = `Hello Dr. ${doctor.full_name},
         
 New appointment confirmed!
 Patient: ${patientName}
 Date: ${slot.slot_date}
 Time: ${slot.slot_time}
 Location: ${slot.facility_name || "Clinic"}
-Fee: ${fee} BDT (${payment_method})
+  Fee: ${fee} BDT (${method})
 
 Please log in to your dashboard for more details.`;
 
-        await sendAppointmentEmail({
-            to: doctor.email,
-            subject,
-            text
-        });
+      await sendAppointmentEmail({
+        to: doctor.email,
+        subject,
+        text,
+      });
     } catch (e) {
-        console.error("Email failed", e);
-        // Don't fail the request if email fails
+      console.error("Email failed", e);
+      // Don't fail the request if email fails
     }
 
     res.status(201).json(appointment);
@@ -278,6 +396,19 @@ exports.updateSlotStatus = async (req, res) => {
   try {
     const { slot_id } = req.params;
     const { status } = req.body;
+
+    const doctorId = req.user?.userId;
+    if (doctorId) {
+      const owned = await db.query(
+        "SELECT 1 FROM appointment_slots WHERE slot_id = $1 AND doctor_id = $2",
+        [slot_id, doctorId],
+      );
+      if (owned.rows.length === 0) {
+        return res
+          .status(403)
+          .json({ error: "You can only modify your own slots" });
+      }
+    }
 
     const result = await db.query(
       `UPDATE appointment_slots SET status = $1 WHERE slot_id = $2 RETURNING *`,

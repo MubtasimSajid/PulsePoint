@@ -113,7 +113,7 @@ export default function Login({ onLogin }) {
                       onClick={() => setStep('user_select')}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
-                      <span className="text-2xl">👤</span> Login as User
+                      Login as User
                     </button>
                     <button
                       type="button"
@@ -123,7 +123,7 @@ export default function Login({ onLogin }) {
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
-                      <span className="text-2xl">🏥</span> Login as Hospital
+                      Login as Hospital
                     </button>
                   </div>
                 )}
@@ -138,7 +138,7 @@ export default function Login({ onLogin }) {
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
-                      <span className="text-2xl">🤒</span> Patient
+                      Patient
                     </button>
                     <button
                       type="button"
@@ -148,7 +148,7 @@ export default function Login({ onLogin }) {
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
-                      <span className="text-2xl">👨‍⚕️</span> Doctor
+                      Doctor
                     </button>
                     <button
                       type="button"

@@ -65,9 +65,18 @@ export default function Profile({ userId, onUserUpdate }) {
     mutationFn: async () => {
       const heightVal = form.height_cm === "" ? null : Number(form.height_cm);
       const weightVal = form.weight_kg === "" ? null : Number(form.weight_kg);
+
+      const genderLocked = Boolean(userData?.gender);
+      const bloodGroupLocked = Boolean(patientData?.blood_group);
       const patientPayload = {
         height_cm: Number.isNaN(heightVal) ? null : heightVal,
         weight_kg: Number.isNaN(weightVal) ? null : weightVal,
+        address: form.address,
+        gender: genderLocked ? userData.gender : form.gender,
+        blood_group: bloodGroupLocked
+          ? patientData.blood_group
+          : form.blood_group,
+        emergency_contact: form.emergency_contact,
       };
       await patientsAPI.update(userId, patientPayload);
     },
@@ -93,9 +102,14 @@ export default function Profile({ userId, onUserUpdate }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  if (!userId) return <div className="text-center text-slate-600">No user found.</div>;
+  if (!userId)
+    return <div className="text-center text-slate-600">No user found.</div>;
   if (userData && userData.role !== "patient") {
-    return <div className="text-center text-slate-600">Profile editing is only available for patients.</div>;
+    return (
+      <div className="text-center text-slate-600">
+        Profile editing is only available for patients.
+      </div>
+    );
   }
   if (userLoading || patientLoading) {
     return (
@@ -111,17 +125,30 @@ export default function Profile({ userId, onUserUpdate }) {
   const computedAge = userData?.age_years ?? "-";
   const computedBmi = patientData?.bmi ?? "-";
 
+  const genderLocked = Boolean(userData?.gender);
+  const bloodGroupLocked = Boolean(patientData?.blood_group);
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Profile</p>
-          <h1 className="text-3xl font-bold text-slate-800">Update your details</h1>
-          <p className="text-slate-500 mt-1">Changes here will live-recalculate age and BMI.</p>
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
+            Profile
+          </p>
+          <h1 className="text-3xl font-bold text-slate-800">
+            Update your details
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Changes here will live-recalculate age and BMI.
+          </p>
         </div>
         <div className="bg-slate-50 px-4 py-3 rounded-xl text-sm text-slate-600">
-          <div className="flex items-center gap-2"><span className="font-semibold">Age:</span> {computedAge}</div>
-          <div className="flex items-center gap-2"><span className="font-semibold">BMI:</span> {computedBmi}</div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">Age:</span> {computedAge}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">BMI:</span> {computedBmi}
+          </div>
         </div>
       </div>
 
@@ -133,7 +160,9 @@ export default function Profile({ userId, onUserUpdate }) {
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">Email (read-only)</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Email (read-only)
+          </label>
           <input
             name="email"
             type="email"
@@ -145,7 +174,9 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Full Name</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Full Name
+          </label>
           <input
             name="full_name"
             value={form.full_name}
@@ -168,7 +199,9 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Date of Birth
+          </label>
           <input
             type="date"
             name="date_of_birth"
@@ -186,17 +219,29 @@ export default function Profile({ userId, onUserUpdate }) {
             value={form.gender || ""}
             onChange={handleChange}
             className="input-premium"
-            disabled
+            disabled={genderLocked}
+            title={
+              genderLocked
+                ? "Gender was set during registration and can't be changed."
+                : ""
+            }
           >
             <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
+          {genderLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">Address</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Address
+          </label>
           <textarea
             name="address"
             value={form.address}
@@ -207,7 +252,9 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Height (cm)</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Height (cm)
+          </label>
           <input
             type="number"
             step="0.1"
@@ -219,7 +266,9 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Weight (kg)</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Weight (kg)
+          </label>
           <input
             type="number"
             step="0.1"
@@ -231,17 +280,32 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Blood Group</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Blood Group
+          </label>
           <input
             name="blood_group"
             value={form.blood_group}
             onChange={handleChange}
             className="input-premium"
+            disabled={bloodGroupLocked}
+            title={
+              bloodGroupLocked
+                ? "Blood group was set during registration and can't be changed."
+                : ""
+            }
           />
+          {bloodGroupLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Emergency Contact</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Emergency Contact
+          </label>
           <input
             name="emergency_contact"
             value={form.emergency_contact}
@@ -258,7 +322,9 @@ export default function Profile({ userId, onUserUpdate }) {
           >
             {updateProfile.isPending ? "Saving..." : "Save changes"}
           </button>
-          <p className="text-sm text-slate-500">Saving will recompute age and BMI in real time.</p>
+          <p className="text-sm text-slate-500">
+            Saving will recompute age and BMI in real time.
+          </p>
         </div>
       </form>
     </div>

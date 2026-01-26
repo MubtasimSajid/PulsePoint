@@ -61,9 +61,9 @@ exports.createAppointment = async (req, res) => {
     } = req.body;
 
     if (!patient_id || !doctor_id || !appt_date || !appt_time) {
-      return res
-        .status(400)
-        .json({ error: "patient_id, doctor_id, appt_date, and appt_time are required" });
+      return res.status(400).json({
+        error: "patient_id, doctor_id, appt_date, and appt_time are required",
+      });
     }
 
     if (hospital_id && chamber_id) {
@@ -73,11 +73,15 @@ exports.createAppointment = async (req, res) => {
     }
 
     if (!hospital_id && !chamber_id) {
-      return res.status(400).json({ error: "hospital_id or chamber_id is required" });
+      return res
+        .status(400)
+        .json({ error: "hospital_id or chamber_id is required" });
     }
 
     if (!department_id) {
-      return res.status(400).json({ error: "department_id is required for appointments" });
+      return res
+        .status(400)
+        .json({ error: "department_id is required for appointments" });
     }
 
     const result = await db.query(
@@ -102,7 +106,8 @@ exports.createAppointment = async (req, res) => {
     if (details?.doctor_email) {
       try {
         const subject = `New appointment on ${details.appt_date} at ${details.appt_time}`;
-        const locationLabel = details.hospital_name || details.chamber_name || "Clinic";
+        const locationLabel =
+          details.hospital_name || details.chamber_name || "Clinic";
         const text = `Hello ${details.doctor_name || "Doctor"},
 
 ${details.patient_name} has scheduled an appointment.
@@ -180,7 +185,9 @@ exports.updateAppointment = async (req, res) => {
       return res.status(404).json({ error: "Appointment not found" });
     }
 
-    const details = await fetchAppointmentDetails(result.rows[0].appointment_id);
+    const details = await fetchAppointmentDetails(
+      result.rows[0].appointment_id,
+    );
 
     res.json(details || result.rows[0]);
   } catch (error) {
@@ -213,15 +220,20 @@ exports.cancelAppointment = async (req, res) => {
 
     const { id } = req.params; // appointment_id
     const { reason } = req.body;
+    const requesterUserId = req.user?.userId;
 
-    // Get appointment details with fee info
+    if (!requesterUserId) {
+      await client.query("ROLLBACK");
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
     const apptCheck = await client.query(
-      `SELECT a.*, d.consultation_fee, d.user_id as doctor_user_id, s.slot_id 
+      `SELECT a.*, d.consultation_fee, d.user_id as doctor_user_id, s.slot_id
        FROM appointments a
        JOIN doctors d ON a.doctor_id = d.user_id
        LEFT JOIN appointment_slots s ON a.appointment_id = s.appointment_id
        WHERE a.appointment_id = $1 FOR UPDATE`,
-      [id]
+      [id],
     );
 
     if (apptCheck.rows.length === 0) {
@@ -231,48 +243,66 @@ exports.cancelAppointment = async (req, res) => {
 
     const appt = apptCheck.rows[0];
 
-    if (appt.status === "cancelled") {
+    // Only the assigned doctor can cancel
+    if (appt.doctor_id !== requesterUserId) {
       await client.query("ROLLBACK");
-      return res.status(400).json({ error: "Appointment is already cancelled" });
+      return res
+        .status(403)
+        .json({
+          error: "Only the assigned doctor can cancel this appointment",
+        });
     }
 
-    // Process Refund if applicable (Assume paid if scheduled/confirmed for now, or check transactions)
-    // For simplicity based on requirements, we do "opposite of booking"
-    const { processTransfer } = require("./paymentController");
-    
-    // Reverse transfer: Doctor -> Patient
-    if (appt.consultation_fee > 0) {
-       try {
-         await processTransfer(
-           appt.doctor_user_id,
-           appt.patient_id,
-           appt.consultation_fee,
-           "refund",
-           appt.appointment_id,
-           client
-         );
-       } catch (err) {
-         console.warn("Refund transfer failed - might be MFS or unpaid:", err.message);
-         // Continue even if refund fails? User said "Patient will be refunded". 
-         // If generic error like "Insufficient funds" in doctor account, we might block validation,
-         // but doctor might have withdrawn. 
-         // For this demo, let's assume system account covers it or force negative.
-         // But processTransfer checks balance. 
-         // Let's force it or assume doctor has funds.
-       }
+    if (appt.status === "cancelled") {
+      await client.query("ROLLBACK");
+      return res
+        .status(400)
+        .json({ error: "Appointment is already cancelled" });
+    }
+
+    // Refund based on the recorded payment transaction (if any)
+    const paymentTxRes = await client.query(
+      `SELECT amount
+       FROM account_transactions
+       WHERE status = 'completed'
+         AND description = ('Appointment payment for appointment ' || $1)
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [appt.appointment_id],
+    );
+
+    const paymentAmount = paymentTxRes.rows[0]?.amount;
+    if (paymentAmount && parseFloat(paymentAmount) > 0) {
+      const { processTransfer } = require("./paymentController");
+      try {
+        await processTransfer(
+          appt.doctor_user_id,
+          appt.patient_id,
+          paymentAmount,
+          "appointment",
+          appt.appointment_id,
+          client,
+          {
+            description: `Appointment refund for appointment ${appt.appointment_id}`,
+          },
+        );
+      } catch (err) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Refund failed: " + err.message });
+      }
     }
 
     // Update Appointment Status
     await client.query(
-      "UPDATE appointments SET status = 'cancelled' WHERE appointment_id = $1",
-      [id]
+      "UPDATE appointments SET status = 'cancelled', note = COALESCE($2, note) WHERE appointment_id = $1",
+      [id, reason || null],
     );
 
     // Free the Slot
     if (appt.slot_id) {
       await client.query(
         "UPDATE appointment_slots SET status = 'free', appointment_id = NULL WHERE slot_id = $1",
-        [appt.slot_id]
+        [appt.slot_id],
       );
     }
 
@@ -281,8 +311,7 @@ exports.cancelAppointment = async (req, res) => {
     // Email Patient
     // Implementation omitted for brevity, but should be here.
 
-    res.json({ message: "Appointment cancelled and refunded successfully" });
-
+    res.json({ message: "Appointment cancelled" });
   } catch (error) {
     await client.query("ROLLBACK");
     res.status(500).json({ error: error.message });

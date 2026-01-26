@@ -15,6 +15,7 @@ const medicalHistoryRoutes = require("./medicalHistory");
 const searchRoutes = require("./search");
 const scheduleRoutes = require("./schedules");
 const notificationRoutes = require("./notifications");
+const paymentRoutes = require("./paymentRoutes");
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -30,5 +31,6 @@ router.use("/medical-history", medicalHistoryRoutes);
 router.use("/search", searchRoutes);
 router.use("/schedules", scheduleRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/payment", paymentRoutes);
 
 module.exports = router;

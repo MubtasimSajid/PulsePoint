@@ -24,6 +24,7 @@ import Profile from "./components/Profile";
 import DoctorProfile from "./components/DoctorProfile";
 import DoctorDashboard from "./components/DoctorDashboard";
 import HospitalDashboard from "./components/HospitalDashboard";
+import PatientMedicalHistory from "./components/PatientMedicalHistory";
 
 // Theme Context
 const ThemeContext = createContext();
@@ -76,137 +77,324 @@ function Navigation({ user, onLogout }) {
     navigate("/login");
   };
 
-  if (!user) return null;
-
   return (
     <nav className="nav-premium sticky top-0 z-50">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto pl-4 pr-6">
         <div className="flex items-center justify-between h-18 py-4">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all duration-300 group-hover:scale-105">
-              <span className="text-xl">💊</span>
-            </div>
+          <Link to="/" className="flex items-center group">
             <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
               PulsePoint
             </span>
           </Link>
-          
+
           <div className="flex items-center gap-2">
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle Button - ALWAYS VISIBLE */}
             <button
               onClick={toggleTheme}
               className="p-2 mr-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
-              title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              title={
+                theme === "dark"
+                  ? "Switch to Light Mode"
+                  : "Switch to Dark Mode"
+              }
             >
-              {theme === 'dark' ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              {theme === "dark" ? (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  />
                 </svg>
               )}
             </button>
 
-            {user.role === "admin" && (
+            {user && (
               <>
-                <Link to="/patients" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Patients
-                </Link>
-                <Link to="/doctors" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Doctors
-                </Link>
-                <Link to="/appointments" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Appointments
-                </Link>
-                <Link to="/hospitals" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                  Hospitals
-                </Link>
-              </>
-            )}
+                {user?.role === "admin" && (
+                  <>
+                    <Link
+                      to="/patients"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                      Patients
+                    </Link>
+                    <Link
+                      to="/doctors"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Doctors
+                    </Link>
+                    <Link
+                      to="/appointments"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Appointments
+                    </Link>
+                    <Link
+                      to="/hospitals"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      Hospitals
+                    </Link>
+                  </>
+                )}
 
-            {user.role === "patient" && (
-              <>
-                <Link to="/search-doctors" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Find Doctors
-                </Link>
-                <Link to="/my-appointments" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  My Appointments
-                </Link>
-              </>
-            )}
+                {user?.role === "patient" && (
+                  <>
+                    <Link
+                      to="/search-doctors"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      Find Doctors
+                    </Link>
+                    <Link
+                      to="/my-appointments"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      My Appointments
+                    </Link>
+                  </>
+                )}
 
-            {user.role === "doctor" && (
-              <>
-                <Link to="/appointments" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Appointments
-                </Link>
-                <Link to="/prescriptions" className="nav-link flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  Prescriptions
-                </Link>
-              </>
-            )}
+                {user?.role === "doctor" && (
+                  <>
+                    <Link
+                      to="/doctor-dashboard"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9.75 17L9 20l-1-1-3 3-1.5-1.5 3-3-1-1 3-.75m8.25-10.5a3 3 0 11-6 0 3 3 0 016 0zM4 20a8 8 0 0116 0"
+                        />
+                      </svg>
+                      Dashboard
+                    </Link>
 
-            <Link to="/medical-history" className="nav-link flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              History
-            </Link>
-            {(user.role === "patient" || user.role === "doctor") && (
-              <Link to="/profile" className="nav-link flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Profile
-              </Link>
-            )}
+                    <Link
+                      to="/doctor-dashboard?tab=schedule"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      Schedule
+                    </Link>
+                    <Link
+                      to="/prescriptions"
+                      className="nav-link flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Prescriptions
+                    </Link>
+                  </>
+                )}
 
-            <div className="ml-4 pl-4 border-l border-white/10 flex items-center gap-4">
-              <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-lg">
-                  {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                <Link
+                  to="/medical-history"
+                  className="nav-link flex items-center gap-2"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                  History
+                </Link>
+                {(user?.role === "patient" || user?.role === "doctor") && (
+                  <Link
+                    to="/profile"
+                    className="nav-link flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Profile
+                  </Link>
+                )}
+
+                <div className="ml-4 pl-4 border-l border-white/10 flex items-center gap-4">
+                  <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                    <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+                      {user.full_name?.charAt(0)?.toUpperCase() || "U"}
+                    </div>
+                    <div className="text-right hidden sm:block">
+                      <p className="text-sm font-medium text-white leading-none mb-1">
+                        {user.full_name}
+                      </p>
+                      <p className="text-xs text-slate-400 capitalize leading-none">
+                        {user?.role?.replace("_", " ") || "User"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
+                    title="Logout"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-white leading-none mb-1">{user.full_name}</p>
-                  <p className="text-xs text-slate-400 capitalize leading-none">{user.role.replace("_", " ")}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
-                title="Logout"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -260,13 +448,21 @@ function App() {
                 <Route
                   path="/login"
                   element={
-                    !user ? <Login onLogin={handleLogin} /> : <Navigate to="/" />
+                    !user ? (
+                      <Login onLogin={handleLogin} />
+                    ) : (
+                      <Navigate to="/" />
+                    )
                   }
                 />
                 <Route
                   path="/register"
                   element={
-                    !user ? <Register /> : <Navigate to="/" />
+                    !user ? (
+                      <Register onRegister={handleLogin} />
+                    ) : (
+                      <Navigate to="/" />
+                    )
                   }
                 />
 
@@ -279,7 +475,8 @@ function App() {
                         <Navigate to="/doctor-dashboard" />
                       ) : user?.role === "patient" ? (
                         <Navigate to="/patient-dashboard" />
-                      ) : user?.role === "hospital" || user?.role === "admin" ? (
+                      ) : user?.role === "hospital" ||
+                        user?.role === "admin" ? (
                         <Navigate to="/hospitals" />
                       ) : (
                         <Dashboard user={user} />
@@ -287,7 +484,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                
+
                 <Route
                   path="/patients"
                   element={
@@ -304,7 +501,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                
+
                 {/* Doctor Search & Booking (Patient View) */}
                 <Route
                   path="/search-doctors"
@@ -323,11 +520,11 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-                 <Route
+                <Route
                   path="/my-appointments"
                   element={
                     <ProtectedRoute>
-                      <PatientDashboard patientId={user?.user_id} />
+                      <PatientDashboard patientId={user?.user_id} user={user} />
                     </ProtectedRoute>
                   }
                 />
@@ -363,7 +560,7 @@ function App() {
                   path="/patient-dashboard"
                   element={
                     <ProtectedRoute>
-                      <PatientDashboard patientId={user?.user_id} />
+                      <PatientDashboard patientId={user?.user_id} user={user} />
                     </ProtectedRoute>
                   }
                 />
@@ -379,7 +576,11 @@ function App() {
                   path="/profile"
                   element={
                     <ProtectedRoute>
-                      <Profile />
+                      {user?.role === "doctor" ? (
+                        <DoctorProfile userId={user?.user_id} />
+                      ) : (
+                        <Profile userId={user?.user_id} />
+                      )}
                     </ProtectedRoute>
                   }
                 />

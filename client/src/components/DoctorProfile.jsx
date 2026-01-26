@@ -37,9 +37,11 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
 
   useEffect(() => {
     if (doctorData) {
-      const resolvedSpecs = (doctorData.specializations || []).map((spec) =>
-        typeof spec === "string" ? spec : spec?.spec_name || spec?.name || ""
-      ).filter(Boolean);
+      const resolvedSpecs = (doctorData.specializations || [])
+        .map((spec) =>
+          typeof spec === "string" ? spec : spec?.spec_name || spec?.name || "",
+        )
+        .filter(Boolean);
 
       setForm((prev) => ({
         ...prev,
@@ -59,12 +61,50 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
     }
   }, [doctorData]);
 
+  const genderLocked = Boolean(doctorData?.gender);
+  const dobLocked = Boolean(doctorData?.date_of_birth);
+  const licenseLocked = Boolean(doctorData?.license_number);
+  const experienceLocked =
+    doctorData?.experience_years !== null &&
+    doctorData?.experience_years !== undefined;
+  const qualificationLocked = Boolean(doctorData?.qualification);
+
   const updateProfile = useMutation({
     mutationFn: async () => {
+      // Send only the fields this screen is meant to edit.
+      // Important: do NOT send `specializations` here because the API expects specialization IDs (integers),
+      // while the GET endpoint returns specialization names (e.g. "Dermatology").
       const payload = {
+        address: form.address,
         consultation_fee:
           form.consultation_fee === "" ? null : Number(form.consultation_fee),
+        ...(genderLocked ? {} : { gender: form.gender }),
+        ...(dobLocked ? {} : { date_of_birth: form.date_of_birth }),
+        ...(licenseLocked ? {} : { license_number: form.license_number }),
+        ...(qualificationLocked ? {} : { qualification: form.qualification }),
+        ...(experienceLocked
+          ? {}
+          : {
+              experience_years:
+                form.experience_years === ""
+                  ? null
+                  : Number(form.experience_years),
+            }),
       };
+
+      if (
+        payload.consultation_fee !== null &&
+        Number.isNaN(payload.consultation_fee)
+      ) {
+        payload.consultation_fee = null;
+      }
+      if (
+        Object.prototype.hasOwnProperty.call(payload, "experience_years") &&
+        payload.experience_years !== null &&
+        Number.isNaN(payload.experience_years)
+      ) {
+        payload.experience_years = null;
+      }
       await doctorsAPI.update(userId, payload);
     },
     onSuccess: async () => {
@@ -89,7 +129,8 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  if (!userId) return <div className="text-center text-slate-600">No user found.</div>;
+  if (!userId)
+    return <div className="text-center text-slate-600">No user found.</div>;
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -105,15 +146,23 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
     <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Profile</p>
-          <h1 className="text-3xl font-bold text-slate-800">Update your details</h1>
-          <p className="text-slate-500 mt-1">Doctor profile fields match registration.</p>
+          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
+            Profile
+          </p>
+          <h1 className="text-3xl font-bold text-slate-800">
+            Update your details
+          </h1>
+          <p className="text-slate-500 mt-1">
+            Doctor profile fields match registration.
+          </p>
         </div>
       </div>
 
       {form.specializations && form.specializations.length > 0 && (
         <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700">
-          <div className="font-semibold text-slate-800 mb-2">Specializations</div>
+          <div className="font-semibold text-slate-800 mb-2">
+            Specializations
+          </div>
           <div className="flex flex-wrap gap-2">
             {form.specializations.map((spec, idx) => (
               <span
@@ -148,7 +197,9 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Full Name</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Full Name
+          </label>
           <input
             name="full_name"
             value={form.full_name}
@@ -171,15 +222,27 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Date of Birth
+          </label>
           <input
             type="date"
             name="date_of_birth"
             value={form.date_of_birth || ""}
             onChange={handleChange}
             className="input-premium"
-            readOnly
+            disabled={dobLocked}
+            title={
+              dobLocked
+                ? "Date of birth was set during registration and can't be changed."
+                : ""
+            }
           />
+          {dobLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -189,17 +252,29 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             value={form.gender || ""}
             onChange={handleChange}
             className="input-premium"
-            disabled
+            disabled={genderLocked}
+            title={
+              genderLocked
+                ? "Gender was set during registration and can't be changed."
+                : ""
+            }
           >
             <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
+          {genderLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">Address</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Address
+          </label>
           <textarea
             name="address"
             value={form.address}
@@ -210,18 +285,32 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">License Number</label>
+          <label className="text-sm font-semibold text-slate-700">
+            License Number
+          </label>
           <input
             name="license_number"
             value={form.license_number}
             onChange={handleChange}
             className="input-premium"
-            readOnly
+            disabled={licenseLocked}
+            title={
+              licenseLocked
+                ? "License number was set during registration and can't be changed."
+                : ""
+            }
           />
+          {licenseLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Experience (years)</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Experience (years)
+          </label>
           <input
             type="number"
             name="experience_years"
@@ -229,23 +318,47 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             min="0"
-            readOnly
+            disabled={experienceLocked}
+            title={
+              experienceLocked
+                ? "Experience was set during registration and can't be changed."
+                : ""
+            }
           />
+          {experienceLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Qualification</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Qualification
+          </label>
           <input
             name="qualification"
             value={form.qualification}
             onChange={handleChange}
             className="input-premium"
-            readOnly
+            disabled={qualificationLocked}
+            title={
+              qualificationLocked
+                ? "Qualification was set during registration and can't be changed."
+                : ""
+            }
           />
+          {qualificationLocked && (
+            <p className="text-xs text-slate-500">
+              Set during registration and locked.
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Consultation Fee</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Consultation Fee
+          </label>
           <input
             type="number"
             step="0.01"
@@ -257,17 +370,6 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Doctor Code</label>
-          <input
-            name="doctor_code"
-            value={form.doctor_code}
-            onChange={handleChange}
-            className="input-premium"
-            readOnly
-          />
-        </div>
-
         <div className="md:col-span-2 flex items-center gap-3 pt-2">
           <button
             type="submit"
@@ -276,7 +378,9 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           >
             {updateProfile.isPending ? "Saving..." : "Save changes"}
           </button>
-          <p className="text-sm text-slate-500">Doctor fields match what was captured during registration.</p>
+          <p className="text-sm text-slate-500">
+            Doctor fields match what was captured during registration.
+          </p>
         </div>
       </form>
     </div>

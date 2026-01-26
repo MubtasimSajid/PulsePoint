@@ -27,14 +27,14 @@ export default function PatientAppointments({ userId }) {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-12 animate-fade-in">
       {/* Tabs */}
-      <div className="flex p-1 bg-slate-900/60 border border-white/10 rounded-xl w-fit">
+      <div className="flex gap-6 p-4 bg-slate-900/60 border border-white/10 rounded-3xl w-fit">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-14 py-6 rounded-2xl text-2xl font-bold transition-all ${
               activeTab === tab.id
                 ? "bg-[#A38D5D] text-white shadow-lg shadow-[#A38D5D]/20"
                 : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
@@ -66,7 +66,9 @@ export default function PatientAppointments({ userId }) {
                   <div className="text-xl font-bold text-white">
                     {new Date(appt.appt_date).getDate()}
                   </div>
-                  <div className="text-xs text-indigo-200/70">{appt.appt_time}</div>
+                  <div className="text-xs text-indigo-200/70">
+                    {appt.appt_time}
+                  </div>
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-100 text-lg">
@@ -76,7 +78,9 @@ export default function PatientAppointments({ userId }) {
                     {appt.department_name}
                   </p>
                   <p className="text-xs text-slate-400 flex items-center gap-1">
-                    <span className="font-semibold text-slate-300">{appt.hospital_name || appt.chamber_name}</span>
+                    <span className="font-semibold text-slate-300">
+                      {appt.hospital_name || appt.chamber_name}
+                    </span>
                     <span className="text-slate-600 mx-1">•</span>
                     {appt.facility_address}
                   </p>
@@ -88,8 +92,8 @@ export default function PatientAppointments({ userId }) {
                     appt.status === "completed"
                       ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
                       : appt.status === "cancelled"
-                      ? "bg-red-500/20 text-red-300 border border-red-500/20"
-                      : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/20"
+                        : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                   }`}
                 >
                   {appt.status}
