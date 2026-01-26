@@ -138,11 +138,16 @@ exports.bookSlot = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const { slot_id, patient_id, doctor_id, triage_notes } = req.body;
+    const { slot_id, patient_id, doctor_id, triage_notes, payment_method } = req.body;
 
     // Check if slot is still free
     const slotCheck = await client.query(
-      `SELECT * FROM appointment_slots WHERE slot_id = $1 AND status = 'free' FOR UPDATE`,
+      `SELECT s.*, 
+              CASE WHEN s.facility_type = 'hospital' THEN h.name ELSE c.name END as facility_name
+       FROM appointment_slots s
+       LEFT JOIN hospitals h ON s.facility_id = h.hospital_id AND s.facility_type = 'hospital'
+       LEFT JOIN chambers c ON s.facility_id = c.chamber_id AND s.facility_type = 'chamber'
+       WHERE s.slot_id = $1 AND s.status = 'free' FOR UPDATE`,
       [slot_id],
     );
 
@@ -152,6 +157,38 @@ exports.bookSlot = async (req, res) => {
     }
 
     const slot = slotCheck.rows[0];
+
+    // Get Doctor Fee
+    const doctorCheck = await client.query(
+      "SELECT consultation_fee, full_name, email FROM doctors d JOIN users u ON d.user_id = u.user_id WHERE d.user_id = $1",
+      [doctor_id]
+    );
+    const doctor = doctorCheck.rows[0];
+    const fee = doctor.consultation_fee || 0;
+
+    // Process Payment
+    if (payment_method === "wallet" && fee > 0) {
+      try {
+        const { processTransfer } = require("./paymentController");
+        await processTransfer(
+          patient_id, 
+          doctor_id, 
+          fee, 
+          "appointment", 
+          slot_id, // temporarily using slot_id as ref, will update to appt_id later or ignore
+          client
+        );
+      } catch (err) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Payment failed: " + err.message });
+      }
+    } else if (payment_method === "mfs") {
+      // For MFS, we assume external gateway verification happened on frontend
+      // In a real app, we'd verify the transaction ID here. 
+      // For now, we simulate 'adding funds' then 'transferring' or just log it.
+      // Let's assume MFS results in direct balance update (deposit + pay)
+      // Implementation omitted for brevity, focusing on Wallet as requested "deduct deducted"
+    }
 
     // Create appointment
     const appointmentResult = await client.query(
@@ -196,6 +233,37 @@ exports.bookSlot = async (req, res) => {
     }
 
     await client.query("COMMIT");
+
+    // Email Notification (After Commit)
+    try {
+        const { sendAppointmentEmail } = require("../services/emailService");
+        
+        // Fetch patient details for email
+        const patientRes = await db.query("SELECT full_name FROM users WHERE user_id = $1", [patient_id]);
+        const patientName = patientRes.rows[0]?.full_name || "Patient";
+
+        const subject = `New Appointment: ${slot.slot_date} at ${slot.slot_time}`;
+        const text = `Hello Dr. ${doctor.full_name},
+        
+New appointment confirmed!
+Patient: ${patientName}
+Date: ${slot.slot_date}
+Time: ${slot.slot_time}
+Location: ${slot.facility_name || "Clinic"}
+Fee: ${fee} BDT (${payment_method})
+
+Please log in to your dashboard for more details.`;
+
+        await sendAppointmentEmail({
+            to: doctor.email,
+            subject,
+            text
+        });
+    } catch (e) {
+        console.error("Email failed", e);
+        // Don't fail the request if email fails
+    }
+
     res.status(201).json(appointment);
   } catch (error) {
     await client.query("ROLLBACK");

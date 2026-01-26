@@ -99,6 +99,7 @@ export const appointmentsAPI = {
     api.post("/appointments", normalizeAppointmentPayload(data)),
   update: (id, data) =>
     api.put(`/appointments/${id}`, normalizeAppointmentPayload(data)),
+  cancel: (id, data) => api.put(`/appointments/${id}/cancel`, data),
   delete: (id) => api.delete(`/appointments/${id}`),
 };
 
@@ -187,6 +188,12 @@ export const notificationsAPI = {
   markAsRead: (notificationId) =>
     api.put(`/notifications/${notificationId}/read`),
   markAllAsRead: (userId) => api.put(`/notifications/${userId}/read-all`),
+};
+
+// Payment API
+export const paymentAPI = {
+  getBalance: () => api.get("/payment/balance"),
+  addFunds: (amount) => api.post("/payment/add-funds", { amount }),
 };
 
 export default api;
