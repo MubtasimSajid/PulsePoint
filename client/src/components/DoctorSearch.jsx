@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api, { specializationsAPI, searchAPI } from "../services/api";
+import AppointmentGrid from "./AppointmentGrid";
 
 export default function DoctorSearch({ onSelectDoctor }) {
   const [filters, setFilters] = useState({
@@ -10,6 +11,20 @@ export default function DoctorSearch({ onSelectDoctor }) {
     facility_id: "",
     doctor_name: "",
   });
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [patientId, setPatientId] = useState(null);
+
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      try {
+        const parsed = JSON.parse(user);
+        setPatientId(parsed?.user_id || null);
+      } catch {
+        setPatientId(null);
+      }
+    }
+  }, []);
 
   // Fetch specializations
   const { data: specializations } = useQuery({
@@ -48,6 +63,14 @@ export default function DoctorSearch({ onSelectDoctor }) {
     enabled: false, // Manual trigger
   });
 
+  // Auto-trigger search when typing a doctor name (2+ chars) so name-only search works
+  useEffect(() => {
+    if (filters.doctor_name && filters.doctor_name.trim().length >= 2) {
+      refetch();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.doctor_name]);
+
   const handleSearch = () => {
     refetch();
   };
@@ -60,6 +83,7 @@ export default function DoctorSearch({ onSelectDoctor }) {
       facility_id: "",
       doctor_name: "",
     });
+    setSelectedDoctor(null);
   };
 
   return (
@@ -99,8 +123,8 @@ export default function DoctorSearch({ onSelectDoctor }) {
           >
             <option value="">All Specializations</option>
             {specializations?.map((spec) => (
-              <option key={spec.spec_id} value={spec.name}>
-                {spec.name}
+              <option key={spec.spec_id} value={spec.spec_name}>
+                {spec.spec_name}
               </option>
             ))}
           </select>
@@ -318,7 +342,13 @@ export default function DoctorSearch({ onSelectDoctor }) {
                     </div>
                   </div>
                   <button
-                    onClick={() => onSelectDoctor && onSelectDoctor(doctor)}
+                    onClick={() => {
+                      if (onSelectDoctor) {
+                        onSelectDoctor(doctor);
+                      } else {
+                        setSelectedDoctor(doctor);
+                      }
+                    }}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all duration-300"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,6 +372,12 @@ export default function DoctorSearch({ onSelectDoctor }) {
           </div>
           <h3 className="text-xl font-bold text-slate-700 mb-2">No doctors found</h3>
           <p className="text-slate-500">Try adjusting your search criteria</p>
+        </div>
+      )}
+
+      {selectedDoctor && (
+        <div className="mt-10">
+          <AppointmentGrid doctor={selectedDoctor} patientId={patientId} />
         </div>
       )}
     </div>

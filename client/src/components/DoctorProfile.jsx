@@ -1,9 +1,24 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usersAPI, patientsAPI } from "../services/api";
+import { doctorsAPI, usersAPI } from "../services/api";
 
-export default function Profile({ userId, onUserUpdate }) {
+export default function DoctorProfile({ userId, onUserUpdate }) {
   const queryClient = useQueryClient();
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    date_of_birth: "",
+    gender: "",
+    address: "",
+    license_number: "",
+    experience_years: "",
+    qualification: "",
+    consultation_fee: "",
+    doctor_code: "",
+    specializations: [],
+  });
+
   const toInputDate = (value) => {
     if (!value) return "";
     const d = new Date(value);
@@ -13,78 +28,59 @@ export default function Profile({ userId, onUserUpdate }) {
     const dd = String(d.getDate()).padStart(2, "0");
     return `${yyyy}-${mm}-${dd}`;
   };
-  const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    date_of_birth: "",
-    address: "",
-    gender: "",
-    height_cm: "",
-    weight_kg: "",
-    blood_group: "",
-    emergency_contact: "",
-  });
 
-  const { data: userData, isLoading: userLoading } = useQuery({
-    queryKey: ["user", userId],
-    queryFn: async () => (await usersAPI.getById(userId)).data,
-    enabled: !!userId,
-  });
-
-  const { data: patientData, isLoading: patientLoading } = useQuery({
-    queryKey: ["patient", userId],
-    queryFn: async () => (await patientsAPI.getById(userId)).data,
+  const { data: doctorData, isLoading } = useQuery({
+    queryKey: ["doctor", userId],
+    queryFn: async () => (await doctorsAPI.getById(userId)).data,
     enabled: !!userId,
   });
 
   useEffect(() => {
-    if (userData) {
+    if (doctorData) {
+      const resolvedSpecs = (doctorData.specializations || []).map((spec) =>
+        typeof spec === "string" ? spec : spec?.spec_name || spec?.name || ""
+      ).filter(Boolean);
+
       setForm((prev) => ({
         ...prev,
-        full_name: userData.full_name || "",
-        email: userData.email || "",
-        phone: userData.phone || "",
-        date_of_birth: toInputDate(userData.date_of_birth),
-        address: userData.address || "",
-        gender: userData.gender || "",
+        full_name: doctorData.full_name || "",
+        email: doctorData.email || "",
+        phone: doctorData.phone || "",
+        date_of_birth: toInputDate(doctorData.date_of_birth),
+        gender: doctorData.gender || "",
+        address: doctorData.address || "",
+        license_number: doctorData.license_number || "",
+        experience_years: doctorData.experience_years ?? "",
+        qualification: doctorData.qualification || "",
+        consultation_fee: doctorData.consultation_fee ?? "",
+        doctor_code: doctorData.doctor_code || "",
+        specializations: resolvedSpecs,
       }));
     }
-    if (patientData) {
-      setForm((prev) => ({
-        ...prev,
-        height_cm: patientData.height_cm ?? "",
-        weight_kg: patientData.weight_kg ?? "",
-        blood_group: patientData.blood_group || "",
-        emergency_contact: patientData.emergency_contact || "",
-      }));
-    }
-  }, [userData, patientData]);
+  }, [doctorData]);
 
   const updateProfile = useMutation({
     mutationFn: async () => {
-      const heightVal = form.height_cm === "" ? null : Number(form.height_cm);
-      const weightVal = form.weight_kg === "" ? null : Number(form.weight_kg);
-      const patientPayload = {
-        height_cm: Number.isNaN(heightVal) ? null : heightVal,
-        weight_kg: Number.isNaN(weightVal) ? null : weightVal,
+      const payload = {
+        consultation_fee:
+          form.consultation_fee === "" ? null : Number(form.consultation_fee),
       };
-      await patientsAPI.update(userId, patientPayload);
+      await doctorsAPI.update(userId, payload);
     },
     onSuccess: async () => {
-      const [freshUser] = await Promise.all([
-        usersAPI.getById(userId).then((r) => r.data),
-        queryClient.invalidateQueries({ queryKey: ["patient", userId] }),
+      const freshUser = await usersAPI.getById(userId).then((r) => r.data);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["doctor", userId] }),
         queryClient.invalidateQueries({ queryKey: ["user", userId] }),
       ]);
       if (onUserUpdate && freshUser) {
         localStorage.setItem("user", JSON.stringify(freshUser));
         onUserUpdate(freshUser);
       }
-      alert("Profile updated. Age and BMI recalculated.");
+      alert("Doctor profile updated.");
     },
     onError: (err) => {
-      alert(err?.response?.data?.message || err.message || "Update failed");
+      alert(err?.response?.data?.error || err.message || "Update failed");
     },
   });
 
@@ -94,10 +90,7 @@ export default function Profile({ userId, onUserUpdate }) {
   };
 
   if (!userId) return <div className="text-center text-slate-600">No user found.</div>;
-  if (userData && userData.role !== "patient") {
-    return <div className="text-center text-slate-600">Profile editing is only available for patients.</div>;
-  }
-  if (userLoading || patientLoading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
@@ -108,22 +101,31 @@ export default function Profile({ userId, onUserUpdate }) {
     );
   }
 
-  const computedAge = userData?.age_years ?? "-";
-  const computedBmi = patientData?.bmi ?? "-";
-
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
           <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">Profile</p>
           <h1 className="text-3xl font-bold text-slate-800">Update your details</h1>
-          <p className="text-slate-500 mt-1">Changes here will live-recalculate age and BMI.</p>
-        </div>
-        <div className="bg-slate-50 px-4 py-3 rounded-xl text-sm text-slate-600">
-          <div className="flex items-center gap-2"><span className="font-semibold">Age:</span> {computedAge}</div>
-          <div className="flex items-center gap-2"><span className="font-semibold">BMI:</span> {computedBmi}</div>
+          <p className="text-slate-500 mt-1">Doctor profile fields match registration.</p>
         </div>
       </div>
+
+      {form.specializations && form.specializations.length > 0 && (
+        <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700">
+          <div className="font-semibold text-slate-800 mb-2">Specializations</div>
+          <div className="flex flex-wrap gap-2">
+            {form.specializations.map((spec, idx) => (
+              <span
+                key={`${spec}-${idx}`}
+                className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold"
+              >
+                {spec}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <form
         onSubmit={(e) => {
@@ -133,13 +135,14 @@ export default function Profile({ userId, onUserUpdate }) {
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">Email (read-only)</label>
+          <label className="text-sm font-semibold text-slate-700">Email</label>
           <input
             name="email"
             type="email"
             value={form.email}
             onChange={handleChange}
             className="input-premium"
+            required
             readOnly
           />
         </div>
@@ -208,34 +211,10 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Height (cm)</label>
+          <label className="text-sm font-semibold text-slate-700">License Number</label>
           <input
-            type="number"
-            step="0.1"
-            name="height_cm"
-            value={form.height_cm}
-            onChange={handleChange}
-            className="input-premium"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Weight (kg)</label>
-          <input
-            type="number"
-            step="0.1"
-            name="weight_kg"
-            value={form.weight_kg}
-            onChange={handleChange}
-            className="input-premium"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Blood Group</label>
-          <input
-            name="blood_group"
-            value={form.blood_group}
+            name="license_number"
+            value={form.license_number}
             onChange={handleChange}
             className="input-premium"
             readOnly
@@ -243,10 +222,47 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Emergency Contact</label>
+          <label className="text-sm font-semibold text-slate-700">Experience (years)</label>
           <input
-            name="emergency_contact"
-            value={form.emergency_contact}
+            type="number"
+            name="experience_years"
+            value={form.experience_years}
+            onChange={handleChange}
+            className="input-premium"
+            min="0"
+            readOnly
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">Qualification</label>
+          <input
+            name="qualification"
+            value={form.qualification}
+            onChange={handleChange}
+            className="input-premium"
+            readOnly
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">Consultation Fee</label>
+          <input
+            type="number"
+            step="0.01"
+            name="consultation_fee"
+            value={form.consultation_fee}
+            onChange={handleChange}
+            className="input-premium"
+            min="0"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-slate-700">Doctor Code</label>
+          <input
+            name="doctor_code"
+            value={form.doctor_code}
             onChange={handleChange}
             className="input-premium"
             readOnly
@@ -261,7 +277,7 @@ export default function Profile({ userId, onUserUpdate }) {
           >
             {updateProfile.isPending ? "Saving..." : "Save changes"}
           </button>
-          <p className="text-sm text-slate-500">Saving will recompute age and BMI in real time.</p>
+          <p className="text-sm text-slate-500">Doctor fields match what was captured during registration.</p>
         </div>
       </form>
     </div>

@@ -151,6 +151,163 @@ CREATE INDEX idx_appointments_patient
 CREATE INDEX idx_medical_history_patient
   ON medical_history (patient_id);
 
+-- Accounts and payments
+CREATE TABLE IF NOT EXISTS accounts (
+  account_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  owner_type VARCHAR(20) NOT NULL CHECK (owner_type IN ('user', 'hospital')),
+  owner_id INT NOT NULL,
+  balance NUMERIC(12,2) NOT NULL DEFAULT 0,
+  currency VARCHAR(3) NOT NULL DEFAULT 'BDT',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE (owner_type, owner_id)
+);
+
+CREATE TABLE IF NOT EXISTS account_transactions (
+  txn_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  from_account_id INT,
+  to_account_id INT,
+  amount NUMERIC(12,2) NOT NULL CHECK (amount > 0),
+  status VARCHAR(20) NOT NULL DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed')),
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (from_account_id) REFERENCES accounts(account_id) ON DELETE SET NULL,
+  FOREIGN KEY (to_account_id) REFERENCES accounts(account_id) ON DELETE SET NULL
+);
+
+-- Validate account owner exists
+CREATE OR REPLACE FUNCTION validate_account_owner()
+RETURNS TRIGGER AS $$
+DECLARE
+  owner_exists INT;
+BEGIN
+  IF NEW.owner_type = 'user' THEN
+    SELECT COUNT(*) INTO owner_exists FROM users WHERE user_id = NEW.owner_id;
+  ELSIF NEW.owner_type = 'hospital' THEN
+    SELECT COUNT(*) INTO owner_exists FROM hospitals WHERE hospital_id = NEW.owner_id;
+  ELSE
+    owner_exists := 0;
+  END IF;
+
+  IF owner_exists = 0 THEN
+    RAISE EXCEPTION 'Account owner does not exist';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS accounts_owner_check ON accounts;
+CREATE TRIGGER accounts_owner_check
+  BEFORE INSERT OR UPDATE ON accounts
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_account_owner();
+
+-- Keep accounts updated_at fresh
+CREATE OR REPLACE FUNCTION touch_account_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at := CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS accounts_touch_updated_at ON accounts;
+CREATE TRIGGER accounts_touch_updated_at
+  BEFORE UPDATE ON accounts
+  FOR EACH ROW
+  EXECUTE FUNCTION touch_account_updated_at();
+
+-- Prevent overdraft on completed transactions
+CREATE OR REPLACE FUNCTION ensure_account_balance()
+RETURNS TRIGGER AS $$
+DECLARE
+  current_balance NUMERIC(12,2);
+BEGIN
+  IF NEW.status = 'completed' AND NEW.from_account_id IS NOT NULL THEN
+    SELECT balance INTO current_balance FROM accounts WHERE account_id = NEW.from_account_id FOR UPDATE;
+    IF current_balance IS NULL THEN
+      RAISE EXCEPTION 'Source account not found';
+    END IF;
+    IF current_balance < NEW.amount THEN
+      RAISE EXCEPTION 'Insufficient balance';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS transactions_balance_check ON account_transactions;
+CREATE TRIGGER transactions_balance_check
+  BEFORE INSERT ON account_transactions
+  FOR EACH ROW
+  EXECUTE FUNCTION ensure_account_balance();
+
+-- Apply completed transactions to balances
+CREATE OR REPLACE FUNCTION apply_account_transaction()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.status = 'completed' THEN
+    IF NEW.from_account_id IS NOT NULL THEN
+      UPDATE accounts SET balance = balance - NEW.amount WHERE account_id = NEW.from_account_id;
+    END IF;
+    IF NEW.to_account_id IS NOT NULL THEN
+      UPDATE accounts SET balance = balance + NEW.amount WHERE account_id = NEW.to_account_id;
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS transactions_apply_balance ON account_transactions;
+CREATE TRIGGER transactions_apply_balance
+  AFTER INSERT ON account_transactions
+  FOR EACH ROW
+  EXECUTE FUNCTION apply_account_transaction();
+
+-- Auto-create a payment transaction when an appointment is completed
+CREATE OR REPLACE FUNCTION create_appointment_payment()
+RETURNS TRIGGER AS $$
+DECLARE
+  patient_account_id INT;
+  doctor_account_id INT;
+  fee NUMERIC(12,2);
+  patient_balance NUMERIC(12,2);
+BEGIN
+  IF NEW.status <> 'completed' OR OLD.status = 'completed' THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT account_id, balance INTO patient_account_id, patient_balance
+  FROM accounts WHERE owner_type = 'user' AND owner_id = NEW.patient_id;
+
+  SELECT account_id INTO doctor_account_id
+  FROM accounts WHERE owner_type = 'user' AND owner_id = NEW.doctor_id;
+
+  SELECT consultation_fee INTO fee FROM doctors WHERE user_id = NEW.doctor_id;
+
+  IF patient_account_id IS NULL OR doctor_account_id IS NULL OR fee IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF patient_balance >= fee THEN
+    INSERT INTO account_transactions (from_account_id, to_account_id, amount, status, description)
+    VALUES (patient_account_id, doctor_account_id, fee, 'completed', 'Appointment payment for appointment ' || NEW.appointment_id);
+  ELSE
+    INSERT INTO account_transactions (from_account_id, to_account_id, amount, status, description)
+    VALUES (patient_account_id, doctor_account_id, fee, 'pending', 'Insufficient balance for appointment ' || NEW.appointment_id);
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS appointment_payment_trigger ON appointments;
+CREATE TRIGGER appointment_payment_trigger
+  AFTER UPDATE OF status ON appointments
+  FOR EACH ROW
+  EXECUTE FUNCTION create_appointment_payment();
+
 -- Calculate age from date_of_birth
 CREATE OR REPLACE FUNCTION set_user_age_years()
 RETURNS TRIGGER AS $$
