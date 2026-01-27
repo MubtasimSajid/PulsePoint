@@ -37,7 +37,7 @@ export default function AppointmentGrid({
 
   // Fetch Patient Balance
   const { data: walletData } = useQuery({
-    queryKey: ["wallet", patientId],
+    queryKey: ["wallet"],
     queryFn: async () => (await paymentAPI.getBalance()).data,
     enabled: !!patientId && showBookingModal,
   });

@@ -275,8 +275,8 @@ exports.bookSlot = async (req, res) => {
             patientUserId,
             doctorUserId,
             fee,
-            "appointment",
-            appointment.appointment_id,
+            null,
+            null,
             client,
             {
               description: `Appointment payment for appointment ${appointment.appointment_id}`,
@@ -291,22 +291,15 @@ exports.bookSlot = async (req, res) => {
       } else if (method === "mfs") {
         try {
           const txnId = mfs_transaction_id ? String(mfs_transaction_id) : "";
-          await processDeposit(
-            patientUserId,
-            fee,
-            "appointment",
-            appointment.appointment_id,
-            client,
-            {
-              description: `MFS top-up for appointment ${appointment.appointment_id}${txnId ? ` (${txnId})` : ""}`,
-            },
-          );
+          await processDeposit(patientUserId, fee, null, null, client, {
+            description: `MFS top-up for appointment ${appointment.appointment_id}${txnId ? ` (${txnId})` : ""}`,
+          });
           await processTransfer(
             patientUserId,
             doctorUserId,
             fee,
-            "appointment",
-            appointment.appointment_id,
+            null,
+            null,
             client,
             {
               description: `Appointment payment for appointment ${appointment.appointment_id}`,

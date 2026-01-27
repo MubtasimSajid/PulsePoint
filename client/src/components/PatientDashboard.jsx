@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { notificationsAPI } from "../services/api";
+import { notificationsAPI, paymentAPI } from "../services/api";
 import PatientAppointments from "./PatientAppointments";
 import PatientPrescriptions from "./PatientPrescriptions";
 import PatientMedicalHistory from "./PatientMedicalHistory";
@@ -14,6 +14,12 @@ export default function PatientDashboard({ patientId, user }) {
     queryFn: async () =>
       (await notificationsAPI.getUnreadCount(patientId)).data,
     enabled: !!patientId,
+  });
+
+  const { data: wallet } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: async () => (await paymentAPI.getBalance()).data,
+    enabled: !!user,
   });
 
   const sections = [
@@ -40,6 +46,14 @@ export default function PatientDashboard({ patientId, user }) {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Balance */}
+            <div className="px-4 py-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
+              <p className="text-xs text-indigo-100 font-medium">Balance</p>
+              <p className="text-lg font-bold leading-tight">
+                {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
+              </p>
+            </div>
+
             {/* Notification Bell */}
             <button className="relative p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl transition-all duration-200 group border border-white/10">
               <svg

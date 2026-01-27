@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { schedulesAPI, appointmentsAPI, hospitalsAPI } from "../services/api";
+import {
+  schedulesAPI,
+  appointmentsAPI,
+  hospitalsAPI,
+  paymentAPI,
+} from "../services/api";
 
 export default function DoctorDashboard({ doctorId }) {
   const location = useLocation();
@@ -38,11 +43,18 @@ export default function DoctorDashboard({ doctorId }) {
     onSuccess: () => {
       queryClient.invalidateQueries(["appointments", "doctor", doctorId]);
       queryClient.invalidateQueries({ queryKey: ["doctorSlots"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet"] });
       alert("Appointment cancelled. Slot is now free.");
     },
     onError: (err) => {
       alert(err.response?.data?.error || "Failed to cancel appointment");
     },
+  });
+
+  const { data: wallet } = useQuery({
+    queryKey: ["wallet"],
+    queryFn: async () => (await paymentAPI.getBalance()).data,
+    enabled: !!doctorId,
   });
 
   const { data: schedules } = useQuery({
@@ -113,27 +125,37 @@ export default function DoctorDashboard({ doctorId }) {
           </h1>
           <p className="text-slate-500">Manage your practice and patients</p>
         </div>
-        <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex">
-          <button
-            onClick={() => setActiveTab("appointments")}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === "appointments"
-                ? "bg-indigo-50 text-indigo-600"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            Appointments
-          </button>
-          <button
-            onClick={() => setActiveTab("schedule")}
-            className={`px-4 py-2 rounded-md font-medium transition-colors ${
-              activeTab === "schedule"
-                ? "bg-indigo-50 text-indigo-600"
-                : "text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            Manage Schedule
-          </button>
+
+        <div className="flex items-center gap-3">
+          <div className="bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
+            <p className="text-xs text-slate-500 font-semibold">Balance</p>
+            <p className="text-lg font-bold text-slate-900 leading-tight">
+              {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
+            </p>
+          </div>
+
+          <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex">
+            <button
+              onClick={() => setActiveTab("appointments")}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === "appointments"
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Appointments
+            </button>
+            <button
+              onClick={() => setActiveTab("schedule")}
+              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                activeTab === "schedule"
+                  ? "bg-indigo-50 text-indigo-600"
+                  : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Manage Schedule
+            </button>
+          </div>
         </div>
       </div>
 

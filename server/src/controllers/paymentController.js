@@ -7,11 +7,19 @@ async function ensureAccount(client, userId) {
   );
   if (res.rows.length > 0) return res.rows[0];
 
+  // Race-safe creation: if another request creates the account concurrently,
+  // we fall back to selecting the existing row.
   const created = await client.query(
-    "INSERT INTO accounts (owner_type, owner_id) VALUES ('user', $1) RETURNING account_id, balance, currency",
+    "INSERT INTO accounts (owner_type, owner_id) VALUES ('user', $1) ON CONFLICT (owner_type, owner_id) DO NOTHING RETURNING account_id, balance, currency",
     [userId],
   );
-  return created.rows[0];
+  if (created.rows.length > 0) return created.rows[0];
+
+  const after = await client.query(
+    "SELECT account_id, balance, currency FROM accounts WHERE owner_type = 'user' AND owner_id = $1",
+    [userId],
+  );
+  return after.rows[0];
 }
 
 // Get balance (ensure account exists)
@@ -30,10 +38,39 @@ exports.getBalance = async (req, res) => {
       [account.account_id],
     );
 
+    const normalizedTransactions = transactions.rows.map((tx) => {
+      const accountId = account.account_id;
+      const description = String(tx.description || "");
+      const descriptionLower = description.toLowerCase();
+
+      const isIncoming = String(tx.to_account_id) === String(accountId);
+      const isOutgoing = String(tx.from_account_id) === String(accountId);
+
+      let type = "transfer";
+      if (!tx.from_account_id && isIncoming) type = "deposit";
+      else if (!tx.to_account_id && isOutgoing) type = "withdrawal";
+      else if (descriptionLower.includes("appointment payment"))
+        type = "payment";
+      else if (descriptionLower.includes("appointment refund")) type = "refund";
+      else if (descriptionLower.includes("added funds")) type = "deposit";
+
+      let direction = "unknown";
+      if (isIncoming) direction = "credit";
+      else if (isOutgoing) direction = "debit";
+
+      return {
+        ...tx,
+        transaction_id: tx.txn_id,
+        type,
+        direction,
+      };
+    });
+
     res.json({
       balance: account.balance,
       currency: account.currency,
-      transactions: transactions.rows,
+      account_id: account.account_id,
+      transactions: normalizedTransactions,
     });
   } catch (error) {
     console.error("Get balance error:", error);

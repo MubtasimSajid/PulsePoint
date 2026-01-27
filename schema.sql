@@ -278,6 +278,16 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- If the application already recorded a payment for this appointment,
+  -- don't create a duplicate transaction.
+  IF EXISTS (
+    SELECT 1
+    FROM account_transactions
+    WHERE description = ('Appointment payment for appointment ' || NEW.appointment_id)
+  ) THEN
+    RETURN NEW;
+  END IF;
+
   SELECT account_id, balance INTO patient_account_id, patient_balance
   FROM accounts WHERE owner_type = 'user' AND owner_id = NEW.patient_id;
 
