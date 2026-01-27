@@ -1,5 +1,53 @@
 const db = require("../config/database");
 
+exports.getMyHospitalStats = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (role !== "hospital_admin" && role !== "admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const branchesResult = await db.query(
+      "SELECT COUNT(*)::int AS branch_count, MIN(name) AS hospital_name FROM hospitals WHERE admin_user_id = $1",
+      [userId],
+    );
+
+    const branchCount = branchesResult.rows[0]?.branch_count ?? 0;
+    const hospitalName = branchesResult.rows[0]?.hospital_name ?? null;
+
+    const doctorsResult = await db.query(
+      `SELECT COUNT(DISTINCT hd.doctor_id)::int AS doctor_count
+       FROM hospital_doctors hd
+       JOIN hospitals h ON h.hospital_id = hd.hospital_id
+       WHERE h.admin_user_id = $1`,
+      [userId],
+    );
+
+    const patientsResult = await db.query(
+      `SELECT COUNT(DISTINCT a.patient_id)::int AS patient_count
+       FROM appointments a
+       JOIN hospitals h ON h.hospital_id = a.hospital_id
+       WHERE h.admin_user_id = $1`,
+      [userId],
+    );
+
+    res.json({
+      hospital_name: hospitalName,
+      branch_count: branchCount,
+      doctor_count: doctorsResult.rows[0]?.doctor_count ?? 0,
+      patient_count: patientsResult.rows[0]?.patient_count ?? 0,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getAllHospitals = async (req, res) => {
   try {
     const result = await db.query(`

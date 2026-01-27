@@ -74,7 +74,13 @@ CREATE TABLE hospitals (
   email VARCHAR(100),
   phone VARCHAR(20),
   address TEXT,
-  license_number VARCHAR(50) UNIQUE,
+  license_number VARCHAR(50),
+  tax_id VARCHAR(50),
+  hospital_type VARCHAR(30) CHECK (hospital_type IN ('public', 'private', 'trust_charity', 'military')),
+  category VARCHAR(30) CHECK (category IN ('general', 'multi_specialty', 'single_specialty')),
+  specialty VARCHAR(100),
+  website_url TEXT,
+  location VARCHAR(100),
   FOREIGN KEY (admin_user_id) REFERENCES users(user_id)
 );
 

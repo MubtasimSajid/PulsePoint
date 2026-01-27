@@ -10,7 +10,7 @@ export default function Login({ onLogin }) {
     password: "",
   });
   const [error, setError] = useState("");
-  const [step, setStep] = useState('initial'); // 'initial', 'user_select'
+  const [step, setStep] = useState("initial"); // 'initial', 'user_select'
   const [showForm, setShowForm] = useState(false);
 
   const loginMutation = useMutation({
@@ -22,7 +22,8 @@ export default function Login({ onLogin }) {
       if (data.onboarding) {
         localStorage.setItem("onboarding", JSON.stringify(data.onboarding));
         if (data.onboarding.required) {
-          const missing = data.onboarding.missing_fields?.join(", ") || "profile information";
+          const missing =
+            data.onboarding.missing_fields?.join(", ") || "profile information";
           window.alert(`Please complete your profile: ${missing}`);
         }
       }
@@ -68,17 +69,6 @@ export default function Login({ onLogin }) {
     setError("");
   };
 
-  const fillDemo = (role) => {
-    if (role === "patient") {
-      setFormData({ email: "patient@test.com", password: "password123" });
-    } else if (role === "doctor") {
-      setFormData({ email: "doctor@test.com", password: "password123" });
-    } else if (role === "admin") {
-      setFormData({ email: "admin@test.com", password: "password123" });
-    }
-    setError("");
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-shell">
@@ -86,14 +76,12 @@ export default function Login({ onLogin }) {
           <span className="auth-badge">PulsePoint</span>
           <h1 className="auth-title">Care, simplified.</h1>
           <p className="auth-subtitle">
-            Connect with your care team, manage appointments, and stay on top of your health without the clutter.
+            Connect with your care team, manage appointments, and stay on top of
+            your health without the clutter.
           </p>
-
-
         </div>
 
         <div className="auth-card">
-
           <div className="auth-card-header">
             <div>
               <p className="auth-eyebrow">Welcome back</p>
@@ -106,11 +94,11 @@ export default function Login({ onLogin }) {
           <form onSubmit={handleSubmit} className="auth-form">
             {!showForm ? (
               <div className="space-y-4">
-                {step === 'initial' && (
+                {step === "initial" && (
                   <div className="grid gap-3">
                     <button
                       type="button"
-                      onClick={() => setStep('user_select')}
+                      onClick={() => setStep("user_select")}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
                       Login as User
@@ -119,7 +107,6 @@ export default function Login({ onLogin }) {
                       type="button"
                       onClick={() => {
                         setShowForm(true);
-                        fillDemo('admin'); // Optional: pre-fill for demo convenience, or remove if strictly manual
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
@@ -128,13 +115,12 @@ export default function Login({ onLogin }) {
                   </div>
                 )}
 
-                {step === 'user_select' && (
+                {step === "user_select" && (
                   <div className="grid gap-3 animate-fade-in">
                     <button
                       type="button"
                       onClick={() => {
                         setShowForm(true);
-                        fillDemo('patient');
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
@@ -144,7 +130,6 @@ export default function Login({ onLogin }) {
                       type="button"
                       onClick={() => {
                         setShowForm(true);
-                        fillDemo('doctor');
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
                     >
@@ -152,7 +137,7 @@ export default function Login({ onLogin }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setStep('initial')}
+                      onClick={() => setStep("initial")}
                       className="text-slate-500 hover:text-indigo-600 text-sm font-medium pt-2"
                     >
                       ← Back
@@ -170,8 +155,18 @@ export default function Login({ onLogin }) {
                   }}
                   className="mb-6 text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-sm group w-fit"
                 >
-                  <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  <svg
+                    className="w-4 h-4 group-hover:-translate-x-1 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
                   </svg>
                   Change Role
                 </button>
@@ -202,14 +197,16 @@ export default function Login({ onLogin }) {
                   />
                 </label>
 
-                <button type="submit" disabled={loginMutation.isPending} className="auth-primary-btn">
+                <button
+                  type="submit"
+                  disabled={loginMutation.isPending}
+                  className="auth-primary-btn"
+                >
                   {loginMutation.isPending ? "Signing in..." : "Sign in"}
                 </button>
               </div>
             )}
           </form>
-
-
 
           <div className="auth-divider">
             <span>or</span>
@@ -219,7 +216,6 @@ export default function Login({ onLogin }) {
             <Link to="/register" className="auth-link-btn">
               Create a PulsePoint account
             </Link>
-            <p className="auth-demo-note">Demo password: password123</p>
           </div>
         </div>
       </div>

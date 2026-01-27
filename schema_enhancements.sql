@@ -63,6 +63,22 @@ CREATE TABLE IF NOT EXISTS notifications (
 ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS location VARCHAR(100);
 ALTER TABLE chambers ADD COLUMN IF NOT EXISTS location VARCHAR(100);
 
+-- Ensure user roles include hospital_admin (older DBs may not)
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users
+  ADD CONSTRAINT users_role_check
+  CHECK (role IN ('patient', 'doctor', 'hospital_admin', 'admin'));
+
+-- Hospital verification / onboarding fields
+-- Allow multiple branches to share the same registration/license number.
+ALTER TABLE hospitals DROP CONSTRAINT IF EXISTS hospitals_license_number_key;
+
+ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS tax_id VARCHAR(50);
+ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS hospital_type VARCHAR(30);
+ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS category VARCHAR(30);
+ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS specialty VARCHAR(100);
+ALTER TABLE hospitals ADD COLUMN IF NOT EXISTS website_url TEXT;
+
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_doctor_schedules_doctor ON doctor_schedules(doctor_id);
 CREATE INDEX IF NOT EXISTS idx_appointment_slots_doctor_date ON appointment_slots(doctor_id, slot_date);

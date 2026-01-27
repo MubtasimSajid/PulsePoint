@@ -81,7 +81,7 @@ function Navigation({ user, onLogout }) {
     <nav className="nav-premium sticky top-0 z-50">
       <div className="container mx-auto pl-4 pr-6">
         <div className="flex items-center justify-between h-18 py-4">
-          <Link to="/" className="flex items-center group">
+          <Link to="/" className="flex items-center group nav-brand">
             <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
               PulsePoint
             </span>

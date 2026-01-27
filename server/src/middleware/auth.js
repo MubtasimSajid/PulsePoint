@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+  process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
 
 // Verify JWT token
 exports.authenticate = (req, res, next) => {

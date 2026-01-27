@@ -17,5 +17,8 @@
   "bugs": {
     "url": "https://github.com/MubtasimSajid/PulsePoint/issues"
   },
-  "homepage": "https://github.com/MubtasimSajid/PulsePoint#readme"
+  "homepage": "https://github.com/MubtasimSajid/PulsePoint#readme",
+  "dependencies": {
+    "dotenv": "^17.2.3"
+  }
 }

@@ -152,9 +152,6 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           <h1 className="text-3xl font-bold text-slate-800">
             Update your details
           </h1>
-          <p className="text-slate-500 mt-1">
-            Doctor profile fields match registration.
-          </p>
         </div>
       </div>
 
@@ -232,17 +229,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             disabled={dobLocked}
-            title={
-              dobLocked
-                ? "Date of birth was set during registration and can't be changed."
-                : ""
-            }
           />
-          {dobLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -253,22 +240,12 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             disabled={genderLocked}
-            title={
-              genderLocked
-                ? "Gender was set during registration and can't be changed."
-                : ""
-            }
           >
             <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
-          {genderLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
@@ -294,17 +271,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             disabled={licenseLocked}
-            title={
-              licenseLocked
-                ? "License number was set during registration and can't be changed."
-                : ""
-            }
           />
-          {licenseLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -319,17 +286,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             className="input-premium"
             min="0"
             disabled={experienceLocked}
-            title={
-              experienceLocked
-                ? "Experience was set during registration and can't be changed."
-                : ""
-            }
           />
-          {experienceLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -342,17 +299,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             disabled={qualificationLocked}
-            title={
-              qualificationLocked
-                ? "Qualification was set during registration and can't be changed."
-                : ""
-            }
           />
-          {qualificationLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -378,9 +325,6 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           >
             {updateProfile.isPending ? "Saving..." : "Save changes"}
           </button>
-          <p className="text-sm text-slate-500">
-            Doctor fields match what was captured during registration.
-          </p>
         </div>
       </form>
     </div>

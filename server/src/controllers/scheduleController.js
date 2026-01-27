@@ -197,6 +197,55 @@ exports.generateSlots = async (req, res) => {
 // Book a slot
 exports.bookSlot = async (req, res) => {
   const client = await db.connect();
+
+  function formatFriendlyDate(value) {
+    if (!value) return "";
+
+    // Prefer YYYY-MM-DD if present to avoid timezone shifts.
+    const raw = String(value);
+    const isoPrefix = raw.match(/^\d{4}-\d{2}-\d{2}/);
+    let dateObj;
+    if (isoPrefix) {
+      const [y, m, d] = isoPrefix[0].split("-").map((n) => parseInt(n, 10));
+      dateObj = new Date(y, m - 1, d);
+    } else if (value instanceof Date) {
+      dateObj = value;
+    } else {
+      const parsed = new Date(raw);
+      dateObj = Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    if (!dateObj) return raw;
+
+    const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+      dateObj.getDay()
+    ];
+    const month = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ][dateObj.getMonth()];
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${weekday}, ${day} ${month} ${year}`;
+  }
+
+  function formatTimeOnly(value) {
+    if (!value) return "";
+    const str = String(value);
+    const match = str.match(/^(\d{1,2}):(\d{2})/);
+    if (!match) return str;
+    return `${match[1].padStart(2, "0")}:${match[2]}`;
+  }
   try {
     await client.query("BEGIN");
 
@@ -353,15 +402,17 @@ exports.bookSlot = async (req, res) => {
       );
       const patientName = patientRes.rows[0]?.full_name || "Patient";
 
-      const subject = `New Appointment: ${slot.slot_date} at ${slot.slot_time}`;
+      const apptDate = formatFriendlyDate(slot.slot_date);
+      const apptTime = formatTimeOnly(slot.slot_time);
+
+      const subject = `New Appointment: ${apptDate} at ${apptTime}`;
       const text = `Hello Dr. ${doctor.full_name},
         
 New appointment confirmed!
 Patient: ${patientName}
-Date: ${slot.slot_date}
-Time: ${slot.slot_time}
+Time: ${apptDate} at ${apptTime}
 Location: ${slot.facility_name || "Clinic"}
-  Fee: ${fee} BDT (${method})
+Fee: ${fee} BDT (${method})
 
 Please log in to your dashboard for more details.`;
 

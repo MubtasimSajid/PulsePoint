@@ -160,9 +160,7 @@ export default function Profile({ userId, onUserUpdate }) {
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">
-            Email (read-only)
-          </label>
+          <label className="text-sm font-semibold text-slate-700">Email</label>
           <input
             name="email"
             type="email"
@@ -220,22 +218,12 @@ export default function Profile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             disabled={genderLocked}
-            title={
-              genderLocked
-                ? "Gender was set during registration and can't be changed."
-                : ""
-            }
           >
             <option value="">Select</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
             <option value="other">Other</option>
           </select>
-          {genderLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
@@ -289,17 +277,7 @@ export default function Profile({ userId, onUserUpdate }) {
             onChange={handleChange}
             className="input-premium"
             disabled={bloodGroupLocked}
-            title={
-              bloodGroupLocked
-                ? "Blood group was set during registration and can't be changed."
-                : ""
-            }
           />
-          {bloodGroupLocked && (
-            <p className="text-xs text-slate-500">
-              Set during registration and locked.
-            </p>
-          )}
         </div>
 
         <div className="flex flex-col gap-2">

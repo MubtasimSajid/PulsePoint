@@ -1,9 +1,10 @@
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/database");
 
 const JWT_SECRET =
-  process.env.JWT_SECRET || "your-secret-key-change-in-production";
+  process.env.JWT_SECRET || crypto.randomBytes(32).toString("hex");
 const JWT_EXPIRES_IN = "7d";
 const ALLOWED_ROLES = ["patient", "doctor", "hospital_admin", "admin"];
 
@@ -46,11 +47,24 @@ exports.register = async (req, res) => {
 
     const normalizedRole = (role || "patient").toLowerCase();
 
+    const hospitalName =
+      normalizedRole === "hospital_admin" ? req.body?.hospital_name : null;
+    const derivedFullName =
+      full_name || (normalizedRole === "hospital_admin" ? hospitalName : null);
+
     // Validate required fields
-    if (!email || !password || !full_name) {
-      return res
-        .status(400)
-        .json({ error: "Email, password, and full name are required" });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    if (normalizedRole === "hospital_admin") {
+      if (!hospitalName) {
+        return res.status(400).json({ error: "Hospital name is required" });
+      }
+    } else {
+      if (!derivedFullName) {
+        return res.status(400).json({ error: "Full name is required" });
+      }
     }
 
     if (!ALLOWED_ROLES.includes(normalizedRole)) {
@@ -82,8 +96,8 @@ exports.register = async (req, res) => {
       [
         email,
         hashedPassword,
-        full_name,
-        phone,
+        derivedFullName,
+        phone || null,
         normalizeDate(date_of_birth || dob),
         gender,
         address,
@@ -135,11 +149,14 @@ exports.register = async (req, res) => {
       } = req.body;
 
       const specializationListRaw =
-        specialization_ids || specializations || (specialization_id ? [specialization_id] : []);
+        specialization_ids ||
+        specializations ||
+        (specialization_id ? [specialization_id] : []);
       const specializationList = Array.isArray(specializationListRaw)
         ? specializationListRaw
         : [specializationListRaw].filter(Boolean);
-      const primarySpecialization = specializationList.length > 0 ? specializationList[0] : null;
+      const primarySpecialization =
+        specializationList.length > 0 ? specializationList[0] : null;
 
       await client.query(
         "INSERT INTO doctors (user_id, doctor_code, consultation_fee, license_number, specialization_id, experience_years, qualification) VALUES ($1, $2, $3, $4, $5, $6, $7)",
@@ -168,25 +185,90 @@ exports.register = async (req, res) => {
     if (normalizedRole === "hospital_admin") {
       const {
         hospital_name,
-        hospital_email,
-        hospital_phone,
-        hospital_address,
         hospital_license_number,
-        hospital_est_year,
+        hospital_tax_id,
+        hospital_type,
+        hospital_category,
+        hospital_specialty,
+        hospital_website_url,
+        hospital_branch_addresses,
       } = req.body;
 
-      if (hospital_name || hospital_license_number || hospital_address) {
+      const branchAddresses = Array.isArray(hospital_branch_addresses)
+        ? hospital_branch_addresses
+        : [];
+
+      if (!hospital_license_number) {
+        return res
+          .status(400)
+          .json({ error: "Registration/License number is required" });
+      }
+      if (!hospital_tax_id) {
+        return res.status(400).json({ error: "Tax ID / EIN is required" });
+      }
+      if (!hospital_type) {
+        return res.status(400).json({ error: "Hospital type is required" });
+      }
+      if (!hospital_category) {
+        return res.status(400).json({ error: "Hospital category is required" });
+      }
+      if (hospital_category === "single_specialty" && !hospital_specialty) {
+        return res
+          .status(400)
+          .json({
+            error: "Specialty is required for single specialty hospitals",
+          });
+      }
+      if (!hospital_website_url) {
+        return res.status(400).json({ error: "Website URL is required" });
+      }
+
+      // Backward-compat: accept a single address string if the old payload is used.
+      if (branchAddresses.length === 0 && req.body?.hospital_address) {
+        branchAddresses.push(req.body.hospital_address);
+      }
+
+      const cleanedBranchAddresses = branchAddresses
+        .map((v) => (typeof v === "string" ? v.trim() : ""))
+        .filter(Boolean);
+
+      if (cleanedBranchAddresses.length === 0) {
+        return res
+          .status(400)
+          .json({ error: "At least one branch address is required" });
+      }
+
+      // Create one row per branch so existing appointment/hospital selection keeps working.
+      for (let i = 0; i < cleanedBranchAddresses.length; i++) {
         await client.query(
-          `INSERT INTO hospitals (admin_user_id, name, est_year, email, phone, address, license_number)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          `INSERT INTO hospitals (
+            admin_user_id,
+            name,
+            est_year,
+            email,
+            phone,
+            address,
+            license_number,
+            tax_id,
+            hospital_type,
+            category,
+            specialty,
+            website_url,
+            location
+          )
+          VALUES ($1, $2, NULL, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11)`,
           [
             user.user_id,
-            hospital_name || `${full_name}'s Hospital`,
-            hospital_est_year,
-            hospital_email || email,
-            hospital_phone || phone,
-            hospital_address || address,
+            hospital_name,
+            email,
+            cleanedBranchAddresses[i],
             hospital_license_number,
+            hospital_tax_id,
+            hospital_type,
+            hospital_category,
+            hospital_specialty || null,
+            hospital_website_url,
+            `Branch ${i + 1}`,
           ],
         );
       }
@@ -469,7 +551,9 @@ async function buildOnboardingStatus(userId, role) {
 
   if (normalizedRole === "patient") {
     const [userResult, patientResult] = await Promise.all([
-      pool.query("SELECT date_of_birth FROM users WHERE user_id = $1", [userId]),
+      pool.query("SELECT date_of_birth FROM users WHERE user_id = $1", [
+        userId,
+      ]),
       pool.query(
         "SELECT height_cm, weight_kg, blood_group, emergency_contact FROM patients WHERE user_id = $1",
         [userId],

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { schedulesAPI, paymentAPI } from "../services/api";
 
@@ -7,12 +7,15 @@ export default function AppointmentGrid({
   patientId,
   compact = false,
 }) {
+  const BOOKING_TIMEOUT_MS = 25000;
   const queryClient = useQueryClient();
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedBranchKey, setSelectedBranchKey] = useState(""); // "type-id"
   const [paymentMethod, setPaymentMethod] = useState("wallet");
   const [mfsTransactionId, setMfsTransactionId] = useState("");
+  const bookingAbortRef = useRef(null);
+  const bookingCancelledByUserRef = useRef(false);
   const [triageNotes, setTriageNotes] = useState({
     symptoms: "",
     severity: "low",
@@ -68,7 +71,24 @@ export default function AppointmentGrid({
 
   // Book slot mutation
   const bookSlotMutation = useMutation({
-    mutationFn: async (data) => (await schedulesAPI.bookSlot(data)).data,
+    mutationFn: async (data) => {
+      const controller = new AbortController();
+      bookingAbortRef.current = controller;
+
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, BOOKING_TIMEOUT_MS);
+
+      try {
+        const response = await schedulesAPI.bookSlot(data, {
+          signal: controller.signal,
+        });
+        return response.data;
+      } finally {
+        clearTimeout(timeoutId);
+        bookingAbortRef.current = null;
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctorSlots"] });
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
@@ -78,9 +98,27 @@ export default function AppointmentGrid({
       alert("Appointment booked successfully! Confirmation email sent.");
     },
     onError: (err) => {
-      alert(err.response?.data?.error || "Booking failed");
+      if (bookingCancelledByUserRef.current) {
+        bookingCancelledByUserRef.current = false;
+        return;
+      }
+
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Booking failed. Please try again.";
+      alert(message);
     },
   });
+
+  const closeBookingModal = () => {
+    if (bookSlotMutation.isPending && bookingAbortRef.current) {
+      bookingCancelledByUserRef.current = true;
+      bookingAbortRef.current.abort();
+    }
+
+    setShowBookingModal(false);
+  };
 
   const handleSlotClick = (slot) => {
     if (slot.status === "free") {
@@ -236,7 +274,7 @@ export default function AppointmentGrid({
                 Confirm Appointment
               </h3>
               <button
-                onClick={() => setShowBookingModal(false)}
+                onClick={closeBookingModal}
                 className="text-slate-400 hover:text-white transition-colors"
               >
                 ✕
@@ -380,7 +418,7 @@ export default function AppointmentGrid({
             {/* Footer */}
             <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-slate-800/50">
               <button
-                onClick={() => setShowBookingModal(false)}
+                onClick={closeBookingModal}
                 className="px-5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors font-medium"
               >
                 Cancel

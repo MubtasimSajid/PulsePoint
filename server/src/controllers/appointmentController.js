@@ -48,6 +48,55 @@ exports.getAppointmentById = async (req, res) => {
 
 exports.createAppointment = async (req, res) => {
   try {
+    function formatFriendlyDate(value) {
+      if (!value) return "";
+
+      // Prefer YYYY-MM-DD if present to avoid timezone shifts.
+      const raw = String(value);
+      const isoPrefix = raw.match(/^\d{4}-\d{2}-\d{2}/);
+      let dateObj;
+      if (isoPrefix) {
+        const [y, m, d] = isoPrefix[0].split("-").map((n) => parseInt(n, 10));
+        dateObj = new Date(y, m - 1, d);
+      } else if (value instanceof Date) {
+        dateObj = value;
+      } else {
+        const parsed = new Date(raw);
+        dateObj = Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+
+      if (!dateObj) return raw;
+
+      const weekday = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+        dateObj.getDay()
+      ];
+      const month = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ][dateObj.getMonth()];
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      return `${weekday}, ${day} ${month} ${year}`;
+    }
+
+    function formatTimeOnly(value) {
+      if (!value) return "";
+      const str = String(value);
+      const match = str.match(/^(\d{1,2}):(\d{2})/);
+      if (!match) return str;
+      return `${match[1].padStart(2, "0")}:${match[2]}`;
+    }
+
     const {
       patient_id,
       doctor_id,
@@ -105,13 +154,16 @@ exports.createAppointment = async (req, res) => {
 
     if (details?.doctor_email) {
       try {
-        const subject = `New appointment on ${details.appt_date} at ${details.appt_time}`;
+        const apptDate = formatFriendlyDate(details.appt_date);
+        const apptTime = formatTimeOnly(details.appt_time);
+
+        const subject = `New appointment on ${apptDate} at ${apptTime}`;
         const locationLabel =
           details.hospital_name || details.chamber_name || "Clinic";
         const text = `Hello ${details.doctor_name || "Doctor"},
 
 ${details.patient_name} has scheduled an appointment.
-Date: ${details.appt_date} at ${details.appt_time}
+      When: ${apptDate} at ${apptTime}
 Department: ${details.department_name || "General"}
 Location: ${locationLabel}
 Address: ${details.facility_address || "N/A"}
@@ -246,11 +298,9 @@ exports.cancelAppointment = async (req, res) => {
     // Only the assigned doctor can cancel
     if (appt.doctor_id !== requesterUserId) {
       await client.query("ROLLBACK");
-      return res
-        .status(403)
-        .json({
-          error: "Only the assigned doctor can cancel this appointment",
-        });
+      return res.status(403).json({
+        error: "Only the assigned doctor can cancel this appointment",
+      });
     }
 
     if (appt.status === "cancelled") {

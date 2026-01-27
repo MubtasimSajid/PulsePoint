@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -108,6 +109,7 @@ export const hospitalsAPI = {
   getAll: () => api.get("/hospitals"),
   getById: (id) => api.get(`/hospitals/${id}`),
   getDoctors: (id) => api.get(`/hospitals/${id}/doctors`),
+  getMyStats: () => api.get("/hospitals/my/stats"),
   create: (data) => api.post("/hospitals", data),
   update: (id, data) => api.put(`/hospitals/${id}`, data),
   delete: (id) => api.delete(`/hospitals/${id}`),
@@ -174,9 +176,8 @@ export const schedulesAPI = {
   createSchedule: (data) => api.post("/schedules", data),
   getAvailableSlots: (doctorId, params) =>
     api.get(`/schedules/slots/${doctorId}`, { params }),
-  generateSlots: (data) =>
-    api.post("/schedules/generate-slots", data),
-  bookSlot: (data) => api.post("/schedules/book-slot", data),
+  generateSlots: (data) => api.post("/schedules/generate-slots", data),
+  bookSlot: (data, config) => api.post("/schedules/book-slot", data, config),
   updateSlotStatus: (slotId, data) =>
     api.put(`/schedules/slot/${slotId}`, data),
 };
