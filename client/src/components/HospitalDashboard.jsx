@@ -8,15 +8,15 @@ export default function HospitalDashboard() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
-      <div className="bg-emerald-600 rounded-3xl p-10 text-white shadow-xl shadow-emerald-200">
+    <div className="max-w-6xl mx-auto space-y-12 animate-fade-in">
+      <div className="bg-emerald-600 rounded-3xl p-12 text-white shadow-xl shadow-emerald-200">
         <h1 className="text-4xl font-bold mb-2">Hospital Administration</h1>
         <p className="text-emerald-100 text-lg opacity-90">
           {stats?.hospital_name || "Your hospital"}
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-12">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <p className="text-emerald-100 text-sm font-medium mb-1 uppercase tracking-wider">
               Total Doctors
             </p>
@@ -24,7 +24,7 @@ export default function HospitalDashboard() {
               {stats?.doctor_count ?? 0}
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <p className="text-emerald-100 text-sm font-medium mb-1 uppercase tracking-wider">
               Total Patients
             </p>
@@ -32,7 +32,7 @@ export default function HospitalDashboard() {
               {stats?.patient_count ?? 0}
             </p>
           </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
             <p className="text-emerald-100 text-sm font-medium mb-1 uppercase tracking-wider">
               Branches
             </p>
@@ -43,50 +43,38 @@ export default function HospitalDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
           <h2 className="text-xl font-bold text-slate-800 mb-6">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
-              <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">
-                👨‍⚕️
-              </span>
+          <div className="grid grid-cols-2 gap-8">
+            <button className="p-6 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
               <span className="font-bold text-sm block">Add Doctor</span>
             </button>
-            <button className="p-4 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
-              <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">
-                🏥
-              </span>
+            <button className="p-6 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
               <span className="font-bold text-sm block">
                 Manage Departments
               </span>
             </button>
-            <button className="p-4 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
-              <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">
-                📊
-              </span>
+            <button className="p-6 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
               <span className="font-bold text-sm block">View Reports</span>
             </button>
-            <button className="p-4 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
-              <span className="block text-2xl mb-2 group-hover:scale-110 transition-transform">
-                ⚙️
-              </span>
+            <button className="p-6 rounded-xl bg-slate-50 hover:bg-emerald-50 hover:text-emerald-600 transition-colors text-left group">
               <span className="font-bold text-sm block">Settings</span>
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
           <h2 className="text-xl font-bold text-slate-800 mb-6">
             Recent Activity
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex gap-4 items-start pb-4 border-b border-slate-50 last:border-0 last:pb-0"
+                className="flex gap-6 items-start pb-6 border-b border-slate-50 last:border-0 last:pb-0"
               >
                 <div className="w-2 h-2 rounded-full bg-emerald-500 mt-2"></div>
                 <div>

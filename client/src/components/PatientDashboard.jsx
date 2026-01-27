@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { notificationsAPI, paymentAPI } from "../services/api";
 import PatientAppointments from "./PatientAppointments";
 import PatientPrescriptions from "./PatientPrescriptions";
 import PatientMedicalHistory from "./PatientMedicalHistory";
 
 export default function PatientDashboard({ patientId, user }) {
+  const location = useLocation();
+  const isMyAppointmentsRoute = location.pathname === "/my-appointments";
   const [activeSection, setActiveSection] = useState("appointments"); // appointments, medicines, history
 
   const { data: unreadCount } = useQuery({
@@ -23,23 +25,34 @@ export default function PatientDashboard({ patientId, user }) {
   });
 
   const sections = [
-    { id: "appointments", label: "Appointments", icon: "📅" },
-    { id: "medicines", label: "Medicines", icon: "💊" },
-    { id: "history", label: "Medical History", icon: "📋" },
+    { id: "appointments", label: "Appointments" },
+    { id: "medicines", label: "Medicines" },
+    { id: "history", label: "Medical History" },
   ];
 
+  // If on /my-appointments route, show only appointments
+  if (isMyAppointmentsRoute) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+        <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-600/50 p-6 min-h-[800px]">
+          <PatientAppointments userId={patientId} />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-16 animate-fade-in">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-32 animate-fade-in">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 text-white shadow-xl shadow-indigo-200/20">
+      <div className="relative overflow-hidden rounded-3xl bg-hero-gradient shadow-xl shadow-primary/20 pb-32 md:pb-40 !mb-3">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
         <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-4">
-            <div>
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-5">
+            <div style={{ marginLeft: '20px' }}>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-16 text-white">
                 Welcome Back, {user?.full_name?.split(" ")[0] || "User"}
               </h1>
-              <p className="text-indigo-100 text-lg max-w-xl font-medium">
+              <p className="text-slate-300 text-lg max-w-xl font-medium leading-loose">
                 Ready to take control of your health today?
               </p>
             </div>
@@ -47,34 +60,15 @@ export default function PatientDashboard({ patientId, user }) {
 
           <div className="flex items-center gap-4">
             {/* Balance */}
-            <div className="px-4 py-3 bg-white/10 backdrop-blur-md rounded-xl border border-white/10">
-              <p className="text-xs text-indigo-100 font-medium">Balance</p>
-              <p className="text-lg font-bold leading-tight">
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-700/50" style={{ padding: '8px 12px' }}>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Balance</p>
+              <p className="text-lg font-bold leading-tight text-slate-900 dark:text-white">
                 {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
               </p>
             </div>
 
             {/* Notification Bell */}
-            <button className="relative p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl transition-all duration-200 group border border-white/10">
-              <svg
-                className="w-6 h-6 text-white group-hover:scale-110 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-              {unreadCount?.count > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg animate-pulse ring-2 ring-indigo-600">
-                  {unreadCount.count}
-                </span>
-              )}
-            </button>
+
           </div>
         </div>
 
@@ -83,26 +77,26 @@ export default function PatientDashboard({ patientId, user }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Main Content Area */}
-        <div className="lg:col-span-12 space-y-12">
+        <div className="lg:col-span-12">
           {/* Tabs */}
-          <div className="flex items-center gap-6 p-4 bg-slate-900/40 border border-white/5 rounded-3xl w-fit backdrop-blur-sm overflow-x-auto max-w-full">
+          <div className="flex items-center gap-6 bg-card/60 border border-slate-600/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10" style={{ padding: '32px 48px' }}>
             {sections.map((section) => (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`px-14 py-6 rounded-2xl font-bold text-2xl transition-all duration-200 whitespace-nowrap ${
+                className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
                   activeSection === section.id
-                    ? "bg-[#A38D5D] text-white shadow-lg shadow-[#A38D5D]/20"
-                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
+                style={{ padding: '20px 48px' }}
               >
-                <span className="mr-2">{section.icon}</span>
                 {section.label}
               </button>
             ))}
           </div>
 
-          <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-6 min-h-[500px]">
+          <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-600/50 p-6 min-h-[800px] !mt-3">
             {activeSection === "appointments" && (
               <PatientAppointments userId={patientId} />
             )}

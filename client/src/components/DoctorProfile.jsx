@@ -130,41 +130,41 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
   };
 
   if (!userId)
-    return <div className="text-center text-slate-600">No user found.</div>;
+    return <div className="text-center text-muted-foreground">No user found.</div>;
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-slate-500">Loading profile...</p>
+          <p className="text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl p-10 animate-fade-in">
+      <div className="flex items-center justify-between mb-10">
         <div>
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
+          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
             Profile
           </p>
-          <h1 className="text-3xl font-bold text-slate-800">
+          <h1 className="text-3xl font-bold text-foreground">
             Update your details
           </h1>
         </div>
       </div>
 
       {form.specializations && form.specializations.length > 0 && (
-        <div className="mb-6 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700">
-          <div className="font-semibold text-slate-800 mb-2">
+        <div className="mb-6 bg-background border border-border rounded-xl p-4 text-sm text-muted-foreground">
+          <div className="font-semibold text-foreground mb-2">
             Specializations
           </div>
           <div className="flex flex-wrap gap-2">
             {form.specializations.map((spec, idx) => (
               <span
                 key={`${spec}-${idx}`}
-                className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold"
+                className="px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold"
               >
                 {spec}
               </span>
@@ -178,10 +178,10 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           e.preventDefault();
           updateProfile.mutate();
         }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 gap-10"
       >
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">Email</label>
+          <label className="text-sm font-semibold text-foreground">Email</label>
           <input
             name="email"
             type="email"
@@ -194,7 +194,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Full Name
           </label>
           <input
@@ -208,7 +208,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Phone</label>
+          <label className="text-sm font-semibold text-foreground">Phone</label>
           <input
             name="phone"
             value={form.phone}
@@ -219,7 +219,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Date of Birth
           </label>
           <input
@@ -233,7 +233,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Gender</label>
+          <label className="text-sm font-semibold text-foreground">Gender</label>
           <select
             name="gender"
             value={form.gender || ""}
@@ -249,7 +249,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Address
           </label>
           <textarea
@@ -262,7 +262,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             License Number
           </label>
           <input
@@ -275,7 +275,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Experience (years)
           </label>
           <input
@@ -290,7 +290,7 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Qualification
           </label>
           <input

@@ -172,39 +172,40 @@ export default function AppointmentGrid({
 
   return (
     <div
-      className={`bg-slate-900/50 rounded-2xl border border-white/10 ${compact ? "p-4" : "p-8"}`}
+      className={`bg-card rounded-2xl border border-border ${compact ? "p-4" : "p-8"}`}
     >
       {!compact && (
-        <h2 className="text-2xl font-bold mb-6 text-white">
+        <h2 className="text-2xl font-bold mb-6 text-foreground">
           Available Slots for Dr. {doctor.full_name}
         </h2>
       )}
 
-      {/* Branch Selection */}
       <div className="mb-8">
-        <label className="block text-sm font-medium text-slate-300 mb-2 uppercase tracking-wide">
+        <label className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">
           Select Location
         </label>
         {branches.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {branches.map((branch) => (
               <button
                 key={branch.key}
                 onClick={() => setSelectedBranchKey(branch.key)}
-                className={`p-4 rounded-xl border text-left transition-all duration-200 flex items-center gap-3 ${
+                className={`p-6 rounded-xl border text-left transition-all duration-200 flex items-center gap-4 ${
                   selectedBranchKey === branch.key
-                    ? "bg-[#A38D5D] border-[#A38D5D] text-white shadow-lg shadow-[#A38D5D]/20 transform scale-[1.02]"
-                    : "bg-slate-800 border-white/10 text-slate-300 hover:bg-slate-700 hover:border-white/20"
+                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 transform scale-[1.02]"
+                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:border-border/80"
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
                     selectedBranchKey === branch.key
                       ? "bg-white/20 text-white"
-                      : "bg-slate-700 text-slate-400"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {branch.type === "hospital" ? "🏥" : "🏪"}
+                  <span className="text-sm font-extrabold">
+                    {branch.type === "hospital" ? "H" : "C"}
+                  </span>
                 </div>
                 <div>
                   <div className="font-bold">{branch.name}</div>
@@ -222,11 +223,11 @@ export default function AppointmentGrid({
 
       {/* Slot Grid */}
       {selectedBranchKey ? (
-        <div className="space-y-8 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="space-y-10 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
           {Object.keys(slotsByDate).length > 0 ? (
             Object.keys(slotsByDate).map((date) => (
               <div key={date} className="animate-fade-in">
-                <h3 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#A38D5D]"></span>
                   {new Date(date).toLocaleDateString("en-US", {
                     weekday: "short",
@@ -234,7 +235,7 @@ export default function AppointmentGrid({
                     day: "numeric",
                   })}
                 </h3>
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
                   {slotsByDate[date].map((slot) => (
                     <button
                       key={slot.slot_id}
@@ -369,7 +370,26 @@ export default function AppointmentGrid({
                       </div>
                     </div>
                   </div>
-                  <span className="text-2xl">💳</span>
+                  <svg
+                    className="w-6 h-6 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2 7.5A2.5 2.5 0 014.5 5h15A2.5 2.5 0 0122 7.5v9A2.5 2.5 0 0119.5 19h-15A2.5 2.5 0 012 16.5v-9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2 9h20"
+                    />
+                  </svg>
                 </label>
 
                 <label
@@ -393,7 +413,26 @@ export default function AppointmentGrid({
                       </div>
                     </div>
                   </div>
-                  <span className="text-2xl">📱</span>
+                  <svg
+                    className="w-6 h-6 text-slate-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 3h8a2 2 0 012 2v14a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M11 18h2"
+                    />
+                  </svg>
                 </label>
 
                 {paymentMethod === "mfs" && (

@@ -1,12 +1,67 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    /* Light Mode (User Provided) */
+    --background: 100% 0 0; /* oklch(1 0 0) -> white */
+    --foreground: 14.5% 0 0; /* oklch(.145 0 0) -> dark gray */
+    --card: 100% 0 0;
+    --card-foreground: 14.5% 0 0;
+    --popover: 100% 0 0;
+    --popover-foreground: 14.5% 0 0;
+    --primary: 62.3% .214 259.815; /* Blue-500 from user list */
+    --primary-foreground: 98% 0 0;
+    --secondary: 96.2% .044 156.743; /* Green-100 placeholder */
+    --secondary-foreground: 14.5% 0 0;
+    --muted: 97% 0 0;
+    --muted-foreground: 55.6% 0 0;
+    --accent: 97% 0 0;
+    --accent-foreground: 20.5% 0 0;
+    --destructive: 57.7% .245 27.325;
+    --destructive-foreground: 98% 0 0;
+    --border: 92.2% 0 0;
+    --input: 92.2% 0 0;
+    --ring: 62.3% .214 259.815;
+    --radius: 0.625rem;
+
+    /* Custom Header Gradient for Light Mode (from user) */
+    --header-bg: radial-gradient(circle at left top, #029ccd 8%, transparent 30%), radial-gradient(circle at left bottom, #15cb8640 30%, transparent 50%), radial-gradient(circle at right bottom, #47cef880 20%, transparent 40%), #d6d6d6;
+  }
+
+  .dark {
+    /* Dark Mode (Interactive Cares) */
+    --background: 20.8% .0295 219.13; /* oklch approx for #0B1120 brand-dark */
+    --foreground: 93% 0 0; /* slate-200 */
+    --card: 25% .02 219; /* Approx for #1E293B brand-surface */
+    --card-foreground: 93% 0 0;
+    --popover: 25% .02 219;
+    --popover-foreground: 93% 0 0;
+    --primary: 71.5% .143 215.221; /* Cyan */
+    --primary-foreground: 100% 0 0;
+    --secondary: 72.3% .219 149.579; /* Green */
+    --secondary-foreground: 100% 0 0;
+    --muted: 30% .02 219;
+    --muted-foreground: 70% 0 0;
+    --accent: 30% .02 219;
+    --accent-foreground: 98% 0 0;
+    --destructive: 30% .1 25;
+    --destructive-foreground: 98% 0 0;
+    --border: 30% .02 219;
+    --input: 30% .02 219;
+    --ring: 71.5% .143 215.221;
+    
+    /* Custom Header Gradient for Dark Mode (Interactive Clones) */
+    --header-bg: linear-gradient(to bottom right, #029ccd, #47cef8, #15cb86);
+  }
+ 
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
     @apply antialiased;
+    background-color: oklch(var(--background));
+    color: oklch(var(--foreground));
   }
 }
 
@@ -16,13 +71,42 @@
   }
   
   .input {
-    @apply w-full px-4 py-3 text-sm border-2 border-slate-200 rounded-xl bg-white transition-all duration-200;
-    @apply hover:border-slate-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10;
+    @apply w-full px-4 py-3 text-sm border-2 border-slate-200 rounded-xl transition-all duration-200;
+    background-color: oklch(var(--item-background)); /* fallback or specific var */
+    /* Using bg-white relative to theme or direct var avoiding @apply for custom utility */
+    background-color: oklch(var(--background)); 
+    
+    @apply hover:border-slate-300 focus:ring-4;
+    /* Split specific custom colors out of apply */
+    border-color: oklch(var(--border));
+    color: oklch(var(--foreground));
   }
   
+  .input:focus {
+      border-color: oklch(var(--primary));
+      --tw-ring-color: oklch(var(--primary) / 0.1);
+  }
+  
+  .input-premium {
+    @apply w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200;
+    @apply bg-slate-50 text-slate-700 placeholder:text-slate-400;
+    @apply border-transparent focus:bg-white focus:ring-2 focus:ring-slate-200 focus:border-slate-300;
+  }
+  
+  :is(.dark .input-premium) {
+    background-color: oklch(var(--card));
+    color: oklch(var(--foreground));
+  }
+  
+  :is(.dark .input-premium:focus) {
+    background-color: oklch(var(--card));
+    opacity: 0.9;
+  }
+
   .card {
-    @apply bg-white rounded-2xl shadow-lg border border-white/80 transition-all duration-300;
+    @apply rounded-2xl shadow-lg border border-white/80 transition-all duration-300;
     @apply hover:shadow-xl hover:-translate-y-1;
+    background-color: oklch(var(--card)); /* Explicit vs @apply bg-card */
   }
 }
 

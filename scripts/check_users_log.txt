@@ -1,0 +1,5 @@
+Checking users...
+Found 3 users:
+- ID: 34, Email: ishmamtahmid@iut-dhaka.edu, Role: hospital_admin
+- ID: 30, Email: tahmid12955@gmail.com, Role: patient
+- ID: 31, Email: tahmid0259@gmail.com, Role: doctor

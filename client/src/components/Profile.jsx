@@ -129,25 +129,21 @@ export default function Profile({ userId, onUserUpdate }) {
   const bloodGroupLocked = Boolean(patientData?.blood_group);
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8 animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl p-10 animate-fade-in" style={{ marginLeft: '40px' }}>
+      <div className="flex items-center justify-between mb-10">
         <div>
-          <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
+          <h1 className="text-4xl font-bold text-[#3AAFA9] uppercase tracking-wide">
             Profile
-          </p>
-          <h1 className="text-3xl font-bold text-slate-800">
-            Update your details
           </h1>
-          <p className="text-slate-500 mt-1">
-            Changes here will live-recalculate age and BMI.
-          </p>
         </div>
-        <div className="bg-slate-50 px-4 py-3 rounded-xl text-sm text-slate-600">
+        <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-700/50" style={{ padding: '12px 20px' }}>
           <div className="flex items-center gap-2">
-            <span className="font-semibold">Age:</span> {computedAge}
+            <span className="text-base text-slate-500 dark:text-slate-400 font-medium">Age:</span>
+            <span className="text-lg font-bold text-slate-900 dark:text-white">{computedAge}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold">BMI:</span> {computedBmi}
+            <span className="text-base text-slate-500 dark:text-slate-400 font-medium">BMI:</span>
+            <span className="text-lg font-bold text-slate-900 dark:text-white">{computedBmi}</span>
           </div>
         </div>
       </div>
@@ -157,10 +153,10 @@ export default function Profile({ userId, onUserUpdate }) {
           e.preventDefault();
           updateProfile.mutate();
         }}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 gap-10"
       >
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">Email</label>
+          <label className="text-sm font-semibold text-foreground">Email</label>
           <input
             name="email"
             type="email"
@@ -172,7 +168,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Full Name
           </label>
           <input
@@ -186,7 +182,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Phone</label>
+          <label className="text-sm font-semibold text-foreground">Phone</label>
           <input
             name="phone"
             value={form.phone}
@@ -197,7 +193,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Date of Birth
           </label>
           <input
@@ -211,13 +207,13 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">Gender</label>
+          <label className="text-sm font-semibold text-foreground">Gender</label>
           <select
             name="gender"
             value={form.gender || ""}
             onChange={handleChange}
             className="input-premium"
-            disabled={genderLocked}
+            disabled
           >
             <option value="">Select</option>
             <option value="male">Male</option>
@@ -227,7 +223,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Address
           </label>
           <textarea
@@ -240,7 +236,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Height (cm)
           </label>
           <input
@@ -254,7 +250,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Weight (kg)
           </label>
           <input
@@ -268,7 +264,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Blood Group
           </label>
           <input
@@ -281,7 +277,7 @@ export default function Profile({ userId, onUserUpdate }) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-slate-700">
+          <label className="text-sm font-semibold text-foreground">
             Emergency Contact
           </label>
           <input
@@ -292,17 +288,15 @@ export default function Profile({ userId, onUserUpdate }) {
           />
         </div>
 
-        <div className="md:col-span-2 flex items-center gap-3 pt-2">
+        <div className="md:col-span-2 flex justify-end" style={{ marginTop: '-25px', marginBottom: '30px' }}>
           <button
             type="submit"
-            className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 transition-all"
+            className="bg-[#3AAFA9] text-white text-base font-semibold rounded-lg shadow-lg shadow-[#3AAFA9]/30 hover:-translate-y-0.5 transition-all"
+            style={{ padding: '10px 22px' }}
             disabled={updateProfile.isPending}
           >
             {updateProfile.isPending ? "Saving..." : "Save changes"}
           </button>
-          <p className="text-sm text-slate-500">
-            Saving will recompute age and BMI in real time.
-          </p>
         </div>
       </form>
     </div>

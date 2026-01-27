@@ -71,7 +71,7 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="auth-page">
-      <div className="auth-shell">
+      <div className="auth-shell auth-shell--split">
         <div className="auth-hero">
           <span className="auth-badge">PulsePoint</span>
           <h1 className="auth-title">Care, simplified.</h1>

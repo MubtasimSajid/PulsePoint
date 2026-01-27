@@ -106,7 +106,7 @@ export default function Patients() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 bg-clip-text text-transparent">
             Patients
           </h1>
-          <p className="text-slate-500 mt-2">Manage patient records and information</p>
+          <p className="text-secondary mt-2">Manage patient records and information</p>
         </div>
         <button
           onClick={() => openModal()}
@@ -125,22 +125,22 @@ export default function Patients() {
           <table className="w-full">
             <thead>
               <tr className="bg-gradient-to-r from-slate-50 to-slate-100/50">
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                   ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                   Phone
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                   Blood Group
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -149,7 +149,7 @@ export default function Patients() {
               {patients?.map((patient) => (
                 <tr key={patient.user_id} className="hover:bg-indigo-50/50 transition-colors duration-200 group">
                   <td className="px-6 py-5">
-                    <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-sm font-mono font-medium">
+                    <span className="inline-flex items-center px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-mono font-medium">
                       {patient.patient_code}
                     </span>
                   </td>
@@ -158,13 +158,13 @@ export default function Patients() {
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm shadow-md">
                         {patient.full_name?.charAt(0) || 'P'}
                       </div>
-                      <span className="font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">
+                      <span className="font-medium text-foreground group-hover:text-primary transition-colors">
                         {patient.full_name}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-slate-600">{patient.email}</td>
-                  <td className="px-6 py-5 text-slate-600">{patient.phone}</td>
+                  <td className="px-6 py-5 text-foreground">{patient.email}</td>
+                  <td className="px-6 py-5 text-foreground">{patient.phone}</td>
                   <td className="px-6 py-5">
                     <span className="inline-flex items-center px-3 py-1 bg-gradient-to-r from-rose-50 to-pink-50 text-rose-700 rounded-lg text-sm font-semibold border border-rose-200">
                       {patient.blood_group || 'N/A'}
@@ -228,7 +228,7 @@ export default function Patients() {
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Full Name</label>
+                  <label className="text-sm font-semibold text-foreground">Full Name</label>
                   <input
                     type="text"
                     placeholder="Full Name"
@@ -241,7 +241,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Email</label>
+                  <label className="text-sm font-semibold text-foreground">Email</label>
                   <input
                     type="email"
                     placeholder="Email"
@@ -254,7 +254,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Phone</label>
+                  <label className="text-sm font-semibold text-foreground">Phone</label>
                   <input
                     type="text"
                     placeholder="Phone"
@@ -266,7 +266,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
+                  <label className="text-sm font-semibold text-foreground">Date of Birth</label>
                   <input
                     type="date"
                     placeholder="Date of Birth"
@@ -278,7 +278,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Patient Code</label>
+                  <label className="text-sm font-semibold text-foreground">Patient Code</label>
                   <input
                     type="text"
                     placeholder="Patient Code"
@@ -290,7 +290,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Blood Group</label>
+                  <label className="text-sm font-semibold text-foreground">Blood Group</label>
                   <input
                     type="text"
                     placeholder="Blood Group"
@@ -302,7 +302,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Height (cm)</label>
+                  <label className="text-sm font-semibold text-foreground">Height (cm)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -315,7 +315,7 @@ export default function Patients() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Weight (kg)</label>
+                  <label className="text-sm font-semibold text-foreground">Weight (kg)</label>
                   <input
                     type="number"
                     step="0.01"

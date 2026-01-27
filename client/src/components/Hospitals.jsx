@@ -136,7 +136,7 @@ export default function Hospitals() {
                     {hospital.name?.charAt(0) || 'H'}
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-800">{hospital.name}</h3>
+                    <h3 className="text-lg font-bold text-foreground">{hospital.name}</h3>
                     <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
                       Est. {hospital.est_year}
                     </span>
@@ -151,8 +151,8 @@ export default function Hospitals() {
                     </svg>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-400 block">Admin</span>
-                    <span className="font-medium text-slate-700">{hospital.admin_name}</span>
+                    <span className="text-xs text-secondary block">Admin</span>
+                    <span className="font-medium text-foreground">{hospital.admin_name}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-slate-600">
@@ -162,8 +162,8 @@ export default function Hospitals() {
                     </svg>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-400 block">Email</span>
-                    <span className="font-medium text-slate-700">{hospital.email}</span>
+                    <span className="text-xs text-secondary block">Email</span>
+                    <span className="font-medium text-foreground">{hospital.email}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-slate-600">
@@ -173,8 +173,8 @@ export default function Hospitals() {
                     </svg>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-400 block">Phone</span>
-                    <span className="font-medium text-slate-700">{hospital.phone}</span>
+                    <span className="text-xs text-secondary block">Phone</span>
+                    <span className="font-medium text-foreground">{hospital.phone}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-slate-600">
@@ -184,12 +184,12 @@ export default function Hospitals() {
                     </svg>
                   </div>
                   <div>
-                    <span className="text-xs text-slate-400 block">License</span>
+                    <span className="text-xs text-secondary block">License</span>
                     <span className="font-medium text-slate-700 font-mono">{hospital.license_number}</span>
                   </div>
                 </div>
                 <div className="pt-2 border-t border-slate-100">
-                  <p className="text-slate-500 text-xs">{hospital.address}</p>
+                  <p className="text-muted-foreground text-xs">{hospital.address}</p>
                 </div>
               </div>
               <div className="mt-6 flex gap-3">
@@ -243,7 +243,7 @@ export default function Hospitals() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Hospital Name</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">Hospital Name</label>
                 <input
                   type="text"
                   placeholder="Enter hospital name"
@@ -251,13 +251,13 @@ export default function Hospitals() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-700 font-medium placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                  className="w-full px-4 py-3 bg-muted/50 border-2 border-border rounded-xl text-foreground font-medium placeholder-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/10 transition-all"
                   required
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Admin</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">Admin</label>
                   <select
                     value={formData.admin_user_id}
                     onChange={(e) =>
@@ -275,7 +275,7 @@ export default function Hospitals() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Established Year</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">Established Year</label>
                   <input
                     type="number"
                     placeholder="e.g., 2020"
@@ -283,13 +283,13 @@ export default function Hospitals() {
                     onChange={(e) =>
                       setFormData({ ...formData, est_year: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-700 font-medium placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    className="w-full px-4 py-3 bg-muted/50 border-2 border-border rounded-xl text-foreground font-medium placeholder-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/10 transition-all"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">Email</label>
                   <input
                     type="email"
                     placeholder="hospital@example.com"
@@ -297,11 +297,11 @@ export default function Hospitals() {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-700 font-medium placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    className="w-full px-4 py-3 bg-muted/50 border-2 border-border rounded-xl text-foreground font-medium placeholder-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/10 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Phone</label>
+                  <label className="block text-sm font-semibold text-foreground mb-2">Phone</label>
                   <input
                     type="text"
                     placeholder="+1 (555) 123-4567"
@@ -309,12 +309,12 @@ export default function Hospitals() {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-700 font-medium placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    className="w-full px-4 py-3 bg-muted/50 border-2 border-border rounded-xl text-foreground font-medium placeholder-muted-foreground focus:border-primary focus:bg-card focus:ring-4 focus:ring-primary/10 transition-all"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">License Number</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">License Number</label>
                 <input
                   type="text"
                   placeholder="Enter license number"
@@ -326,7 +326,7 @@ export default function Hospitals() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Address</label>
+                <label className="block text-sm font-semibold text-foreground mb-2">Address</label>
                 <textarea
                   placeholder="Enter full address"
                   value={formData.address}

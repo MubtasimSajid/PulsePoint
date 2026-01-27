@@ -117,7 +117,7 @@ export default function DoctorDashboard({ doctorId }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto space-y-12 animate-fade-in">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">
@@ -240,8 +240,8 @@ export default function DoctorDashboard({ doctorId }) {
       )}
 
       {activeTab === "schedule" && (
-        <div className="space-y-6">
-          <div className="bg-indigo-600 rounded-2xl p-8 text-white shadow-lg shadow-indigo-200">
+        <div className="space-y-10">
+          <div className="bg-indigo-600 rounded-2xl p-10 text-white shadow-lg shadow-indigo-200">
             <div className="flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-bold mb-2">Weekly Schedule</h2>
@@ -261,9 +261,9 @@ export default function DoctorDashboard({ doctorId }) {
             {showScheduleForm && (
               <form
                 onSubmit={handleCreateSchedule}
-                className="mt-8 bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20"
+                className="mt-10 bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   <select
                     className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-indigo-200 outline-none focus:bg-white/30"
                     value={scheduleForm.day_of_week}
@@ -375,11 +375,11 @@ export default function DoctorDashboard({ doctorId }) {
             )}
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-8">
             {schedules?.map((schedule) => (
               <div
                 key={schedule.schedule_id}
-                className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"
+                className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"
               >
                 <div>
                   <div className="flex items-center gap-3 mb-1">

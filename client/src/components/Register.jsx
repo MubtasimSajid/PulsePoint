@@ -262,13 +262,13 @@ export default function Register({ onRegister }) {
 
   return (
     <div className="auth-page">
-      <div className="auth-shell">
+      <div className="auth-shell auth-shell--split">
         <div className="auth-hero">
           <span className="auth-badge">PulsePoint</span>
-          <h1 className="auth-title">Create your account</h1>
+          <h1 className="auth-title">Care, simplified.</h1>
           <p className="auth-subtitle">
-            Join the PulsePoint network to manage appointments, records, and
-            communication in one secure place.
+            Connect with your care team, manage appointments, and stay on top of
+            your health without the clutter.
           </p>
         </div>
 

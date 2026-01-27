@@ -84,10 +84,10 @@ export default function Dashboard() {
     <div className="animate-fade-in">
       {/* Header */}
       <div className="mb-10">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold text-primary">
           Dashboard Overview
         </h1>
-        <p className="text-slate-500 mt-2 text-lg">Welcome to your healthcare management center</p>
+        <p className="text-secondary mt-2 text-lg">Welcome to your healthcare management center</p>
       </div>
 
       {/* Stats Grid */}
@@ -108,8 +108,8 @@ export default function Dashboard() {
               <div className={`inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br ${stat.gradient} rounded-xl shadow-lg mb-4 text-white transform group-hover:scale-110 transition-transform duration-300`}>
                 {stat.icon}
               </div>
-              <p className="text-4xl font-extrabold text-slate-800 mb-1">{stat.value}</p>
-              <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">{stat.title}</p>
+              <p className="text-4xl font-extrabold text-foreground mb-1">{stat.value}</p>
+              <p className="text-sm font-medium text-secondary uppercase tracking-wide">{stat.title}</p>
             </div>
           </div>
         ))}
@@ -126,8 +126,8 @@ export default function Dashboard() {
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-800">Recent Appointments</h2>
-                <p className="text-sm text-slate-500">Latest scheduled visits</p>
+                <h2 className="text-xl font-bold text-foreground">Recent Appointments</h2>
+                <p className="text-sm text-secondary">Latest scheduled visits</p>
               </div>
             </div>
           </div>

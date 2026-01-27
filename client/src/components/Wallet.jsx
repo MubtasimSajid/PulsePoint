@@ -42,10 +42,10 @@ export default function Wallet() {
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8 animate-fade-in">
       {/* Balance Card */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-8 text-white shadow-xl shadow-slate-200/50">
+      <div className="bg-primary rounded-3xl p-8 text-primary-foreground shadow-xl shadow-primary/20">
         <div className="flex justify-between items-start mb-8">
           <div>
-            <p className="text-slate-400 font-medium mb-1">Total Balance</p>
+            <p className="text-primary-foreground/80 font-medium mb-1">Total Balance</p>
             <h2 className="text-5xl font-bold tracking-tight">
               {wallet?.currency} {wallet?.balance}
             </h2>
@@ -58,11 +58,11 @@ export default function Wallet() {
         {/* Add Funds Form */}
         <form onSubmit={handleAddFunds} className="flex gap-4 items-end">
           <div className="flex-1">
-            <label className="block text-sm text-slate-400 mb-2">
+            <label className="block text-sm text-primary-foreground/80 mb-2">
               Add Funds
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-foreground/60">
                 ৳
               </span>
               <input
@@ -70,7 +70,7 @@ export default function Wallet() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-10 py-3 focus:outline-none focus:border-indigo-500 transition-colors text-white placeholder-slate-500"
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 pl-10 py-3 focus:outline-none focus:border-white/50 transition-colors text-white placeholder-white/30"
                 min="0"
               />
             </div>
@@ -87,13 +87,13 @@ export default function Wallet() {
       </div>
 
       {/* Transactions */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200">
-        <h3 className="text-xl font-bold text-slate-800 mb-6">
+      <div className="bg-card rounded-3xl p-8 shadow-sm border border-border">
+        <h3 className="text-xl font-bold text-foreground mb-6">
           Recent Transactions
         </h3>
         <div className="space-y-4">
           {wallet?.transactions?.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">
+            <p className="text-muted-foreground text-center py-8">
               No transactions yet
             </p>
           ) : (
@@ -142,10 +142,10 @@ export default function Wallet() {
                     );
                   })()}
                   <div>
-                    <p className="font-medium text-slate-900 capitalize">
+                    <p className="font-medium text-foreground capitalize">
                       {tx.description || tx.type}
                     </p>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-muted-foreground">
                       {new Date(tx.created_at).toLocaleDateString()} •{" "}
                       {new Date(tx.created_at).toLocaleTimeString()}
                     </p>
@@ -167,7 +167,7 @@ export default function Wallet() {
                       </p>
                     );
                   })()}
-                  <p className="text-xs text-slate-400 uppercase tracking-wide font-medium">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
                     {tx.status}
                   </p>
                 </div>

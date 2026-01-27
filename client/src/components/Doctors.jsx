@@ -104,7 +104,7 @@ export default function Doctors() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-600 bg-clip-text text-transparent">
             Doctors
           </h1>
-          <p className="text-slate-500 mt-2">Manage medical staff and specialists</p>
+          <p className="text-secondary mt-2">Manage medical staff and specialists</p>
         </div>
 
       </div>
@@ -113,25 +113,25 @@ export default function Doctors() {
         <table className="w-full">
           <thead>
             <tr className="bg-gradient-to-r from-slate-50 to-slate-100/50">
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Code
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Email
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Phone
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Specializations
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Fee
               </th>
-              <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-bold text-secondary uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -140,7 +140,7 @@ export default function Doctors() {
             {doctors?.map((doctor) => (
               <tr key={doctor.user_id} className="hover:bg-emerald-50/50 transition-colors duration-200 group">
                 <td className="px-6 py-5">
-                  <span className="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-sm font-mono font-medium">
+                  <span className="inline-flex items-center px-3 py-1 bg-muted text-muted-foreground rounded-lg text-sm font-mono font-medium">
                     {doctor.doctor_code}
                   </span>
                 </td>
@@ -149,20 +149,20 @@ export default function Doctors() {
                     <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm shadow-md">
                       {doctor.full_name?.charAt(0) || 'D'}
                     </div>
-                    <span className="font-medium text-slate-700 group-hover:text-emerald-600 transition-colors">
+                    <span className="font-medium text-foreground group-hover:text-primary transition-colors">
                       {doctor.full_name}
                     </span>
                   </div>
                 </td>
-                <td className="px-6 py-5 text-slate-600">{doctor.email}</td>
-                <td className="px-6 py-5 text-slate-600">{doctor.phone}</td>
+                <td className="px-6 py-5 text-foreground">{doctor.email}</td>
+                <td className="px-6 py-5 text-foreground">{doctor.phone}</td>
                 <td className="px-6 py-5">
                   <div className="flex flex-wrap gap-1">
                     {doctor.specializations?.map((spec, idx) => (
                       <span key={idx} className="inline-flex items-center px-2 py-1 bg-gradient-to-r from-violet-50 to-purple-50 text-violet-700 rounded-lg text-xs font-medium border border-violet-200">
                         {spec}
                       </span>
-                    )) || <span className="text-slate-400">N/A</span>}
+                    )) || <span className="text-muted-foreground">N/A</span>}
                   </div>
                 </td>
                 <td className="px-6 py-5">
@@ -227,7 +227,7 @@ export default function Doctors() {
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Full Name</label>
+                  <label className="text-sm font-semibold text-foreground">Full Name</label>
                   <input
                     type="text"
                     placeholder="Full Name"
@@ -240,7 +240,7 @@ export default function Doctors() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Email</label>
+                  <label className="text-sm font-semibold text-foreground">Email</label>
                   <input
                     type="email"
                     placeholder="Email"
@@ -253,7 +253,7 @@ export default function Doctors() {
                 />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Phone</label>
+                  <label className="text-sm font-semibold text-foreground">Phone</label>
                   <input
                     type="text"
                     placeholder="Phone"
@@ -265,7 +265,7 @@ export default function Doctors() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Date of Birth</label>
+                  <label className="text-sm font-semibold text-foreground">Date of Birth</label>
                   <input
                     type="date"
                     placeholder="Date of Birth"
@@ -277,7 +277,7 @@ export default function Doctors() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Doctor Code</label>
+                  <label className="text-sm font-semibold text-foreground">Doctor Code</label>
                   <input
                     type="text"
                     placeholder="Doctor Code"
@@ -289,7 +289,7 @@ export default function Doctors() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">Consultation Fee</label>
+                  <label className="text-sm font-semibold text-foreground">Consultation Fee</label>
                   <input
                     type="number"
                     step="0.01"

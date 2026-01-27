@@ -82,7 +82,7 @@ function Navigation({ user, onLogout }) {
       <div className="container mx-auto pl-4 pr-6">
         <div className="flex items-center justify-between h-18 py-4">
           <Link to="/" className="flex items-center group nav-brand">
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+            <span className="text-xl font-bold text-primary tracking-tight">
               PulsePoint
             </span>
           </Link>
@@ -91,7 +91,7 @@ function Navigation({ user, onLogout }) {
             {/* Theme Toggle Button - ALWAYS VISIBLE */}
             <button
               onClick={toggleTheme}
-              className="p-2 mr-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
+              className="p-2 mr-2 rounded-xl text-secondary hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
               title={
                 theme === "dark"
                   ? "Switch to Light Mode"
@@ -360,22 +360,22 @@ function Navigation({ user, onLogout }) {
                 )}
 
                 <div className="ml-4 pl-4 border-l border-white/10 flex items-center gap-4">
-                  <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
-                    <div className="w-9 h-9 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+                  <div className="flex items-center gap-4 px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
+                    <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
                       {user.full_name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
-                    <div className="text-right hidden sm:block">
-                      <p className="text-sm font-medium text-white leading-none mb-1">
+                    <div className="text-right hidden sm:block" style={{ paddingRight: '15px' }}>
+                      <p className="text-sm font-medium text-white leading-none mb-1.5">
                         {user.full_name}
                       </p>
-                      <p className="text-xs text-slate-400 capitalize leading-none">
+                      <p className="text-xs text-secondary capitalize leading-none">
                         {user?.role?.replace("_", " ") || "User"}
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-2 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
+                    className="p-2 rounded-xl text-secondary hover:text-rose-500 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
                     title="Logout"
                   >
                     <svg

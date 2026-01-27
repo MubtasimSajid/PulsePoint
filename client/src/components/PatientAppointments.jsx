@@ -27,18 +27,19 @@ export default function PatientAppointments({ userId }) {
   }
 
   return (
-    <div className="space-y-12 animate-fade-in">
+    <div className="space-y-16 animate-fade-in">
       {/* Tabs */}
-      <div className="flex gap-6 p-4 bg-slate-900/60 border border-white/10 rounded-3xl w-fit">
+      <div className="flex gap-6 bg-card/60 border border-slate-600/50 rounded-xl w-fit" style={{ padding: '32px 48px' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-14 py-6 rounded-2xl text-2xl font-bold transition-all ${
+            className={`rounded-md text-base font-semibold transition-all ${
               activeTab === tab.id
-                ? "bg-[#A38D5D] text-white shadow-lg shadow-[#A38D5D]/20"
-                : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/50 dark:hover:bg-slate-800/50"
             }`}
+            style={{ padding: '20px 48px' }}
           >
             {tab.label}
           </button>
@@ -46,19 +47,19 @@ export default function PatientAppointments({ userId }) {
       </div>
 
       {!appointments || appointments.length === 0 ? (
-        <div className="text-center p-12 bg-slate-800/30 rounded-2xl border border-dashed border-slate-700">
-          <p className="text-slate-400">No {activeTab} appointments found.</p>
+        <div className="mt-10 text-center p-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+          <p className="text-slate-500 dark:text-slate-400">No {activeTab} appointments found.</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="!mt-3 grid gap-3">
           {appointments.map((appt) => (
             <div
               key={appt.appointment_id}
-              className="bg-slate-800/40 p-5 rounded-xl shadow-sm border border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-800/60 transition-all hover:border-white/10 hover:translate-y-[-2px]"
+              className="bg-card p-7 rounded-2xl shadow-sm border border-slate-600/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
             >
               <div className="flex items-start gap-4">
-                <div className="bg-indigo-500/10 p-3 rounded-lg text-center min-w-[70px] border border-indigo-500/20">
-                  <div className="text-xs font-bold text-indigo-300 uppercase">
+                <div className="bg-slate-800/50 p-4 rounded-xl text-center min-w-[84px] border border-slate-600/50">
+                  <div className="text-xs font-bold text-slate-400 uppercase">
                     {new Date(appt.appt_date).toLocaleDateString("en-US", {
                       month: "short",
                     })}
@@ -66,35 +67,36 @@ export default function PatientAppointments({ userId }) {
                   <div className="text-xl font-bold text-white">
                     {new Date(appt.appt_date).getDate()}
                   </div>
-                  <div className="text-xs text-indigo-200/70">
-                    {appt.appt_time}
+                  <div className="text-xs text-slate-400">
+                    {appt.appt_time?.substring(0, 5)}
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-100 text-lg">
+                  <h3 className="font-bold text-white text-lg">
                     Dr. {appt.doctor_name}
                   </h3>
-                  <p className="text-sm text-[#A38D5D] font-medium mb-1">
+                  <p className="text-sm text-slate-400 font-medium mb-1">
                     {appt.department_name}
                   </p>
                   <p className="text-xs text-slate-400 flex items-center gap-1">
                     <span className="font-semibold text-slate-300">
                       {appt.hospital_name || appt.chamber_name}
                     </span>
-                    <span className="text-slate-600 mx-1">•</span>
+                    <span className="text-slate-500 mx-1">•</span>
                     {appt.facility_address}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
+                  className={`rounded-full text-xs font-bold capitalize ${
                     appt.status === "completed"
                       ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
                       : appt.status === "cancelled"
                         ? "bg-red-500/20 text-red-300 border border-red-500/20"
                         : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
                   }`}
+                  style={{ padding: '8px 20px' }}
                 >
                   {appt.status}
                 </span>
