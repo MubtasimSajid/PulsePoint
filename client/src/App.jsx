@@ -364,7 +364,10 @@ function Navigation({ user, onLogout }) {
                     <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
                       {user.full_name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
-                    <div className="text-right hidden sm:block" style={{ paddingRight: '15px' }}>
+                    <div
+                      className="text-right hidden sm:block"
+                      style={{ paddingRight: "15px" }}
+                    >
                       <p className="text-sm font-medium text-white leading-none mb-1.5">
                         {user.full_name}
                       </p>
@@ -475,8 +478,9 @@ function App() {
                         <Navigate to="/doctor-dashboard" />
                       ) : user?.role === "patient" ? (
                         <Navigate to="/patient-dashboard" />
-                      ) : user?.role === "hospital" ||
-                        user?.role === "admin" ? (
+                      ) : user?.role === "hospital_admin" ? (
+                        <Navigate to="/hospital-dashboard" />
+                      ) : user?.role === "admin" ? (
                         <Navigate to="/hospitals" />
                       ) : (
                         <Dashboard user={user} />
@@ -569,6 +573,15 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <DoctorDashboard doctorId={user?.user_id} />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/hospital-dashboard"
+                  element={
+                    <ProtectedRoute>
+                      <HospitalDashboard />
                     </ProtectedRoute>
                   }
                 />

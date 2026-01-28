@@ -22,10 +22,24 @@ exports.getMyHospitalStats = async (req, res) => {
     const hospitalName = branchesResult.rows[0]?.hospital_name ?? null;
 
     const doctorsResult = await db.query(
-      `SELECT COUNT(DISTINCT hd.doctor_id)::int AS doctor_count
-       FROM hospital_doctors hd
-       JOIN hospitals h ON h.hospital_id = hd.hospital_id
-       WHERE h.admin_user_id = $1`,
+      `SELECT COUNT(DISTINCT doctor_id)::int AS doctor_count
+       FROM (
+         -- Doctors explicitly added to the hospital
+         SELECT hd.doctor_id
+         FROM hospital_doctors hd
+         JOIN hospitals h ON h.hospital_id = hd.hospital_id
+         WHERE h.admin_user_id = $1
+
+         UNION
+
+         -- Doctors who have assigned availability (schedules) at a hospital branch
+         SELECT ds.doctor_id
+         FROM doctor_schedules ds
+         JOIN hospitals h ON h.hospital_id = ds.facility_id
+         WHERE ds.facility_type = 'hospital'
+           AND ds.is_active = TRUE
+           AND h.admin_user_id = $1
+       ) doctors`,
       [userId],
     );
 
@@ -33,17 +47,27 @@ exports.getMyHospitalStats = async (req, res) => {
       `SELECT COUNT(DISTINCT a.patient_id)::int AS patient_count
        FROM appointments a
        JOIN hospitals h ON h.hospital_id = a.hospital_id
-       WHERE h.admin_user_id = $1`,
+       WHERE h.admin_user_id = $1
+         AND a.hospital_id IS NOT NULL
+         AND a.status <> 'cancelled'`,
       [userId],
     );
 
-    const balanceResult = await db.query(
-      `SELECT SUM(balance) as total_balance 
-       FROM accounts 
-       WHERE owner_type = 'hospital' 
-       AND owner_id IN (SELECT hospital_id FROM hospitals WHERE admin_user_id = $1)`,
-      [userId]
+    const canonicalHospitalRes = await db.query(
+      "SELECT MIN(hospital_id)::int AS hospital_id FROM hospitals WHERE admin_user_id = $1",
+      [userId],
     );
+    const canonicalHospitalId =
+      canonicalHospitalRes.rows[0]?.hospital_id ?? null;
+
+    const balanceResult = canonicalHospitalId
+      ? await db.query(
+          `SELECT COALESCE(balance, 0) as total_balance
+           FROM accounts
+           WHERE owner_type = 'hospital' AND owner_id = $1`,
+          [canonicalHospitalId],
+        )
+      : { rows: [{ total_balance: 0 }] };
 
     res.json({
       hospital_name: hospitalName,
@@ -187,6 +211,49 @@ exports.getHospitalDoctors = async (req, res) => {
       WHERE hd.hospital_id = $1
     `,
       [id],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getMyRecentActivity = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (role !== "hospital_admin" && role !== "admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const limitRaw = Number(req.query?.limit);
+    const limit = Number.isFinite(limitRaw)
+      ? Math.max(1, Math.min(25, Math.floor(limitRaw)))
+      : 10;
+
+    const result = await db.query(
+      `SELECT 
+         a.appointment_id,
+         a.appt_date,
+         a.appt_time,
+         a.status,
+         h.name as hospital_name,
+         u_doctor.full_name as doctor_name,
+         u_patient.full_name as patient_name
+       FROM appointments a
+       JOIN hospitals h ON h.hospital_id = a.hospital_id
+       JOIN users u_doctor ON u_doctor.user_id = a.doctor_id
+       JOIN users u_patient ON u_patient.user_id = a.patient_id
+       WHERE h.admin_user_id = $1
+       ORDER BY a.appointment_id DESC
+       LIMIT $2`,
+      [userId, limit],
     );
 
     res.json(result.rows);

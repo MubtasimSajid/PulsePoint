@@ -5,6 +5,11 @@ const { authenticate } = require("../middleware/auth");
 
 router.get("/", hospitalController.getAllHospitals);
 router.get("/my/stats", authenticate, hospitalController.getMyHospitalStats);
+router.get(
+  "/my/recent-activity",
+  authenticate,
+  hospitalController.getMyRecentActivity,
+);
 router.get("/:id", hospitalController.getHospitalById);
 router.get("/:id/doctors", hospitalController.getHospitalDoctors);
 router.post("/", hospitalController.createHospital);

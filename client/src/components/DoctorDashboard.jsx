@@ -274,150 +274,149 @@ export default function DoctorDashboard({ doctorId }) {
             )}
 
             {activeTab === "schedule" && (
-              <div className="space-y-10">
-                <div className="relative overflow-hidden rounded-2xl bg-hero-gradient p-10 shadow-lg shadow-primary/10">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
-                  <div className="relative flex justify-between items-center">
-                    <div style={{ marginLeft: "20px" }}>
-                      <h2 className="text-2xl font-bold mb-2 text-white">
-                        Weekly Schedule
-                      </h2>
-                      <p className="text-slate-200 opacity-90 max-w-xl leading-relaxed">
-                        Define your recurring weekly availability. Once set,
-                        generate slots so patients can book them.
-                      </p>
+              <div className="space-y-6">
+                <div className="flex justify-between items-start" style={{ marginLeft: "20px" }}>
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2 text-foreground">
+                      Weekly Schedule
+                    </h2>
+                    <p className="text-muted-foreground max-w-xl leading-relaxed">
+                      Define your recurring weekly availability. Once set,
+                      generate slots so patients can book them.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowScheduleForm(!showScheduleForm)}
+                    className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors rounded-full text-sm font-bold"
+                    style={{ padding: "8px 24px" }}
+                  >
+                    {showScheduleForm ? "Cancel" : "+ New Schedule"}
+                  </button>
+                </div>
+
+                {showScheduleForm && (
+                  <form
+                    onSubmit={handleCreateSchedule}
+                    className="bg-card/60 backdrop-blur-sm p-6 rounded-xl border border-slate-600/50"
+                    style={{ marginLeft: "20px" }}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <select
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        value={scheduleForm.day_of_week}
+                        onChange={(e) =>
+                          setScheduleForm({
+                            ...scheduleForm,
+                            day_of_week: e.target.value,
+                          })
+                        }
+                      >
+                        {[
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                          "Sunday",
+                        ].map((day) => (
+                          <option
+                            key={day}
+                            value={day}
+                            className="bg-slate-800 text-white"
+                          >
+                            {day}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="time"
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        value={scheduleForm.start_time}
+                        onChange={(e) =>
+                          setScheduleForm({
+                            ...scheduleForm,
+                            start_time: e.target.value,
+                          })
+                        }
+                      />
+                      <input
+                        type="time"
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        value={scheduleForm.end_time}
+                        onChange={(e) =>
+                          setScheduleForm({
+                            ...scheduleForm,
+                            end_time: e.target.value,
+                          })
+                        }
+                      />
+                      <select
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        value={selectedHospitalName}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          setSelectedHospitalName(name);
+                          setScheduleForm({
+                            ...scheduleForm,
+                            facility_type: "hospital",
+                            facility_id: "",
+                          });
+                        }}
+                      >
+                        <option value="" className="bg-slate-800 text-white">
+                          Select Hospital Name
+                        </option>
+                        {hospitalNames.map((name) => (
+                          <option
+                            key={name}
+                            value={name}
+                            className="bg-slate-800 text-white"
+                          >
+                            {name}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        value={scheduleForm.facility_id}
+                        onChange={(e) =>
+                          setScheduleForm({
+                            ...scheduleForm,
+                            facility_id: e.target.value,
+                          })
+                        }
+                        required
+                        disabled={!selectedHospitalName}
+                      >
+                        <option value="" className="bg-slate-800 text-white">
+                          Select Branch
+                        </option>
+                        {hospitalBranches.map((h) => (
+                          <option
+                            key={h.hospital_id}
+                            value={h.hospital_id}
+                            className="bg-slate-800 text-white"
+                          >
+                            {h.location ||
+                              h.address ||
+                              `Branch ${h.hospital_id}`}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <button
-                      onClick={() => setShowScheduleForm(!showScheduleForm)}
-                      className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 disabled:opacity-50 transition-colors rounded-full text-sm font-bold"
+                      type="submit"
+                      disabled={createScheduleMutation.isPending}
+                      className="mt-4 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 disabled:opacity-50 transition-colors rounded-full text-sm font-bold"
                       style={{ padding: "8px 24px" }}
                     >
-                      {showScheduleForm ? "Cancel" : "+ New Schedule"}
+                      {createScheduleMutation.isPending
+                        ? "Saving..."
+                        : "Save Schedule Rule"}
                     </button>
-                  </div>
-
-                  {showScheduleForm && (
-                    <form
-                      onSubmit={handleCreateSchedule}
-                      className="mt-10 bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <select
-                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-indigo-200 outline-none focus:bg-white/30"
-                          value={scheduleForm.day_of_week}
-                          onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              day_of_week: e.target.value,
-                            })
-                          }
-                        >
-                          {[
-                            "Monday",
-                            "Tuesday",
-                            "Wednesday",
-                            "Thursday",
-                            "Friday",
-                            "Saturday",
-                            "Sunday",
-                          ].map((day) => (
-                            <option
-                              key={day}
-                              value={day}
-                              className="text-slate-800"
-                            >
-                              {day}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="time"
-                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                          value={scheduleForm.start_time}
-                          onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              start_time: e.target.value,
-                            })
-                          }
-                        />
-                        <input
-                          type="time"
-                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                          value={scheduleForm.end_time}
-                          onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              end_time: e.target.value,
-                            })
-                          }
-                        />
-                        <select
-                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                          value={selectedHospitalName}
-                          onChange={(e) => {
-                            const name = e.target.value;
-                            setSelectedHospitalName(name);
-                            setScheduleForm({
-                              ...scheduleForm,
-                              facility_type: "hospital",
-                              facility_id: "",
-                            });
-                          }}
-                        >
-                          <option value="" className="text-slate-800">
-                            Select Hospital Name
-                          </option>
-                          {hospitalNames.map((name) => (
-                            <option
-                              key={name}
-                              value={name}
-                              className="text-slate-800"
-                            >
-                              {name}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                          value={scheduleForm.facility_id}
-                          onChange={(e) =>
-                            setScheduleForm({
-                              ...scheduleForm,
-                              facility_id: e.target.value,
-                            })
-                          }
-                          required
-                          disabled={!selectedHospitalName}
-                        >
-                          <option value="" className="text-slate-800">
-                            Select Branch
-                          </option>
-                          {hospitalBranches.map((h) => (
-                            <option
-                              key={h.hospital_id}
-                              value={h.hospital_id}
-                              className="text-slate-800"
-                            >
-                              {h.location ||
-                                h.address ||
-                                `Branch ${h.hospital_id}`}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={createScheduleMutation.isPending}
-                        className="mt-4 w-full bg-white text-indigo-600 font-bold py-3 rounded-lg hover:bg-indigo-50 transition-colors"
-                      >
-                        {createScheduleMutation.isPending
-                          ? "Saving..."
-                          : "Save Schedule Rule"}
-                      </button>
-                    </form>
-                  )}
-                </div>
+                  </form>
+                )}
 
                 <div className="!mt-3 space-y-3">
                   {schedules?.map((schedule) => (
@@ -428,7 +427,7 @@ export default function DoctorDashboard({ doctorId }) {
                       <div style={{ marginLeft: "20px" }}>
                         <div className="flex items-center gap-3 mb-1">
                           <span
-                            className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 rounded-full text-xs font-bold uppercase tracking-wide"
+                            className="bg-[#3AAFA9]/20 text-[#3AAFA9] border border-[#3AAFA9]/30 rounded-full text-xs font-bold uppercase tracking-wide"
                             style={{ padding: "4px 12px" }}
                           >
                             {schedule.day_of_week}
@@ -439,7 +438,7 @@ export default function DoctorDashboard({ doctorId }) {
                             {schedule.end_time.slice(0, 5)}
                           </span>
                         </div>
-                        <h3 className="font-bold text-white text-lg mt-2">
+                        <h3 className="font-bold text-foreground text-lg mt-2">
                           {schedule.facility_name}
                         </h3>
                         <p className="text-xs text-slate-400 mt-1">

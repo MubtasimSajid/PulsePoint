@@ -57,58 +57,76 @@ export default function DoctorSearch({ onSelectDoctor }) {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full flex items-center justify-center p-4">
-      <div className="bg-card/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-3xl relative animate-fade-in border border-slate-600/50" style={{ padding: '48px 64px' }}>
+    <div style={{ minHeight: 'calc(100vh - 80px)', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+      <div style={{ background: 'rgba(30, 41, 59, 0.95)', backdropFilter: 'blur(24px)', borderRadius: '24px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', width: '100%', maxWidth: '768px', position: 'relative', padding: '48px 64px', border: 'none' }} className="animate-fade-in">
         
         {/* Close Button */}
         <button 
           onClick={handleClose}
-          className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors p-2 hover:bg-muted rounded-full"
+          style={{ position: 'absolute', top: '24px', right: '24px', color: '#94a3b8', padding: '8px', borderRadius: '50%', cursor: 'pointer', background: 'transparent', border: 'none', transition: 'all 0.2s' }}
         >
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg style={{ width: '32px', height: '32px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
         {/* Header */}
-        <h2 className="text-4xl font-bold text-foreground mb-10 text-center tracking-tight">
+        <h2 style={{ fontSize: '36px', fontWeight: 700, color: '#f8fafc', marginBottom: '40px', textAlign: 'center', letterSpacing: '-0.025em' }}>
           Find a Doctor Here
         </h2>
 
         {/* Inputs */}
-        <div className="space-y-6 max-w-lg mx-auto">
+        <div style={{ maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* Department Search */}
-          <div className="relative group">
+          <div style={{ position: 'relative' }}>
             <select
               value={filters.specialization}
               onChange={(e) => setFilters({ ...filters, specialization: e.target.value })}
-              className="w-full bg-muted/30 border-2 border-slate-600/50 rounded-2xl text-foreground font-medium appearance-none focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300 placeholder-transparent"
-              style={{ padding: '20px 28px' }}
+              style={{ 
+                width: '100%', 
+                background: 'rgba(30, 41, 59, 0.5)', 
+                border: '2px solid rgba(100, 116, 139, 0.3)', 
+                borderRadius: '16px', 
+                color: '#f8fafc', 
+                fontWeight: 500, 
+                appearance: 'none', 
+                padding: '20px 28px',
+                outline: 'none',
+                cursor: 'pointer'
+              }}
             >
-              <option value="" className="bg-card text-muted-foreground">Search by Department</option>
+              <option value="" style={{ background: '#1e293b', color: '#94a3b8' }}>Search by Department</option>
               {specializations?.map((spec) => (
-                <option key={spec.spec_id} value={spec.spec_name} className="bg-card text-foreground">
+                <option key={spec.spec_id} value={spec.spec_name} style={{ background: '#1e293b', color: '#f8fafc' }}>
                   {spec.spec_name}
                 </option>
               ))}
             </select>
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground group-hover:text-primary transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div style={{ position: 'absolute', right: '24px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#94a3b8' }}>
+              <svg style={{ width: '24px', height: '24px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
           </div>
 
           {/* Doctor Name Search */}
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
              <input
               type="text"
               value={filters.doctor_name}
               onChange={(e) => setFilters({ ...filters, doctor_name: e.target.value })}
               placeholder="Search With Doctor's Name ..."
-              className="w-full bg-muted/30 border-2 border-slate-600/50 rounded-2xl text-foreground font-medium placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all duration-300"
-              style={{ padding: '20px 28px' }}
+              style={{ 
+                width: '100%', 
+                background: 'rgba(30, 41, 59, 0.5)', 
+                border: '2px solid rgba(100, 116, 139, 0.3)', 
+                borderRadius: '16px', 
+                color: '#f8fafc', 
+                fontWeight: 500, 
+                padding: '20px 28px',
+                outline: 'none'
+              }}
             />
           </div>
 
@@ -116,29 +134,29 @@ export default function DoctorSearch({ onSelectDoctor }) {
 
         {/* Loading Spinner */}
         {(isLoadingSpecs || isLoadingSearch) && (
-          <div className="flex justify-center mt-12 mb-4">
-             <div className="flex gap-2">
-                <span className="w-3 h-3 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                <span className="w-3 h-3 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                <span className="w-3 h-3 bg-slate-500 rounded-full animate-bounce"></span>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '48px', marginBottom: '16px' }}>
+             <div style={{ display: 'flex', gap: '8px' }}>
+                <span style={{ width: '12px', height: '12px', background: '#64748b', borderRadius: '50%' }} className="animate-bounce [animation-delay:-0.3s]"></span>
+                <span style={{ width: '12px', height: '12px', background: '#64748b', borderRadius: '50%' }} className="animate-bounce [animation-delay:-0.15s]"></span>
+                <span style={{ width: '12px', height: '12px', background: '#64748b', borderRadius: '50%' }} className="animate-bounce"></span>
              </div>
           </div>
         )}
 
         {/* Results List (if any) */}
         {!isLoadingSearch && doctors && doctors.length > 0 && (
-          <div className="mt-12 space-y-4 animate-fade-in max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-             <h3 className="text-muted-foreground font-medium text-sm uppercase tracking-wider text-center mb-6">Found {doctors.length} Doctors</h3>
+          <div style={{ marginTop: '48px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }} className="animate-fade-in custom-scrollbar">
+             <h3 style={{ color: '#94a3b8', fontWeight: 500, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', marginBottom: '24px' }}>Found {doctors.length} Doctors</h3>
              {doctors.map((doctor) => (
-                <div key={doctor.user_id} className="p-4 border border-border rounded-2xl hover:border-primary/30 hover:bg-muted/50 transition-all duration-300 bg-card/50 flex flex-col gap-4 group">
-                   <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start gap-4">
-                     <div className="flex items-center gap-4 w-full sm:w-auto">
-                        <div className="w-14 h-14 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-xl group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
+                <div key={doctor.user_id} style={{ padding: '20px', background: 'rgba(30, 41, 59, 0.5)', borderRadius: '16px', border: '1px solid rgba(100, 116, 139, 0.3)', display: 'flex', flexDirection: 'column', gap: '16px', transition: 'all 0.2s' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '56px', height: '56px', background: 'rgba(58, 175, 169, 0.15)', color: '#3AAFA9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px' }}>
                            {doctor.full_name?.charAt(0)}
                         </div>
                         <div>
-                           <h4 className="font-bold text-foreground text-lg">{doctor.full_name}</h4>
-                           <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                           <h4 style={{ fontWeight: 700, color: '#f8fafc', fontSize: '18px' }}>{doctor.full_name}</h4>
+                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', fontSize: '14px', color: '#94a3b8' }}>
                              {doctor.specializations?.map((s, i) => <span key={i}>{s}</span>)}
                            </div>
                         </div>
@@ -146,19 +164,29 @@ export default function DoctorSearch({ onSelectDoctor }) {
                      
                      <button
                         onClick={() => setSelectedDoctorId(selectedDoctorId === doctor.user_id ? null : doctor.user_id)}
-                        className={`px-6 py-2 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                          selectedDoctorId === doctor.user_id
-                            ? "bg-muted text-muted-foreground hover:bg-muted/80"
-                            : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
-                        }`}
+                        style={{
+                          padding: '10px 24px',
+                          borderRadius: '9999px',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          transition: 'all 0.2s',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: selectedDoctorId === doctor.user_id ? 'rgba(100, 116, 139, 0.3)' : 'rgba(58, 175, 169, 0.2)',
+                          color: selectedDoctorId === doctor.user_id ? '#94a3b8' : '#3AAFA9',
+                          border: selectedDoctorId === doctor.user_id ? '1px solid rgba(100, 116, 139, 0.5)' : '1px solid rgba(58, 175, 169, 0.3)',
+                          cursor: 'pointer'
+                        }}
                      >
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: selectedDoctorId === doctor.user_id ? '#94a3b8' : '#3AAFA9' }}></span>
                        {selectedDoctorId === doctor.user_id ? "Close Slots" : "Book Appointment"}
                      </button>
                    </div>
                    
                    {/* Slots Accordion */}
                    {selectedDoctorId === doctor.user_id && (
-                     <div className="mt-4 pt-4 border-t border-white/5 animate-fade-in">
+                     <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(100, 116, 139, 0.2)' }} className="animate-fade-in">
                         <AppointmentGrid 
                            doctor={doctor} 
                            patientId={patientId} 
@@ -172,7 +200,7 @@ export default function DoctorSearch({ onSelectDoctor }) {
         )}
         
         {!isLoadingSearch && doctors && doctors.length === 0 && (filters.specialization || filters.doctor_name) && (
-           <div className="mt-12 text-center text-muted-foreground">
+           <div style={{ marginTop: '48px', textAlign: 'center', color: '#94a3b8' }}>
               <p>No doctors found matching your criteria.</p>
            </div>
         )}

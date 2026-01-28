@@ -66,11 +66,11 @@ async function runTest() {
     // First ensure account exists
     const accRes = await client.query(`
       INSERT INTO accounts (owner_type, owner_id, balance) 
-      VALUES ('user', $1, 5000.00) 
+      VALUES ('user', $1, 5500.00) 
       RETURNING account_id
     `, [patientId]);
     const patientAccountId = accRes.rows[0].account_id;
-    console.log('Patient Account created with 5000 balance');
+    console.log('Patient Account created with 5500 balance');
 
     // Create Department
     const deptRes = await client.query(`
@@ -79,9 +79,10 @@ async function runTest() {
     const deptId = deptRes.rows[0].dept_id;
 
     // 2. Book Appointment at Hospital (Fee 2000)
-    // Expect: 
-    // Hospital Share: 10% of 2000 = 200
-    // Doctor Share: remaining = 1800
+    // Expect (NEW logic - hospital gets 10% markup, doctor gets full fee):
+    // Doctor Share: 2000 (full fee)
+    // Hospital Share: 10% of 2000 = 200 (markup)
+    // Total charged: 2200
     console.log('Booking Appointment...');
     const apptRes = await client.query(`
       INSERT INTO appointments (patient_id, doctor_id, hospital_id, department_id, appt_date, appt_time)
@@ -114,10 +115,10 @@ async function runTest() {
       console.error('FAIL: No doctor transaction found');
       pass = false;
     } else {
-      if (Number(doctorTx.amount) === 1800.00) {
-        console.log('PASS: Doctor amount is 1800 (90%)');
+      if (Number(doctorTx.amount) === 2000.00) {
+        console.log('PASS: Doctor amount is 2000 (full fee)');
       } else {
-        console.error(`FAIL: Doctor amount is ${doctorTx.amount}, expected 1800.00`);
+        console.error(`FAIL: Doctor amount is ${doctorTx.amount}, expected 2000.00`);
         pass = false;
       }
     }

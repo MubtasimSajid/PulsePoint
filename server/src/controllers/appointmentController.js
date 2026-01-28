@@ -279,12 +279,13 @@ exports.cancelAppointment = async (req, res) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
+    // Lock the appointment row. Avoid FOR UPDATE on a nullable LEFT JOIN side (Postgres error).
     const apptCheck = await client.query(
-      `SELECT a.*, d.consultation_fee, d.user_id as doctor_user_id, s.slot_id
+      `SELECT a.*, d.consultation_fee, d.user_id as doctor_user_id
        FROM appointments a
        JOIN doctors d ON a.doctor_id = d.user_id
-       LEFT JOIN appointment_slots s ON a.appointment_id = s.appointment_id
-       WHERE a.appointment_id = $1 FOR UPDATE`,
+       WHERE a.appointment_id = $1
+       FOR UPDATE OF a`,
       [id],
     );
 
@@ -294,6 +295,18 @@ exports.cancelAppointment = async (req, res) => {
     }
 
     const appt = apptCheck.rows[0];
+
+    // If a slot exists for this appointment, lock it too (so freeing is race-safe).
+    const slotRes = await client.query(
+      `SELECT slot_id
+       FROM appointment_slots
+       WHERE appointment_id = $1
+       FOR UPDATE`,
+      [id],
+    );
+    if (slotRes.rows.length > 0) {
+      appt.slot_id = slotRes.rows[0].slot_id;
+    }
 
     // Only the assigned doctor can cancel
     if (appt.doctor_id !== requesterUserId) {
@@ -310,35 +323,69 @@ exports.cancelAppointment = async (req, res) => {
         .json({ error: "Appointment is already cancelled" });
     }
 
-    // Refund based on the recorded payment transaction (if any)
+    // Refund based on the recorded payment transactions (if any)
+    // The DB trigger creates two transactions: 'Doctor fee' and optionally 'Hospital fee (10%)'
     const paymentTxRes = await client.query(
-      `SELECT amount
-       FROM account_transactions
-       WHERE status = 'completed'
-         AND description = ('Appointment payment for appointment ' || $1)
-       ORDER BY created_at DESC
-       LIMIT 1`,
+      `SELECT 
+         t.from_account_id, 
+         t.to_account_id, 
+         t.amount, 
+         t.description,
+         acc_to.owner_type as to_owner_type,
+         acc_to.owner_id as to_owner_id
+       FROM account_transactions t
+       JOIN accounts acc_to ON t.to_account_id = acc_to.account_id
+       WHERE t.status = 'completed'
+         AND (t.description LIKE ('Doctor fee for appointment ' || $1 || '%')
+              OR t.description LIKE ('Hospital fee (10%) for appointment ' || $1 || '%'))
+       ORDER BY t.created_at DESC`,
       [appt.appointment_id],
     );
 
-    const paymentAmount = paymentTxRes.rows[0]?.amount;
-    if (paymentAmount && parseFloat(paymentAmount) > 0) {
+    if (paymentTxRes.rows.length > 0) {
       const { processTransfer } = require("./paymentController");
-      try {
-        await processTransfer(
-          appt.doctor_user_id,
-          appt.patient_id,
-          paymentAmount,
-          "appointment",
-          appt.appointment_id,
-          client,
-          {
-            description: `Appointment refund for appointment ${appt.appointment_id}`,
-          },
-        );
-      } catch (err) {
-        await client.query("ROLLBACK");
-        return res.status(400).json({ error: "Refund failed: " + err.message });
+
+      // Refund each payment transaction in reverse (doctor/hospital -> patient)
+      for (const tx of paymentTxRes.rows) {
+        const refundAmount = parseFloat(tx.amount);
+        if (refundAmount > 0) {
+          try {
+            // For hospital fees, we need to handle differently since processTransfer expects user IDs
+            // and hospitals don't have user IDs. We'll need to create a direct transaction instead.
+            if (tx.to_owner_type === "hospital") {
+              // Direct refund from hospital account back to patient account
+              await client.query(
+                `INSERT INTO account_transactions
+                 (from_account_id, to_account_id, amount, status, description)
+                 VALUES ($1, $2, $3, 'completed', $4)`,
+                [
+                  tx.to_account_id, // hospital account
+                  tx.from_account_id, // patient account
+                  refundAmount,
+                  `Refund: ${tx.description}`,
+                ],
+              );
+            } else {
+              // User-to-user refund (doctor -> patient)
+              await processTransfer(
+                tx.to_owner_id, // from doctor user ID
+                appt.patient_id, // to patient user ID
+                refundAmount,
+                "appointment",
+                appt.appointment_id,
+                client,
+                {
+                  description: `Refund: ${tx.description}`,
+                },
+              );
+            }
+          } catch (err) {
+            await client.query("ROLLBACK");
+            return res
+              .status(400)
+              .json({ error: "Refund failed: " + err.message });
+          }
+        }
       }
     }
 

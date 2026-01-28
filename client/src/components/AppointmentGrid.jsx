@@ -135,7 +135,7 @@ export default function AppointmentGrid({
     if (
       paymentMethod === "wallet" &&
       walletData &&
-      walletData.balance < (doctor.consultation_fee || 0)
+      parseFloat(walletData.balance) < parseFloat(doctor.consultation_fee || 0) * 1.1
     ) {
       alert("Insufficient balance! Please add funds or choose MFS.");
       return;
@@ -167,49 +167,67 @@ export default function AppointmentGrid({
 
   if (isLoading)
     return (
-      <div className="text-sm text-slate-400 p-4">Loading schedule...</div>
+      <div style={{ fontSize: '14px', color: '#94a3b8', padding: '16px' }}>Loading schedule...</div>
     );
 
   return (
     <div
-      className={`bg-card rounded-2xl border border-border ${compact ? "p-4" : "p-8"}`}
+      style={{ 
+        background: 'transparent', 
+        borderRadius: '16px', 
+        padding: compact ? '16px' : '32px',
+        border: 'none'
+      }}
     >
       {!compact && (
-        <h2 className="text-2xl font-bold mb-6 text-foreground">
+        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#f8fafc' }}>
           Available Slots for Dr. {doctor.full_name}
         </h2>
       )}
 
-      <div className="mb-8">
-        <label className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+      <div style={{ marginBottom: '32px', marginLeft: '16px', marginTop: '24px' }}>
+        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#94a3b8', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Select Location
         </label>
         {branches.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             {branches.map((branch) => (
               <button
                 key={branch.key}
                 onClick={() => setSelectedBranchKey(branch.key)}
-                className={`p-6 rounded-xl border text-left transition-all duration-200 flex items-center gap-4 ${
-                  selectedBranchKey === branch.key
-                    ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 transform scale-[1.02]"
-                    : "bg-muted/50 border-border text-muted-foreground hover:bg-muted hover:border-border/80"
-                }`}
+                style={{
+                  padding: '20px',
+                  borderRadius: '16px',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  cursor: 'pointer',
+                  background: selectedBranchKey === branch.key ? 'rgba(58, 175, 169, 0.15)' : 'rgba(30, 41, 59, 0.5)',
+                  border: selectedBranchKey === branch.key ? '1px solid rgba(58, 175, 169, 0.5)' : '1px solid rgba(100, 116, 139, 0.3)',
+                  boxShadow: selectedBranchKey === branch.key ? '0 4px 14px rgba(58, 175, 169, 0.2)' : 'none'
+                }}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                    selectedBranchKey === branch.key
-                      ? "bg-white/20 text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: selectedBranchKey === branch.key ? '#3AAFA9' : 'rgba(100, 116, 139, 0.3)',
+                    color: selectedBranchKey === branch.key ? 'white' : '#94a3b8'
+                  }}
                 >
-                  <span className="text-sm font-extrabold">
+                  <span style={{ fontSize: '14px', fontWeight: 700 }}>
                     {branch.type === "hospital" ? "H" : "C"}
                   </span>
                 </div>
                 <div>
-                  <div className="font-bold">{branch.name}</div>
-                  <div className="text-xs opacity-70">
+                  <div style={{ fontWeight: 700, color: selectedBranchKey === branch.key ? '#3AAFA9' : '#f8fafc' }}>{branch.name}</div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>
                     {branch.location || "General Location"}
                   </div>
                 </div>
@@ -217,31 +235,41 @@ export default function AppointmentGrid({
             ))}
           </div>
         ) : (
-          <p className="text-slate-400 italic">No available locations found.</p>
+          <p style={{ color: '#64748b', fontStyle: 'italic' }}>No available locations found.</p>
         )}
       </div>
 
       {/* Slot Grid */}
       {selectedBranchKey ? (
-        <div className="space-y-10 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }} className="custom-scrollbar">
           {Object.keys(slotsByDate).length > 0 ? (
             Object.keys(slotsByDate).map((date) => (
               <div key={date} className="animate-fade-in">
-                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#A38D5D]"></span>
+                <h3 style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3AAFA9' }}></span>
                   {new Date(date).toLocaleDateString("en-US", {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
                   })}
                 </h3>
-                <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-4">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
                   {slotsByDate[date].map((slot) => (
                     <button
                       key={slot.slot_id}
                       onClick={() => handleSlotClick(slot)}
                       disabled={slot.status !== "free"}
-                      className={`py-2 px-1 rounded-lg text-sm font-medium transition-all duration-200 ${getSlotColor(slot.status)}`}
+                      style={{
+                        padding: '8px 4px',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        transition: 'all 0.2s',
+                        cursor: slot.status === 'free' ? 'pointer' : 'not-allowed',
+                        background: slot.status === 'free' ? 'rgba(58, 175, 169, 0.2)' : slot.status === 'booked' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                        color: slot.status === 'free' ? '#3AAFA9' : slot.status === 'booked' ? '#fb7185' : '#64748b',
+                        border: slot.status === 'free' ? '1px solid rgba(58, 175, 169, 0.3)' : slot.status === 'booked' ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid rgba(100, 116, 139, 0.3)'
+                      }}
                       title={`${slot.status}`}
                     >
                       {slot.slot_time.substring(0, 5)}
@@ -251,19 +279,12 @@ export default function AppointmentGrid({
               </div>
             ))
           ) : (
-            <p className="text-slate-400 text-center py-8 bg-white/5 rounded-xl border border-white/5 border-dashed">
+            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '32px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '12px', border: '1px dashed rgba(100, 116, 139, 0.3)' }}>
               No open slots at this location for the next 4 weeks.
             </p>
           )}
         </div>
-      ) : (
-        branches.length > 0 && (
-          <div className="text-center py-10 bg-white/5 rounded-xl border border-white/5 border-dashed text-slate-400">
-            <span className="text-2xl block mb-2">👆</span>
-            Please select a location above to view slots.
-          </div>
-        )
-      )}
+      ) : null}
 
       {/* Booking Modal */}
       {showBookingModal && selectedSlot && (
@@ -306,8 +327,20 @@ export default function AppointmentGrid({
                 </div>
                 <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
                   <span className="text-slate-400">Consultation Fee</span>
+                  <span className="text-white font-medium">
+                    {parseFloat(doctor.consultation_fee || 0).toFixed(2)} BDT
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Service Fee (10%)</span>
+                  <span className="text-white font-medium">
+                    {(parseFloat(doctor.consultation_fee || 0) * 0.1).toFixed(2)} BDT
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
+                  <span className="text-slate-400 font-semibold">Total Fee</span>
                   <span className="text-[#A38D5D] font-bold text-lg">
-                    {doctor.consultation_fee || 0} BDT
+                    {(parseFloat(doctor.consultation_fee || 0) * 1.1).toFixed(2)} BDT
                   </span>
                 </div>
               </div>
@@ -360,7 +393,7 @@ export default function AppointmentGrid({
                         Balance:{" "}
                         <span
                           className={
-                            walletData?.balance < (doctor.consultation_fee || 0)
+                            parseFloat(walletData?.balance) < parseFloat(doctor.consultation_fee || 0) * 1.1
                               ? "text-rose-400"
                               : "text-emerald-400"
                           }
@@ -465,8 +498,23 @@ export default function AppointmentGrid({
               <button
                 onClick={handleBooking}
                 disabled={bookSlotMutation.isPending}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#A38D5D] to-[#8a764d] text-white font-bold hover:shadow-lg hover:shadow-[#A38D5D]/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '9999px',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  transition: 'all 0.2s',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: bookSlotMutation.isPending ? 'rgba(100, 116, 139, 0.3)' : 'rgba(58, 175, 169, 0.2)',
+                  color: bookSlotMutation.isPending ? '#94a3b8' : '#3AAFA9',
+                  border: bookSlotMutation.isPending ? '1px solid rgba(100, 116, 139, 0.5)' : '1px solid rgba(58, 175, 169, 0.3)',
+                  cursor: bookSlotMutation.isPending ? 'not-allowed' : 'pointer',
+                  opacity: bookSlotMutation.isPending ? 0.6 : 1
+                }}
               >
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: bookSlotMutation.isPending ? '#94a3b8' : '#3AAFA9' }}></span>
                 {bookSlotMutation.isPending ? "Processing..." : `Pay & Confirm`}
               </button>
             </div>

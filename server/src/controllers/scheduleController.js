@@ -291,6 +291,15 @@ exports.bookSlot = async (req, res) => {
     const doctor = doctorCheck.rows[0];
     const fee = doctor.consultation_fee || 0;
 
+    console.log(
+      "[DEBUG bookSlot] Doctor:",
+      doctor.full_name,
+      "Fee from DB:",
+      doctor.consultation_fee,
+      "Fee used:",
+      fee,
+    );
+
     // Create appointment
     const appointmentResult = await client.query(
       `
@@ -310,61 +319,29 @@ exports.bookSlot = async (req, res) => {
 
     const appointment = appointmentResult.rows[0];
 
-    // Process Payment (now we have appointment_id for reference)
+    // Note: Payment is automatically handled by the DB trigger 'trigger_handle_booking_payment'
+    // which splits payment between doctor and hospital (if applicable) when appointment is inserted.
+    // The trigger checks patient balance and creates 'completed' or 'pending' transactions accordingly.
+    // For MFS payments, we still need to add funds first before the trigger can process the payment.
     const method = (payment_method || "wallet").toLowerCase();
-    if (fee > 0) {
-      const {
-        processTransfer,
-        processDeposit,
-      } = require("./paymentController");
-
-      if (method === "wallet") {
-        try {
-          await processTransfer(
-            patientUserId,
-            doctorUserId,
-            fee,
-            null,
-            null,
-            client,
-            {
-              description: `Appointment payment for appointment ${appointment.appointment_id}`,
-            },
-          );
-        } catch (err) {
-          await client.query("ROLLBACK");
-          return res
-            .status(400)
-            .json({ error: "Payment failed: " + err.message });
-        }
-      } else if (method === "mfs") {
-        try {
-          const txnId = mfs_transaction_id ? String(mfs_transaction_id) : "";
-          await processDeposit(patientUserId, fee, null, null, client, {
-            description: `MFS top-up for appointment ${appointment.appointment_id}${txnId ? ` (${txnId})` : ""}`,
-          });
-          await processTransfer(
-            patientUserId,
-            doctorUserId,
-            fee,
-            null,
-            null,
-            client,
-            {
-              description: `Appointment payment for appointment ${appointment.appointment_id}`,
-            },
-          );
-        } catch (err) {
-          await client.query("ROLLBACK");
-          return res
-            .status(400)
-            .json({ error: "MFS payment failed: " + err.message });
-        }
-      } else {
+    if (fee > 0 && method === "mfs") {
+      const { processDeposit } = require("./paymentController");
+      try {
+        const txnId = mfs_transaction_id ? String(mfs_transaction_id) : "";
+        await processDeposit(patientUserId, fee, null, null, client, {
+          description: `MFS top-up for appointment ${appointment.appointment_id}${txnId ? ` (${txnId})` : ""}`,
+        });
+      } catch (err) {
         await client.query("ROLLBACK");
-        return res.status(400).json({ error: "Invalid payment_method" });
+        return res
+          .status(400)
+          .json({ error: "MFS top-up failed: " + err.message });
       }
+    } else if (fee > 0 && method !== "wallet") {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: "Invalid payment_method" });
     }
+    // Wallet payment is automatically handled by the DB trigger after appointment INSERT
 
     // Update slot status
     await client.query(

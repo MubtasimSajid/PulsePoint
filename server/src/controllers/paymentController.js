@@ -22,56 +22,140 @@ async function ensureAccount(client, userId) {
   return after.rows[0];
 }
 
+async function ensureHospitalAccount(client, adminUserId) {
+  // One balance per hospital-admin: use a canonical branch hospital_id as the account owner.
+  // This preserves the DB rule that hospital accounts must reference hospitals.hospital_id.
+  const hospitalIdRes = await client.query(
+    "SELECT MIN(hospital_id)::int AS hospital_id FROM hospitals WHERE admin_user_id = $1",
+    [adminUserId],
+  );
+
+  const canonicalHospitalId = hospitalIdRes.rows[0]?.hospital_id;
+  if (!canonicalHospitalId) {
+    throw new Error("No hospital branches found for this admin");
+  }
+
+  const res = await client.query(
+    "SELECT account_id, balance, currency FROM accounts WHERE owner_type = 'hospital' AND owner_id = $1",
+    [canonicalHospitalId],
+  );
+  if (res.rows.length > 0) return res.rows[0];
+
+  // Race-safe creation
+  const created = await client.query(
+    "INSERT INTO accounts (owner_type, owner_id) VALUES ('hospital', $1) ON CONFLICT (owner_type, owner_id) DO NOTHING RETURNING account_id, balance, currency",
+    [canonicalHospitalId],
+  );
+  if (created.rows.length > 0) return created.rows[0];
+
+  const after = await client.query(
+    "SELECT account_id, balance, currency FROM accounts WHERE owner_type = 'hospital' AND owner_id = $1",
+    [canonicalHospitalId],
+  );
+  return after.rows[0];
+}
+
 // Get balance (ensure account exists)
 exports.getBalance = async (req, res) => {
   const userId = req.user.userId;
+  const userRole = req.user.role;
   const client = await pool.connect();
 
   try {
-    const account = await ensureAccount(client, userId);
+    // For hospital admins, use ONE shared hospital account (regardless of branch)
+    if (userRole === "hospital_admin") {
+      const account = await ensureHospitalAccount(client, userId);
 
-    // Get recent transactions
-    const transactions = await client.query(
-      `SELECT * FROM account_transactions 
-       WHERE from_account_id = $1 OR to_account_id = $1 
-       ORDER BY created_at DESC LIMIT 20`,
-      [account.account_id],
-    );
+      const transactions = await client.query(
+        `SELECT * FROM account_transactions 
+         WHERE from_account_id = $1 OR to_account_id = $1 
+         ORDER BY created_at DESC LIMIT 20`,
+        [account.account_id],
+      );
 
-    const normalizedTransactions = transactions.rows.map((tx) => {
-      const accountId = account.account_id;
-      const description = String(tx.description || "");
-      const descriptionLower = description.toLowerCase();
+      const normalizedTransactions = transactions.rows.map((tx) => {
+        const accountId = account.account_id;
+        const description = String(tx.description || "");
+        const descriptionLower = description.toLowerCase();
 
-      const isIncoming = String(tx.to_account_id) === String(accountId);
-      const isOutgoing = String(tx.from_account_id) === String(accountId);
+        const isIncoming = String(tx.to_account_id) === String(accountId);
+        const isOutgoing = String(tx.from_account_id) === String(accountId);
 
-      let type = "transfer";
-      if (!tx.from_account_id && isIncoming) type = "deposit";
-      else if (!tx.to_account_id && isOutgoing) type = "withdrawal";
-      else if (descriptionLower.includes("appointment payment"))
-        type = "payment";
-      else if (descriptionLower.includes("appointment refund")) type = "refund";
-      else if (descriptionLower.includes("added funds")) type = "deposit";
+        let type = "transfer";
+        if (!tx.from_account_id && isIncoming) type = "deposit";
+        else if (!tx.to_account_id && isOutgoing) type = "withdrawal";
+        else if (descriptionLower.includes("appointment payment"))
+          type = "payment";
+        else if (descriptionLower.includes("appointment refund"))
+          type = "refund";
+        else if (descriptionLower.includes("added funds")) type = "deposit";
 
-      let direction = "unknown";
-      if (isIncoming) direction = "credit";
-      else if (isOutgoing) direction = "debit";
+        let direction = "unknown";
+        if (isIncoming) direction = "credit";
+        else if (isOutgoing) direction = "debit";
 
-      return {
-        ...tx,
-        transaction_id: tx.txn_id,
-        type,
-        direction,
-      };
-    });
+        return {
+          ...tx,
+          transaction_id: tx.txn_id,
+          type,
+          direction,
+        };
+      });
 
-    res.json({
-      balance: account.balance,
-      currency: account.currency,
-      account_id: account.account_id,
-      transactions: normalizedTransactions,
-    });
+      res.json({
+        balance: account.balance,
+        currency: account.currency,
+        account_id: account.account_id,
+        transactions: normalizedTransactions,
+      });
+    } else {
+      // For regular users (patients, doctors)
+      const account = await ensureAccount(client, userId);
+
+      // Get recent transactions
+      const transactions = await client.query(
+        `SELECT * FROM account_transactions 
+         WHERE from_account_id = $1 OR to_account_id = $1 
+         ORDER BY created_at DESC LIMIT 20`,
+        [account.account_id],
+      );
+
+      const normalizedTransactions = transactions.rows.map((tx) => {
+        const accountId = account.account_id;
+        const description = String(tx.description || "");
+        const descriptionLower = description.toLowerCase();
+
+        const isIncoming = String(tx.to_account_id) === String(accountId);
+        const isOutgoing = String(tx.from_account_id) === String(accountId);
+
+        let type = "transfer";
+        if (!tx.from_account_id && isIncoming) type = "deposit";
+        else if (!tx.to_account_id && isOutgoing) type = "withdrawal";
+        else if (descriptionLower.includes("appointment payment"))
+          type = "payment";
+        else if (descriptionLower.includes("appointment refund"))
+          type = "refund";
+        else if (descriptionLower.includes("added funds")) type = "deposit";
+
+        let direction = "unknown";
+        if (isIncoming) direction = "credit";
+        else if (isOutgoing) direction = "debit";
+
+        return {
+          ...tx,
+          transaction_id: tx.txn_id,
+          type,
+          direction,
+        };
+      });
+
+      res.json({
+        balance: account.balance,
+        currency: account.currency,
+        account_id: account.account_id,
+        transactions: normalizedTransactions,
+      });
+    }
   } catch (error) {
     console.error("Get balance error:", error);
     res.status(500).json({ error: "Failed to fetch wallet info" });
@@ -83,6 +167,7 @@ exports.getBalance = async (req, res) => {
 // Add funds (Mock payment gateway)
 exports.addFunds = async (req, res) => {
   const userId = req.user.userId;
+  const userRole = req.user.role;
   const { amount } = req.body;
 
   if (!amount || amount <= 0) {
@@ -93,7 +178,10 @@ exports.addFunds = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const account = await ensureAccount(client, userId);
+    const account =
+      userRole === "hospital_admin"
+        ? await ensureHospitalAccount(client, userId)
+        : await ensureAccount(client, userId);
 
     // Record transaction; DB trigger applies balance automatically
     await client.query(
@@ -150,6 +238,17 @@ exports.processTransfer = async (
   options = {},
 ) => {
   const { description = "Transfer" } = options;
+
+  console.log(
+    "[DEBUG processTransfer] From:",
+    fromUserId,
+    "To:",
+    toUserId,
+    "Amount:",
+    amount,
+    "Description:",
+    description,
+  );
 
   const fromAcc = await ensureAccount(client, fromUserId);
   const toAcc = await ensureAccount(client, toUserId);

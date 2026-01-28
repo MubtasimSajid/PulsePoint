@@ -66,7 +66,7 @@ export default function Register({ onRegister }) {
       if (data.user.role === "doctor") {
         navigate("/doctor-dashboard");
       } else if (data.user.role === "hospital_admin") {
-        navigate("/hospitals");
+        navigate("/hospital-dashboard");
       } else {
         navigate("/my-appointments");
       }

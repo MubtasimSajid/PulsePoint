@@ -31,6 +31,8 @@ DECLARE
   v_patient_account_id INT;
   v_doctor_account_id INT;
   v_hospital_account_id INT;
+  v_hospital_owner_id INT;
+  v_primary_hospital_id INT;
   
   v_total_fee NUMERIC(12,2);
   v_hospital_share NUMERIC(12,2);
@@ -54,10 +56,12 @@ BEGIN
         WHERE user_id = NEW.doctor_id;
     END IF;
 
-    -- Calculate Split (10% Hospital, 90% Doctor)
+    -- Calculate Split: Hospital gets 10% markup, Doctor gets full fee
+    -- Total charged to patient = consultation_fee * 1.1
     IF v_total_fee IS NOT NULL THEN
-       v_hospital_share := ROUND(v_total_fee * 0.10, 2);
-       v_doctor_share := v_total_fee - v_hospital_share;
+       v_doctor_share := v_total_fee;  -- Doctor gets full consultation fee
+       v_hospital_share := ROUND(v_total_fee * 0.10, 2);  -- Hospital gets 10% extra
+       v_total_fee := v_doctor_share + v_hospital_share;  -- Update total for balance check
     END IF;
     
   ELSE
@@ -81,7 +85,25 @@ BEGIN
   v_doctor_account_id := get_or_create_account('user', NEW.doctor_id);
   
   IF NEW.hospital_id IS NOT NULL THEN
-     v_hospital_account_id := get_or_create_account('hospital', NEW.hospital_id);
+     -- One shared hospital account regardless of branch.
+     SELECT admin_user_id INTO v_hospital_owner_id
+     FROM hospitals
+     WHERE hospital_id = NEW.hospital_id;
+
+     IF v_hospital_owner_id IS NOT NULL THEN
+       -- Canonical hospital_id for this admin; all branches credit this one.
+       SELECT MIN(hospital_id) INTO v_primary_hospital_id
+       FROM hospitals
+       WHERE admin_user_id = v_hospital_owner_id;
+
+       IF v_primary_hospital_id IS NOT NULL THEN
+         v_hospital_account_id := get_or_create_account('hospital', v_primary_hospital_id);
+       ELSE
+         v_hospital_account_id := NULL;
+       END IF;
+     ELSE
+       v_hospital_account_id := NULL;
+     END IF;
   END IF;
 
   -- 3. Check Patient Balance

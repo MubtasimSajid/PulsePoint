@@ -199,7 +199,7 @@ export default function Dashboard() {
                       })}
                     </td>
                     <td style={{ padding: '20px 24px', color: '#cbd5e1', fontWeight: 500 }}>
-                      {appointment.appt_time}
+                      {appointment.appt_time?.substring(0, 5) || appointment.appt_time}
                     </td>
                     <td style={{ padding: '20px 24px' }}>
                       <span
@@ -222,7 +222,7 @@ export default function Dashboard() {
                           borderRadius: '50%',
                           background: appointment.status === 'scheduled' ? '#3AAFA9' : appointment.status === 'completed' ? '#818cf8' : '#fb7185'
                         }}></span>
-                        {appointment.status}
+                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                       </span>
                     </td>
                   </tr>

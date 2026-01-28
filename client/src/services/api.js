@@ -110,6 +110,8 @@ export const hospitalsAPI = {
   getById: (id) => api.get(`/hospitals/${id}`),
   getDoctors: (id) => api.get(`/hospitals/${id}/doctors`),
   getMyStats: () => api.get("/hospitals/my/stats"),
+  getMyRecentActivity: (params = {}) =>
+    api.get("/hospitals/my/recent-activity", { params }),
   create: (data) => api.post("/hospitals", data),
   update: (id, data) => api.put(`/hospitals/${id}`, data),
   delete: (id) => api.delete(`/hospitals/${id}`),
