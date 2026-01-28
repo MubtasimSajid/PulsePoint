@@ -49,24 +49,29 @@ export default function AppointmentGrid({
   const branches = slots
     ? Array.from(
         new Map(
-          slots.map((s) => [
-            `${s.facility_type}-${s.facility_id}`,
-            {
-              key: `${s.facility_type}-${s.facility_id}`,
-              name: s.facility_name,
-              type: s.facility_type,
-              location: s.location || "Unknown",
-            },
-          ]),
+          slots.map((s) => {
+            const key = `${s.facility_type}-${s.facility_id}-${s.branch_name || "default"}`;
+            return [
+              key,
+              {
+                key,
+                name: s.facility_name,
+                type: s.facility_type,
+                location: s.branch_name || s.location || "Unknown", // Prefer branch name
+                branch_name: s.branch_name,
+              },
+            ];
+          }),
         ).values(),
       )
     : [];
 
   // Filter slots by selected branch
   const filteredSlots = selectedBranchKey
-    ? slots.filter(
-        (s) => `${s.facility_type}-${s.facility_id}` === selectedBranchKey,
-      )
+    ? slots.filter((s) => {
+        const key = `${s.facility_type}-${s.facility_id}-${s.branch_name || "default"}`;
+        return key === selectedBranchKey;
+      })
     : [];
 
   // Book slot mutation

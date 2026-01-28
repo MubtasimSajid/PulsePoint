@@ -36,6 +36,7 @@ export default function Register({ onRegister }) {
     hospital_website_url: "",
     hospital_branch_count: 1,
     hospital_branch_addresses: [""],
+    hospital_branch_names: [""],
   });
   const [error, setError] = useState("");
   const [step, setStep] = useState("initial"); // 'initial', 'user_select', 'form'
@@ -177,6 +178,7 @@ export default function Register({ onRegister }) {
       delete dataToSend.hospital_website_url;
       delete dataToSend.hospital_branch_count;
       delete dataToSend.hospital_branch_addresses;
+      delete dataToSend.hospital_branch_names;
     }
     if (dataToSend.role === "hospital_admin") {
       delete dataToSend.height_cm;
@@ -212,6 +214,13 @@ export default function Register({ onRegister }) {
             typeof v === "string" ? v.trim() : "",
           )
         : [];
+      dataToSend.hospital_branch_names = Array.isArray(
+        dataToSend.hospital_branch_names,
+      )
+        ? dataToSend.hospital_branch_names.map((v) =>
+            typeof v === "string" ? v.trim() : "",
+          )
+        : [];
     }
 
     registerMutation.mutate(dataToSend);
@@ -227,23 +236,36 @@ export default function Register({ onRegister }) {
 
   const handleBranchCountChange = (e) => {
     const nextCountRaw = e.target.value;
+
+    if (nextCountRaw === "") {
+      setFormData(prev => ({ ...prev, hospital_branch_count: "" }));
+      return;
+    }
+
     const nextCount = Math.max(
       1,
       Math.min(20, parseInt(nextCountRaw, 10) || 1),
     );
 
     setFormData((prev) => {
-      const existing = Array.isArray(prev.hospital_branch_addresses)
+      const existingAddresses = Array.isArray(prev.hospital_branch_addresses)
         ? prev.hospital_branch_addresses
         : [];
+      const existingNames = Array.isArray(prev.hospital_branch_names)
+        ? prev.hospital_branch_names
+        : [];
       const nextAddresses = Array.from({ length: nextCount }, (_, i) =>
-        typeof existing[i] === "string" ? existing[i] : "",
+        typeof existingAddresses[i] === "string" ? existingAddresses[i] : "",
+      );
+      const nextNames = Array.from({ length: nextCount }, (_, i) =>
+        typeof existingNames[i] === "string" ? existingNames[i] : "",
       );
 
       return {
         ...prev,
         hospital_branch_count: nextCount,
         hospital_branch_addresses: nextAddresses,
+        hospital_branch_names: nextNames,
       };
     });
     setError("");
@@ -256,6 +278,17 @@ export default function Register({ onRegister }) {
         : [];
       next[index] = value;
       return { ...prev, hospital_branch_addresses: next };
+    });
+    setError("");
+  };
+
+  const handleBranchNameChange = (index, value) => {
+    setFormData((prev) => {
+      const next = Array.isArray(prev.hospital_branch_names)
+        ? [...prev.hospital_branch_names]
+        : [];
+      next[index] = value;
+      return { ...prev, hospital_branch_names: next };
     });
     setError("");
   };
@@ -502,19 +535,34 @@ export default function Register({ onRegister }) {
 
                     {(formData.hospital_branch_addresses || []).map(
                       (addr, idx) => (
-                        <label className="auth-field" key={idx}>
-                          <span>Branch Address {idx + 1} (Full Address)</span>
-                          <input
-                            type="text"
-                            value={addr}
-                            onChange={(e) =>
-                              handleBranchAddressChange(idx, e.target.value)
-                            }
-                            className="auth-input"
-                            placeholder="Street, City, State, ZIP, Country"
-                            required
-                          />
-                        </label>
+                        <div key={idx} className="auth-form" style={{ gap: "10px" }}>
+                          <label className="auth-field">
+                            <span>{idx === 0 ? "Main Branch Name" : `Branch ${idx + 1} Name`}</span>
+                            <input
+                              type="text"
+                              value={formData.hospital_branch_names?.[idx] || ""}
+                              onChange={(e) =>
+                                handleBranchNameChange(idx, e.target.value)
+                              }
+                              className="auth-input"
+                              placeholder={idx === 0 ? "e.g., Main Branch" : "e.g., Downtown Branch"}
+                              required
+                            />
+                          </label>
+                          <label className="auth-field">
+                            <span>{idx === 0 ? "Main Branch Address" : `Branch ${idx + 1} Address`}</span>
+                            <input
+                              type="text"
+                              value={addr}
+                              onChange={(e) =>
+                                handleBranchAddressChange(idx, e.target.value)
+                              }
+                              className="auth-input"
+                              placeholder="Street, City, State, ZIP, Country"
+                              required
+                            />
+                          </label>
+                        </div>
                       ),
                     )}
                   </>
@@ -713,7 +761,7 @@ export default function Register({ onRegister }) {
                         onChange={handleChange}
                         className="auth-input"
                       >
-                        <option value="">Select specialization</option>
+                        <option value="">Select Department</option>
                         {specializations?.map((spec) => (
                           <option key={spec.spec_id} value={spec.spec_id}>
                             {spec.spec_name}
@@ -735,7 +783,7 @@ export default function Register({ onRegister }) {
                     </label>
 
                     <label className="auth-field">
-                      <span>Consultation Fee ($)</span>
+                      <span>Consultation Fee (BDT)</span>
                       <input
                         type="number"
                         step="0.01"

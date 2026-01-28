@@ -33,6 +33,7 @@ CREATE TABLE doctors (
   specialization_id INT REFERENCES specializations(spec_id),
   experience_years INT,
   qualification VARCHAR(255),
+  degrees TEXT[],
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
@@ -43,15 +44,6 @@ CREATE TABLE doctor_specializations (
   PRIMARY KEY (doctor_id, spec_id),
   FOREIGN KEY (doctor_id) REFERENCES doctors(user_id) ON DELETE CASCADE,
   FOREIGN KEY (spec_id) REFERENCES specializations(spec_id)
-);
-
-CREATE TABLE doctor_degrees (
-  degree_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  doctor_id INT NOT NULL,
-  degree_name VARCHAR(100),
-  institution VARCHAR(150),
-  achievement_year INT,
-  FOREIGN KEY (doctor_id) REFERENCES doctors(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE patients (
@@ -80,7 +72,9 @@ CREATE TABLE hospitals (
   category VARCHAR(30) CHECK (category IN ('general', 'multi_specialty', 'single_specialty')),
   specialty VARCHAR(100),
   website_url TEXT,
-  location VARCHAR(100),
+  location TEXT, -- Stores the main branch address
+  branch_names TEXT[],
+  branch_addresses TEXT[],
   FOREIGN KEY (admin_user_id) REFERENCES users(user_id)
 );
 

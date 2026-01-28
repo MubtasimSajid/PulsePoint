@@ -192,10 +192,14 @@ exports.register = async (req, res) => {
         hospital_specialty,
         hospital_website_url,
         hospital_branch_addresses,
+        hospital_branch_names,
       } = req.body;
 
       const branchAddresses = Array.isArray(hospital_branch_addresses)
         ? hospital_branch_addresses
+        : [];
+      const branchNames = Array.isArray(hospital_branch_names)
+        ? hospital_branch_names
         : [];
 
       if (!hospital_license_number) {
@@ -231,6 +235,8 @@ exports.register = async (req, res) => {
       const cleanedBranchAddresses = branchAddresses
         .map((v) => (typeof v === "string" ? v.trim() : ""))
         .filter(Boolean);
+      const cleanedBranchNames = branchNames
+        .map((v) => (typeof v === "string" ? v.trim() : ""))
 
       if (cleanedBranchAddresses.length === 0) {
         return res
@@ -239,9 +245,12 @@ exports.register = async (req, res) => {
       }
 
       // Create one row per branch so existing appointment/hospital selection keeps working.
-      for (let i = 0; i < cleanedBranchAddresses.length; i++) {
-        await client.query(
-          `INSERT INTO hospitals (
+      // Create ONE hospital row with arrays for branches
+      // location stores the Main Branch address (first index)
+      const locationAddress = cleanedBranchAddresses[0] || "";
+
+      await client.query(
+        `INSERT INTO hospitals (
             admin_user_id,
             name,
             est_year,
@@ -254,24 +263,27 @@ exports.register = async (req, res) => {
             category,
             specialty,
             website_url,
-            location
+            location,
+            branch_names,
+            branch_addresses
           )
-          VALUES ($1, $2, NULL, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11)`,
-          [
-            user.user_id,
-            hospital_name,
-            email,
-            cleanedBranchAddresses[i],
-            hospital_license_number,
-            hospital_tax_id,
-            hospital_type,
-            hospital_category,
-            hospital_specialty || null,
-            hospital_website_url,
-            `Branch ${i + 1}`,
-          ],
-        );
-      }
+          VALUES ($1, $2, NULL, $3, NULL, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        [
+          user.user_id,
+          hospital_name,
+          email,
+          cleanedBranchAddresses[0], // address column also gets main branch address
+          hospital_license_number,
+          hospital_tax_id,
+          hospital_type,
+          hospital_category,
+          hospital_specialty || null,
+          hospital_website_url,
+          locationAddress,
+          cleanedBranchNames,     // Array
+          cleanedBranchAddresses, // Array
+        ],
+      );
     }
 
     await client.query("COMMIT");
@@ -421,13 +433,13 @@ exports.getProfile = async (req, res) => {
 
     if (user.role === "doctor") {
       const doctorInfo = await pool.query(
-        `SELECT d.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification,
+        `SELECT d.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification, d.degrees,
                 ARRAY_AGG(s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) AS specializations
          FROM doctors d
          LEFT JOIN doctor_specializations ds ON ds.doctor_id = d.user_id
          LEFT JOIN specializations s ON ds.spec_id = s.spec_id
          WHERE d.user_id = $1
-         GROUP BY d.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification`,
+         GROUP BY d.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification, d.degrees`,
         [userId],
       );
       if (doctorInfo.rows.length > 0) {

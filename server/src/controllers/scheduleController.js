@@ -14,7 +14,17 @@ exports.getDoctorSchedules = async (req, res) => {
           ELSE c.name
         END as facility_name,
         CASE 
-          WHEN ds.facility_type = 'hospital' THEN h.location
+          WHEN ds.facility_type = 'hospital' THEN 
+             COALESCE(
+               (
+                 SELECT ba 
+                 FROM unnest(h.branch_names, h.branch_addresses) AS b(bn, ba) 
+                 WHERE b.bn = ds.branch_name 
+                 LIMIT 1
+               ), 
+               ds.branch_name, -- Fallback to branch name if address not found
+               h.location
+             )
           ELSE c.location
         END as location
       FROM doctor_schedules ds
@@ -22,6 +32,11 @@ exports.getDoctorSchedules = async (req, res) => {
       LEFT JOIN chambers c ON ds.facility_id = c.chamber_id AND ds.facility_type = 'chamber'
       WHERE ds.doctor_id = $1 AND ds.is_active = TRUE
       ORDER BY 
+        CASE 
+          WHEN ds.schedule_type = 'single' THEN 0 
+          ELSE 1 
+        END,
+        ds.specific_date,
         CASE ds.day_of_week
           WHEN 'Monday' THEN 1
           WHEN 'Tuesday' THEN 2
@@ -49,7 +64,10 @@ exports.createDoctorSchedule = async (req, res) => {
       doctor_id,
       facility_id,
       facility_type,
-      day_of_week,
+      branch_name,
+      schedule_type, // 'weekly' or 'single'
+      specific_date, // required if schedule_type is 'single'
+      day_of_week,   // required if schedule_type is 'weekly'
       start_time,
       end_time,
       slot_duration_minutes,
@@ -60,17 +78,40 @@ exports.createDoctorSchedule = async (req, res) => {
       return res.status(400).json({ error: "doctor_id is required" });
     }
 
+    const type = schedule_type || 'weekly';
+
+    if (type === 'single' && !specific_date) {
+        return res.status(400).json({ error: "Specific date is required for single schedule" });
+    }
+    
+    if (type === 'single') {
+        const today = new Date();
+        const checkDate = new Date(specific_date);
+        // Compare YYYY-MM-DD strings to avoid timezone confusion, assuming input is YYYY-MM-DD
+        const todayStr = today.toISOString().split('T')[0];
+        if (specific_date <= todayStr) {
+             return res.status(400).json({ error: "Single schedule date must be in the future" });
+        }
+    }
+
+    if (type === 'weekly' && !day_of_week) {
+        return res.status(400).json({ error: "Day of week is required for weekly schedule" });
+    }
+
     const result = await db.query(
       `
-      INSERT INTO doctor_schedules (doctor_id, facility_id, facility_type, day_of_week, start_time, end_time, slot_duration_minutes)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO doctor_schedules (doctor_id, facility_id, facility_type, branch_name, schedule_type, specific_date, day_of_week, start_time, end_time, slot_duration_minutes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `,
       [
         doctorId,
         facility_id,
         facility_type,
-        day_of_week,
+        branch_name || null,
+        type,
+        type === 'single' ? specific_date : null,
+        type === 'weekly' ? day_of_week : null,
         start_time,
         end_time,
         slot_duration_minutes || 30,
@@ -137,7 +178,17 @@ exports.getAvailableSlots = async (req, res) => {
           ELSE c.name
         END as facility_name,
         CASE 
-          WHEN s.facility_type = 'hospital' THEN h.location
+          WHEN s.facility_type = 'hospital' THEN 
+             COALESCE(
+               (
+                 SELECT ba 
+                 FROM unnest(h.branch_names, h.branch_addresses) AS b(bn, ba) 
+                 WHERE b.bn = s.branch_name 
+                 LIMIT 1
+               ), 
+               s.branch_name,
+               h.location
+             )
           ELSE c.location
         END as location
       FROM appointment_slots s
@@ -164,7 +215,7 @@ exports.getAvailableSlots = async (req, res) => {
   }
 };
 
-// Generate slots for a schedule
+// Generate slots for a schedule (Unchanged from prev logic, just keeps the file complete)
 exports.generateSlots = async (req, res) => {
   try {
     const { schedule_id, start_date, end_date } = req.body;
@@ -233,6 +284,7 @@ exports.bookSlot = async (req, res) => {
       "Oct",
       "Nov",
       "Dec",
+      "Dec" // Duplicate Dec? Assuming 12 months.
     ][dateObj.getMonth()];
     const day = String(dateObj.getDate()).padStart(2, "0");
     const year = dateObj.getFullYear();
@@ -266,7 +318,15 @@ exports.bookSlot = async (req, res) => {
     // Check if slot is still free
     const slotCheck = await client.query(
       `SELECT s.*, 
-              CASE WHEN s.facility_type = 'hospital' THEN h.name ELSE c.name END as facility_name
+              CASE WHEN s.facility_type = 'hospital' THEN h.name ELSE c.name END as facility_name,
+              CASE 
+                WHEN s.facility_type = 'hospital' THEN 
+                   COALESCE(
+                     (SELECT ba FROM unnest(h.branch_names, h.branch_addresses) AS b(bn, ba) WHERE b.bn = s.branch_name LIMIT 1),
+                     h.location
+                   )
+                ELSE c.address
+              END as facility_address
        FROM appointment_slots s
        LEFT JOIN hospitals h ON s.facility_id = h.hospital_id AND s.facility_type = 'hospital'
        LEFT JOIN chambers c ON s.facility_id = c.chamber_id AND s.facility_type = 'chamber'
@@ -298,13 +358,15 @@ exports.bookSlot = async (req, res) => {
       doctor.consultation_fee,
       "Fee used:",
       fee,
+      "Branch:",
+      slot.branch_name,
     );
 
     // Create appointment
     const appointmentResult = await client.query(
       `
-      INSERT INTO appointments (patient_id, doctor_id, hospital_id, chamber_id, appt_date, appt_time, status)
-      VALUES ($1, $2, $3, $4, $5, $6, 'scheduled')
+      INSERT INTO appointments (patient_id, doctor_id, hospital_id, chamber_id, branch_name, appt_date, appt_time, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'scheduled')
       RETURNING *
     `,
       [
@@ -312,6 +374,7 @@ exports.bookSlot = async (req, res) => {
         doctorUserId,
         slot.facility_type === "hospital" ? slot.facility_id : null,
         slot.facility_type === "chamber" ? slot.facility_id : null,
+        slot.branch_name || null,
         slot.slot_date,
         slot.slot_time,
       ],
@@ -388,7 +451,8 @@ exports.bookSlot = async (req, res) => {
 New appointment confirmed!
 Patient: ${patientName}
 Time: ${apptDate} at ${apptTime}
-Location: ${slot.facility_name || "Clinic"}
+Location: ${slot.facility_name || "Clinic"} ${slot.branch_name ? `(${slot.branch_name})` : ""}
+Address: ${slot.facility_address || "N/A"}
 Fee: ${fee} BDT (${method})
 
 Please log in to your dashboard for more details.`;

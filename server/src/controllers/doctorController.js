@@ -13,19 +13,13 @@ function canActOnUser(reqUser, targetUserId) {
 exports.getAllDoctors = async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT u.*, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification,
-        ARRAY_AGG(DISTINCT s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) as specializations,
-        ARRAY_AGG(DISTINCT jsonb_build_object(
-          'degree_name', dd.degree_name,
-          'institution', dd.institution,
-          'achievement_year', dd.achievement_year
-        )) FILTER (WHERE dd.degree_name IS NOT NULL) as degrees
+      SELECT u.*, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification, d.degrees,
+        ARRAY_AGG(DISTINCT s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) as specializations
       FROM users u
       INNER JOIN doctors d ON u.user_id = d.user_id
       LEFT JOIN doctor_specializations ds ON d.user_id = ds.doctor_id
       LEFT JOIN specializations s ON ds.spec_id = s.spec_id
-      LEFT JOIN doctor_degrees dd ON d.user_id = dd.doctor_id
-      GROUP BY u.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification
+      GROUP BY u.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification, d.degrees
       ORDER BY u.user_id DESC
     `);
     res.json(result.rows);
@@ -39,21 +33,14 @@ exports.getDoctorById = async (req, res) => {
     const { id } = req.params;
     const result = await db.query(
       `
-      SELECT u.*, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification,
-        ARRAY_AGG(DISTINCT s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) as specializations,
-        ARRAY_AGG(DISTINCT jsonb_build_object(
-          'degree_id', dd.degree_id,
-          'degree_name', dd.degree_name,
-          'institution', dd.institution,
-          'achievement_year', dd.achievement_year
-        )) FILTER (WHERE dd.degree_name IS NOT NULL) as degrees
+      SELECT u.*, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification, d.degrees,
+        ARRAY_AGG(DISTINCT s.spec_name) FILTER (WHERE s.spec_name IS NOT NULL) as specializations
       FROM users u
       INNER JOIN doctors d ON u.user_id = d.user_id
       LEFT JOIN doctor_specializations ds ON d.user_id = ds.doctor_id
       LEFT JOIN specializations s ON ds.spec_id = s.spec_id
-      LEFT JOIN doctor_degrees dd ON d.user_id = dd.doctor_id
       WHERE u.user_id = $1
-      GROUP BY u.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification
+      GROUP BY u.user_id, d.doctor_code, d.consultation_fee, d.license_number, d.experience_years, d.qualification, d.degrees
     `,
       [id],
     );
@@ -103,9 +90,14 @@ exports.createDoctor = async (req, res) => {
     );
     const userId = userResult.rows[0].user_id;
 
+    // Extract degree names if they are objects, or use as is if strings
+    const degreeList = Array.isArray(degrees)
+      ? degrees.map(d => typeof d === 'object' && d.degree_name ? d.degree_name : d).filter(Boolean)
+      : [];
+
     // Create doctor
     await client.query(
-      "INSERT INTO doctors (user_id, doctor_code, consultation_fee, license_number, experience_years, qualification) VALUES ($1, $2, $3, $4, $5, $6)",
+      "INSERT INTO doctors (user_id, doctor_code, consultation_fee, license_number, experience_years, qualification, degrees) VALUES ($1, $2, $3, $4, $5, $6, $7)",
       [
         userId,
         doctor_code,
@@ -113,6 +105,7 @@ exports.createDoctor = async (req, res) => {
         license_number,
         experience_years,
         qualification,
+        degreeList
       ],
     );
 
@@ -122,21 +115,6 @@ exports.createDoctor = async (req, res) => {
         await client.query(
           "INSERT INTO doctor_specializations (doctor_id, spec_id) VALUES ($1, $2)",
           [userId, specId],
-        );
-      }
-    }
-
-    // Add degrees
-    if (degrees && degrees.length > 0) {
-      for (const degree of degrees) {
-        await client.query(
-          "INSERT INTO doctor_degrees (doctor_id, degree_name, institution, achievement_year) VALUES ($1, $2, $3, $4)",
-          [
-            userId,
-            degree.degree_name,
-            degree.institution,
-            degree.achievement_year,
-          ],
         );
       }
     }

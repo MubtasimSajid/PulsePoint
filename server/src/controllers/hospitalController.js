@@ -14,7 +14,7 @@ exports.getMyHospitalStats = async (req, res) => {
     }
 
     const branchesResult = await db.query(
-      "SELECT COUNT(*)::int AS branch_count, MIN(name) AS hospital_name FROM hospitals WHERE admin_user_id = $1",
+      "SELECT SUM(COALESCE(array_length(branch_names, 1), 1))::int AS branch_count, MIN(name) AS hospital_name FROM hospitals WHERE admin_user_id = $1",
       [userId],
     );
 
