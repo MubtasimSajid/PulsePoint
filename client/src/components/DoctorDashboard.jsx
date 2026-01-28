@@ -117,308 +117,363 @@ export default function DoctorDashboard({ doctorId }) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">
-            Doctor Dashboard
-          </h1>
-          <p className="text-slate-500">Manage your practice and patients</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm">
-            <p className="text-xs text-slate-500 font-semibold">Balance</p>
-            <p className="text-lg font-bold text-slate-900 leading-tight">
-              {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
-            </p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-32 animate-fade-in">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-hero-gradient shadow-xl shadow-primary/20 pb-32 md:pb-40 !mb-3">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
+        <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="space-y-4">
+            <div style={{ marginLeft: "20px" }}>
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-4 text-white">
+                Doctor Dashboard
+              </h1>
+              <p className="text-slate-300 text-lg max-w-xl font-medium leading-loose">
+                Manage your practice and patients.
+              </p>
+            </div>
           </div>
 
-          <div className="bg-white p-1 rounded-lg border border-slate-200 shadow-sm flex">
+          <div className="flex items-center gap-4">
+            {/* Balance */}
+            <div
+              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-700/50"
+              style={{ padding: "8px 12px" }}
+            >
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Balance
+              </p>
+              <p className="text-lg font-bold leading-tight text-slate-900 dark:text-white">
+                {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Main Content Area */}
+        <div className="lg:col-span-12">
+          {/* Tabs */}
+          <div
+            className="flex items-center gap-6 bg-card/60 border border-slate-600/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10"
+            style={{ padding: "32px 48px" }}
+          >
             <button
               onClick={() => setActiveTab("appointments")}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
                 activeTab === "appointments"
-                  ? "bg-indigo-50 text-indigo-600"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
+              style={{ padding: "20px 48px" }}
             >
               Appointments
             </button>
             <button
               onClick={() => setActiveTab("schedule")}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
+              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
                 activeTab === "schedule"
-                  ? "bg-indigo-50 text-indigo-600"
-                  : "text-slate-600 hover:bg-slate-50"
+                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
+              style={{ padding: "20px 48px" }}
             >
               Manage Schedule
             </button>
           </div>
-        </div>
-      </div>
 
-      {activeTab === "appointments" && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-6 border-b border-slate-100">
-            <h2 className="text-xl font-bold text-slate-800">
-              Upcoming Appointments
-            </h2>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {!appointments || appointments.length === 0 ? (
-              <div className="p-8 text-center text-slate-500">
-                No appointments found.
-              </div>
-            ) : (
-              appointments.map((appt) => (
-                <div
-                  key={appt.appointment_id}
-                  className="p-6 hover:bg-slate-50 transition-colors flex justify-between items-center"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-indigo-100 text-indigo-600 w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg">
-                      {new Date(appt.appt_date).getDate()}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-500 uppercase">
-                        {new Date(appt.appt_date).toLocaleDateString("en-US", {
-                          month: "long",
-                        })}{" "}
-                        • {appt.appt_time}
-                      </p>
-                      <h3 className="text-lg font-bold text-slate-800">
-                        {appt.patient_name}
-                      </h3>
-                      <p className="text-xs text-slate-400">
-                        ID: {appt.patient_code}
-                      </p>
-                    </div>
+          <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-600/50 p-6 min-h-[800px] !mt-3">
+            {activeTab === "appointments" && (
+              <div className="!mt-3 space-y-3">
+                {!appointments || appointments.length === 0 ? (
+                  <div className="text-center p-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <p className="text-slate-500 dark:text-slate-400">
+                      No appointments found.
+                    </p>
                   </div>
-                  <div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${
-                        appt.status === "completed"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : appt.status === "cancelled"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-blue-100 text-blue-700"
-                      }`}
+                ) : (
+                  appointments.map((appt) => (
+                    <div
+                      key={appt.appointment_id}
+                      className="bg-card p-7 rounded-2xl shadow-sm border border-slate-600/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
                     >
-                      {appt.status}
-                    </span>
+                      <div className="flex items-start gap-4">
+                        <div className="bg-slate-800/50 p-4 rounded-xl text-center min-w-[84px] border border-slate-600/50">
+                          <div className="text-xs font-bold text-slate-400 uppercase">
+                            {new Date(appt.appt_date).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                              },
+                            )}
+                          </div>
+                          <div className="text-xl font-bold text-white">
+                            {new Date(appt.appt_date).getDate()}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            {appt.appt_time?.substring(0, 5)}
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-white text-lg">
+                            {appt.patient_name}
+                          </h3>
+                          <p className="text-sm text-slate-400 font-medium mb-1">
+                            ID: {appt.patient_code}
+                          </p>
+                          <p className="text-xs text-slate-400 flex items-center gap-1">
+                            {/* Add other details if available */}
+                            <span className="font-semibold text-slate-300">
+                               Patient
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`rounded-full text-xs font-bold capitalize ${
+                            appt.status === "completed"
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
+                              : appt.status === "cancelled"
+                                ? "bg-red-500/20 text-red-300 border border-red-500/20"
+                                : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                          }`}
+                          style={{ padding: "8px 20px" }}
+                        >
+                          {appt.status}
+                        </span>
 
-                    {appt.status !== "cancelled" &&
-                      appt.status !== "completed" && (
-                        <button
-                          onClick={() => {
-                            const reason = window.prompt(
-                              "Cancel reason (optional):",
-                              "Doctor cancelled",
-                            );
-                            if (reason === null) return;
-                            cancelAppointmentMutation.mutate({
-                              appointmentId: appt.appointment_id,
-                              reason,
+                        {appt.status !== "cancelled" &&
+                          appt.status !== "completed" && (
+                            <button
+                              onClick={() => {
+                                const reason = window.prompt(
+                                  "Cancel reason (optional):",
+                                  "Doctor cancelled",
+                                );
+                                if (reason === null) return;
+                                cancelAppointmentMutation.mutate({
+                                  appointmentId: appt.appointment_id,
+                                  reason,
+                                });
+                              }}
+                              disabled={cancelAppointmentMutation.isPending}
+                              className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 disabled:opacity-50 transition-colors rounded-full text-xs font-bold"
+                              style={{ padding: "8px 20px" }}
+                            >
+                              {cancelAppointmentMutation.isPending
+                                ? "Cancelling..."
+                                : "Cancel"}
+                            </button>
+                          )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === "schedule" && (
+              <div className="space-y-10">
+                <div className="relative overflow-hidden rounded-2xl bg-hero-gradient p-10 shadow-lg shadow-primary/10">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
+                  <div className="relative flex justify-between items-center">
+                    <div style={{ marginLeft: "20px" }}>
+                      <h2 className="text-2xl font-bold mb-2 text-white">
+                        Weekly Schedule
+                      </h2>
+                      <p className="text-slate-200 opacity-90 max-w-xl leading-relaxed">
+                        Define your recurring weekly availability. Once set,
+                        generate slots so patients can book them.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowScheduleForm(!showScheduleForm)}
+                      className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 disabled:opacity-50 transition-colors rounded-full text-sm font-bold"
+                      style={{ padding: "8px 24px" }}
+                    >
+                      {showScheduleForm ? "Cancel" : "+ New Schedule"}
+                    </button>
+                  </div>
+
+                  {showScheduleForm && (
+                    <form
+                      onSubmit={handleCreateSchedule}
+                      className="mt-10 bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <select
+                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-indigo-200 outline-none focus:bg-white/30"
+                          value={scheduleForm.day_of_week}
+                          onChange={(e) =>
+                            setScheduleForm({
+                              ...scheduleForm,
+                              day_of_week: e.target.value,
+                            })
+                          }
+                        >
+                          {[
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                            "Sunday",
+                          ].map((day) => (
+                            <option
+                              key={day}
+                              value={day}
+                              className="text-slate-800"
+                            >
+                              {day}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="time"
+                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
+                          value={scheduleForm.start_time}
+                          onChange={(e) =>
+                            setScheduleForm({
+                              ...scheduleForm,
+                              start_time: e.target.value,
+                            })
+                          }
+                        />
+                        <input
+                          type="time"
+                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
+                          value={scheduleForm.end_time}
+                          onChange={(e) =>
+                            setScheduleForm({
+                              ...scheduleForm,
+                              end_time: e.target.value,
+                            })
+                          }
+                        />
+                        <select
+                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
+                          value={selectedHospitalName}
+                          onChange={(e) => {
+                            const name = e.target.value;
+                            setSelectedHospitalName(name);
+                            setScheduleForm({
+                              ...scheduleForm,
+                              facility_type: "hospital",
+                              facility_id: "",
                             });
                           }}
-                          disabled={cancelAppointmentMutation.isPending}
-                          className="ml-3 px-3 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 disabled:opacity-50"
                         >
-                          {cancelAppointmentMutation.isPending
-                            ? "Cancelling..."
-                            : "Cancel"}
-                        </button>
-                      )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeTab === "schedule" && (
-        <div className="space-y-10">
-          <div className="bg-indigo-600 rounded-2xl p-10 text-white shadow-lg shadow-indigo-200">
-            <div className="flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">Weekly Schedule</h2>
-                <p className="text-indigo-100 opacity-90 max-w-xl">
-                  Define your recurring weekly availability. Once set, generate
-                  slots so patients can book them.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowScheduleForm(!showScheduleForm)}
-                className="bg-white text-indigo-600 px-5 py-2.5 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all active:scale-95"
-              >
-                {showScheduleForm ? "Cancel" : "+ New Schedule"}
-              </button>
-            </div>
-
-            {showScheduleForm && (
-              <form
-                onSubmit={handleCreateSchedule}
-                className="mt-10 bg-white/10 backdrop-blur-md p-8 rounded-xl border border-white/20"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <select
-                    className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white placeholder-indigo-200 outline-none focus:bg-white/30"
-                    value={scheduleForm.day_of_week}
-                    onChange={(e) =>
-                      setScheduleForm({
-                        ...scheduleForm,
-                        day_of_week: e.target.value,
-                      })
-                    }
-                  >
-                    {[
-                      "Monday",
-                      "Tuesday",
-                      "Wednesday",
-                      "Thursday",
-                      "Friday",
-                      "Saturday",
-                      "Sunday",
-                    ].map((day) => (
-                      <option key={day} value={day} className="text-slate-800">
-                        {day}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="time"
-                    className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                    value={scheduleForm.start_time}
-                    onChange={(e) =>
-                      setScheduleForm({
-                        ...scheduleForm,
-                        start_time: e.target.value,
-                      })
-                    }
-                  />
-                  <input
-                    type="time"
-                    className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                    value={scheduleForm.end_time}
-                    onChange={(e) =>
-                      setScheduleForm({
-                        ...scheduleForm,
-                        end_time: e.target.value,
-                      })
-                    }
-                  />
-                  <select
-                    className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                    value={selectedHospitalName}
-                    onChange={(e) => {
-                      const name = e.target.value;
-                      setSelectedHospitalName(name);
-                      setScheduleForm({
-                        ...scheduleForm,
-                        facility_type: "hospital",
-                        facility_id: "",
-                      });
-                    }}
-                  >
-                    <option value="" className="text-slate-800">
-                      Select Hospital Name
-                    </option>
-                    {hospitalNames.map((name) => (
-                      <option
-                        key={name}
-                        value={name}
-                        className="text-slate-800"
+                          <option value="" className="text-slate-800">
+                            Select Hospital Name
+                          </option>
+                          {hospitalNames.map((name) => (
+                            <option
+                              key={name}
+                              value={name}
+                              className="text-slate-800"
+                            >
+                              {name}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
+                          value={scheduleForm.facility_id}
+                          onChange={(e) =>
+                            setScheduleForm({
+                              ...scheduleForm,
+                              facility_id: e.target.value,
+                            })
+                          }
+                          required
+                          disabled={!selectedHospitalName}
+                        >
+                          <option value="" className="text-slate-800">
+                            Select Branch
+                          </option>
+                          {hospitalBranches.map((h) => (
+                            <option
+                              key={h.hospital_id}
+                              value={h.hospital_id}
+                              className="text-slate-800"
+                            >
+                              {h.location ||
+                                h.address ||
+                                `Branch ${h.hospital_id}`}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={createScheduleMutation.isPending}
+                        className="mt-4 w-full bg-white text-indigo-600 font-bold py-3 rounded-lg hover:bg-indigo-50 transition-colors"
                       >
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-white outline-none focus:bg-white/30"
-                    value={scheduleForm.facility_id}
-                    onChange={(e) =>
-                      setScheduleForm({
-                        ...scheduleForm,
-                        facility_id: e.target.value,
-                      })
-                    }
-                    required
-                    disabled={!selectedHospitalName}
-                  >
-                    <option value="" className="text-slate-800">
-                      Select Branch
-                    </option>
-                    {hospitalBranches.map((h) => (
-                      <option
-                        key={h.hospital_id}
-                        value={h.hospital_id}
-                        className="text-slate-800"
-                      >
-                        {h.location || h.address || `Branch ${h.hospital_id}`}
-                      </option>
-                    ))}
-                  </select>
+                        {createScheduleMutation.isPending
+                          ? "Saving..."
+                          : "Save Schedule Rule"}
+                      </button>
+                    </form>
+                  )}
                 </div>
-                <button
-                  type="submit"
-                  disabled={createScheduleMutation.isPending}
-                  className="mt-4 w-full bg-white text-indigo-600 font-bold py-3 rounded-lg hover:bg-indigo-50 transition-colors"
-                >
-                  {createScheduleMutation.isPending
-                    ? "Saving..."
-                    : "Save Schedule Rule"}
-                </button>
-              </form>
-            )}
-          </div>
 
-          <div className="grid gap-8">
-            {schedules?.map((schedule) => (
-              <div
-                key={schedule.schedule_id}
-                className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-                      {schedule.day_of_week}
-                    </span>
-                    <span className="text-slate-400 text-sm">•</span>
-                    <span className="text-slate-600 font-medium">
-                      {schedule.start_time.slice(0, 5)} -{" "}
-                      {schedule.end_time.slice(0, 5)}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-slate-800">
-                    {schedule.facility_name}
-                  </h3>
-                  <p className="text-xs text-slate-400">{schedule.location}</p>
+                <div className="!mt-3 space-y-3">
+                  {schedules?.map((schedule) => (
+                    <div
+                      key={schedule.schedule_id}
+                      className="bg-card p-7 rounded-2xl shadow-sm border border-slate-600/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
+                    >
+                      <div style={{ marginLeft: "20px" }}>
+                        <div className="flex items-center gap-3 mb-1">
+                          <span
+                            className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 rounded-full text-xs font-bold uppercase tracking-wide"
+                            style={{ padding: "4px 12px" }}
+                          >
+                            {schedule.day_of_week}
+                          </span>
+                          <span className="text-slate-500 mx-1">•</span>
+                          <span className="text-slate-400 font-medium">
+                            {schedule.start_time.slice(0, 5)} -{" "}
+                            {schedule.end_time.slice(0, 5)}
+                          </span>
+                        </div>
+                        <h3 className="font-bold text-white text-lg mt-2">
+                          {schedule.facility_name}
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {schedule.location}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          generateSlotsMutation.mutate({
+                            schedule_id: schedule.schedule_id,
+                            weeks: 4,
+                          })
+                        }
+                        disabled={generateSlotsMutation.isPending}
+                        className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 hover:text-indigo-300 disabled:opacity-50 transition-colors rounded-full text-sm font-bold"
+                        style={{ padding: "8px 24px" }}
+                      >
+                        Regenerate Slots
+                      </button>
+                    </div>
+                  ))}
+                  {(!schedules || schedules.length === 0) && (
+                    <div className="text-center p-12 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                      <p className="text-slate-500 dark:text-slate-400">
+                        No schedule rules defined yet.
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <button
-                  onClick={() =>
-                    generateSlotsMutation.mutate({
-                      schedule_id: schedule.schedule_id,
-                      weeks: 4,
-                    })
-                  }
-                  disabled={generateSlotsMutation.isPending}
-                  className="px-4 py-2 rounded-lg border border-indigo-200 text-indigo-600 font-medium text-sm hover:bg-indigo-50 transition-colors"
-                >
-                  Regenerate Slots
-                </button>
-              </div>
-            ))}
-            {(!schedules || schedules.length === 0) && (
-              <div className="text-center p-12 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
-                <p className="text-slate-500">No schedule rules defined yet.</p>
               </div>
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

@@ -143,35 +143,45 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl p-10 animate-fade-in">
+    <div className="max-w-4xl mx-auto bg-card rounded-2xl shadow-xl p-10 animate-fade-in" style={{ marginLeft: '40px' }}>
       <div className="flex items-center justify-between mb-10">
         <div>
-          <p className="text-sm font-semibold text-primary uppercase tracking-wide">
+          <h1 className="text-4xl font-bold text-[#3AAFA9] uppercase tracking-wide">
             Profile
-          </p>
-          <h1 className="text-3xl font-bold text-foreground">
-            Update your details
           </h1>
         </div>
-      </div>
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-5" style={{ padding: '10px 16px' }}>
+          <div className="flex gap-5">
+            <div className="flex flex-col items-center">
+              <span className="text-3xl font-bold text-slate-900 dark:text-white">{form.experience_years || 0} Yrs</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Experience</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-3xl font-bold text-slate-900 dark:text-white">${form.consultation_fee || 0}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Fee</span>
+            </div>
+          </div>
 
-      {form.specializations && form.specializations.length > 0 && (
-        <div className="mb-6 bg-background border border-border rounded-xl p-4 text-sm text-muted-foreground">
-          <div className="font-semibold text-foreground mb-2">
-            Specializations
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {form.specializations.map((spec, idx) => (
-              <span
-                key={`${spec}-${idx}`}
-                className="px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 text-xs font-semibold"
-              >
-                {spec}
-              </span>
-            ))}
-          </div>
+          {form.specializations && form.specializations.length > 0 && (
+            <>
+              <div className="w-px h-12 bg-slate-200 dark:bg-slate-700"></div>
+              <div className="flex flex-col justify-center">
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Specializations</span>
+                <div className="flex flex-wrap gap-2 max-w-[250px]">
+                  {form.specializations.map((spec, idx) => (
+                    <span
+                      key={`${spec}-${idx}`}
+                      className="text-xl font-bold text-[#3AAFA9]"
+                    >
+                      {spec}{idx < form.specializations.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
       <form
         onSubmit={(e) => {
@@ -317,10 +327,11 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           />
         </div>
 
-        <div className="md:col-span-2 flex items-center gap-3 pt-2">
+        <div className="md:col-span-2 flex justify-end" style={{ marginTop: '-25px', marginBottom: '30px' }}>
           <button
             type="submit"
-            className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 hover:-translate-y-0.5 transition-all"
+            className="bg-[#3AAFA9] text-white text-base font-semibold rounded-lg shadow-lg shadow-[#3AAFA9]/30 hover:-translate-y-0.5 transition-all"
+            style={{ padding: '10px 22px' }}
             disabled={updateProfile.isPending}
           >
             {updateProfile.isPending ? "Saving..." : "Save changes"}

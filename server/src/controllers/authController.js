@@ -346,6 +346,15 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
+    // Validate expected role matches actual role (if provided)
+    const { expectedRole } = req.body;
+    if (expectedRole && user.role !== expectedRole) {
+      // Return generic error to avoid revealing account exists with different role
+      return res.status(401).json({
+        error: "Invalid email or password"
+      });
+    }
+
     // Update last login
     await pool.query(
       "UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE user_id = $1",

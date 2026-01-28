@@ -37,11 +37,20 @@ exports.getMyHospitalStats = async (req, res) => {
       [userId],
     );
 
+    const balanceResult = await db.query(
+      `SELECT SUM(balance) as total_balance 
+       FROM accounts 
+       WHERE owner_type = 'hospital' 
+       AND owner_id IN (SELECT hospital_id FROM hospitals WHERE admin_user_id = $1)`,
+      [userId]
+    );
+
     res.json({
       hospital_name: hospitalName,
       branch_count: branchCount,
       doctor_count: doctorsResult.rows[0]?.doctor_count ?? 0,
       patient_count: patientsResult.rows[0]?.patient_count ?? 0,
+      total_balance: balanceResult.rows[0]?.total_balance ?? 0,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

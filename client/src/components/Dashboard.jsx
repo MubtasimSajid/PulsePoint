@@ -81,127 +81,147 @@ export default function Dashboard() {
   const upcomingAppointments = appointments?.slice(0, 5) || [];
 
   return (
-    <div className="animate-fade-in">
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }} className="animate-fade-in">
       {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold text-primary">
+      <div style={{ marginBottom: '40px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: 700, color: '#f8fafc' }}>
           Dashboard Overview
         </h1>
-        <p className="text-secondary mt-2 text-lg">Welcome to your healthcare management center</p>
+        <p style={{ color: '#94a3b8', marginTop: '8px', fontSize: '18px' }}>Welcome to your healthcare management center</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '40px' }}>
         {stats.map((stat, index) => (
           <div
             key={index}
-            className={`relative bg-white rounded-2xl p-6 shadow-xl ${stat.shadowColor} border border-white/50 overflow-hidden group hover:-translate-y-2 transition-all duration-500 animate-fade-in`}
-            style={{ animationDelay: `${index * 0.1}s` }}
+            style={{ 
+              position: 'relative', 
+              background: 'rgba(30, 41, 59, 0.7)', 
+              borderRadius: '16px', 
+              padding: '24px', 
+              border: '1px solid rgba(100, 116, 139, 0.5)', 
+              overflow: 'hidden',
+              transition: 'all 0.3s',
+              backdropFilter: 'blur(12px)'
+            }}
           >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-50`}></div>
-            
-            {/* Decorative Circle */}
-            <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${stat.gradient} rounded-full opacity-10 group-hover:opacity-20 transition-opacity duration-500`}></div>
-            
-            <div className="relative">
-              <div className={`inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br ${stat.gradient} rounded-xl shadow-lg mb-4 text-white transform group-hover:scale-110 transition-transform duration-300`}>
+            <div style={{ position: 'relative' }}>
+              <div style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                width: '56px', 
+                height: '56px', 
+                background: '#3AAFA9', 
+                borderRadius: '12px', 
+                marginBottom: '16px', 
+                color: 'white',
+                boxShadow: '0 4px 14px rgba(58, 175, 169, 0.3)'
+              }}>
                 {stat.icon}
               </div>
-              <p className="text-4xl font-extrabold text-foreground mb-1">{stat.value}</p>
-              <p className="text-sm font-medium text-secondary uppercase tracking-wide">{stat.title}</p>
+              <p style={{ fontSize: '36px', fontWeight: 800, color: '#f8fafc', marginBottom: '4px' }}>{stat.value}</p>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{stat.title}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Recent Appointments */}
-      <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-white/50 overflow-hidden">
-        <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div style={{ background: 'rgba(30, 41, 59, 0.7)', borderRadius: '16px', border: '1px solid rgba(100, 116, 139, 0.5)', overflow: 'hidden', backdropFilter: 'blur(12px)' }}>
+        <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(100, 116, 139, 0.5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '48px', height: '48px', background: '#3AAFA9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 4px 14px rgba(58, 175, 169, 0.3)' }}>
+                <svg style={{ width: '24px', height: '24px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-foreground">Recent Appointments</h2>
-                <p className="text-sm text-secondary">Latest scheduled visits</p>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#f8fafc' }}>Recent Appointments</h2>
+                <p style={{ fontSize: '14px', color: '#94a3b8' }}>Latest scheduled visits</p>
               </div>
             </div>
           </div>
         </div>
         
         {upcomingAppointments.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr className="bg-gradient-to-r from-slate-50 to-slate-100/50">
-                  <th className="px-8 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <tr style={{ background: 'rgba(15, 23, 42, 0.5)' }}>
+                  <th style={{ padding: '16px 32px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Patient
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Doctor
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Date
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Time
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '12px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {upcomingAppointments.map((appointment, idx) => (
-                  <tr key={appointment.appointment_id} className="hover:bg-indigo-50/50 transition-colors duration-200 group">
-                    <td className="px-8 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                  <tr key={appointment.appointment_id} style={{ borderBottom: '1px solid rgba(100, 116, 139, 0.3)' }}>
+                    <td style={{ padding: '20px 32px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '40px', height: '40px', background: '#3AAFA9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: '14px' }}>
                           {appointment.patient_name?.charAt(0) || 'P'}
                         </div>
-                        <span className="font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">
+                        <span style={{ fontWeight: 500, color: '#f8fafc' }}>
                           {appointment.patient_name}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                    <td style={{ padding: '20px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '40px', height: '40px', background: '#3AAFA9', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, fontSize: '14px' }}>
                           {appointment.doctor_name?.charAt(0) || 'D'}
                         </div>
-                        <span className="font-medium text-slate-700">
+                        <span style={{ fontWeight: 500, color: '#f8fafc' }}>
                           {appointment.doctor_name}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-slate-600 font-medium">
+                    <td style={{ padding: '20px 24px', color: '#cbd5e1', fontWeight: 500 }}>
                       {new Date(appointment.appt_date).toLocaleDateString('en-US', { 
                         weekday: 'short', 
                         month: 'short', 
                         day: 'numeric' 
                       })}
                     </td>
-                    <td className="px-6 py-5 text-slate-600 font-medium">
+                    <td style={{ padding: '20px 24px', color: '#cbd5e1', fontWeight: 500 }}>
                       {appointment.appt_time}
                     </td>
-                    <td className="px-6 py-5">
+                    <td style={{ padding: '20px 24px' }}>
                       <span
-                        className={`inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-full ${
-                          appointment.status === "scheduled"
-                            ? "bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-700 border border-emerald-200"
-                            : appointment.status === "completed"
-                              ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200"
-                              : "bg-gradient-to-r from-rose-50 to-pink-50 text-rose-700 border border-rose-200"
-                        }`}
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: '6px', 
+                          padding: '6px 16px', 
+                          fontSize: '12px', 
+                          fontWeight: 700, 
+                          borderRadius: '9999px',
+                          background: appointment.status === 'scheduled' ? 'rgba(58, 175, 169, 0.2)' : appointment.status === 'completed' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(244, 63, 94, 0.2)',
+                          color: appointment.status === 'scheduled' ? '#3AAFA9' : appointment.status === 'completed' ? '#818cf8' : '#fb7185',
+                          border: `1px solid ${appointment.status === 'scheduled' ? 'rgba(58, 175, 169, 0.3)' : appointment.status === 'completed' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`
+                        }}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          appointment.status === "scheduled" ? "bg-emerald-500" :
-                          appointment.status === "completed" ? "bg-blue-500" : "bg-rose-500"
-                        }`}></span>
+                        <span style={{ 
+                          width: '6px', 
+                          height: '6px', 
+                          borderRadius: '50%',
+                          background: appointment.status === 'scheduled' ? '#3AAFA9' : appointment.status === 'completed' ? '#818cf8' : '#fb7185'
+                        }}></span>
                         {appointment.status}
                       </span>
                     </td>
@@ -211,14 +231,14 @@ export default function Dashboard() {
             </table>
           </div>
         ) : (
-          <div className="py-16 text-center">
-            <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div style={{ padding: '64px 0', textAlign: 'center' }}>
+            <div style={{ width: '80px', height: '80px', background: 'rgba(100, 116, 139, 0.2)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg style={{ width: '40px', height: '40px', color: '#64748b' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <p className="text-slate-500 font-medium">No appointments found</p>
-            <p className="text-sm text-slate-400 mt-1">Appointments will appear here once scheduled</p>
+            <p style={{ color: '#94a3b8', fontWeight: 500 }}>No appointments found</p>
+            <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>Appointments will appear here once scheduled</p>
           </div>
         )}
       </div>

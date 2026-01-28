@@ -12,6 +12,7 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState("");
   const [step, setStep] = useState("initial"); // 'initial', 'user_select'
   const [showForm, setShowForm] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null); // 'patient', 'doctor', 'hospital_admin'
 
   const loginMutation = useMutation({
     mutationFn: async (data) => (await api.post("/auth/login", data)).data,
@@ -58,7 +59,7 @@ export default function Login({ onLogin }) {
       return;
     }
 
-    loginMutation.mutate(formData);
+    loginMutation.mutate({ ...formData, expectedRole: selectedRole });
   };
 
   const handleChange = (e) => {
@@ -106,6 +107,7 @@ export default function Login({ onLogin }) {
                     <button
                       type="button"
                       onClick={() => {
+                        setSelectedRole('hospital_admin');
                         setShowForm(true);
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
@@ -120,6 +122,7 @@ export default function Login({ onLogin }) {
                     <button
                       type="button"
                       onClick={() => {
+                        setSelectedRole('patient');
                         setShowForm(true);
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
@@ -129,6 +132,7 @@ export default function Login({ onLogin }) {
                     <button
                       type="button"
                       onClick={() => {
+                        setSelectedRole('doctor');
                         setShowForm(true);
                       }}
                       className="auth-secondary-btn py-4 text-lg flex items-center justify-center gap-3"
@@ -151,6 +155,7 @@ export default function Login({ onLogin }) {
                   type="button"
                   onClick={() => {
                     setShowForm(false);
+                    setSelectedRole(null);
                     setError("");
                   }}
                   className="mb-6 text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 text-sm group w-fit"
