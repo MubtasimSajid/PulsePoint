@@ -151,22 +151,13 @@ export default function DoctorProfile({ userId, onUserUpdate }) {
           </h1>
         </div>
         <div className="bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-5" style={{ padding: '10px 16px' }}>
-          <div className="flex gap-5">
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-slate-900 dark:text-white">{form.experience_years || 0} Yrs</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Experience</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <span className="text-3xl font-bold text-slate-900 dark:text-white">${form.consultation_fee || 0}</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Fee</span>
-            </div>
-          </div>
+
 
           {form.specializations && form.specializations.length > 0 && (
             <>
-              <div className="w-px h-12 bg-slate-200 dark:bg-slate-700"></div>
+
               <div className="flex flex-col justify-center">
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Specializations</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">Department</span>
                 <div className="flex flex-wrap gap-2 max-w-[250px]">
                   {form.specializations.map((spec, idx) => (
                     <span

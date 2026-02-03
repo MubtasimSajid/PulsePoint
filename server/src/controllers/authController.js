@@ -78,6 +78,8 @@ exports.register = async (req, res) => {
     );
 
     if (existingUser.rows.length > 0) {
+      // If user exists but NOT verified, we can resend OTP (or handle as overlap).
+      // For now, strict uniqueness.
       return res
         .status(409)
         .json({ error: "User with this email already exists" });
@@ -86,12 +88,12 @@ exports.register = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert user
+    // Insert user (is_verified = FALSE by default)
     await client.query("BEGIN");
 
     const userResult = await client.query(
-      `INSERT INTO users (email, password_hash, full_name, phone, date_of_birth, gender, address, role, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE)
+      `INSERT INTO users (email, password_hash, full_name, phone, date_of_birth, gender, address, role, is_active, is_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, TRUE, FALSE)
        RETURNING user_id, email, full_name, phone, date_of_birth, gender, address, role, created_at`,
       [
         email,
@@ -286,9 +288,79 @@ exports.register = async (req, res) => {
       );
     }
 
+    // Generate OTP
+    const { sendOTP } = require("../services/emailService");
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6 digit
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    await client.query(
+      "INSERT INTO email_verifications (email, otp, expires_at) VALUES ($1, $2, $3)",
+      [email, otp, expiresAt]
+    );
+
+    // Send Email
+    await sendOTP({ to: email, otp });
+
     await client.query("COMMIT");
 
-    // Generate JWT token
+    res.status(201).json({
+      message: "Registration successful. Please check your email for verification code.",
+      requires_verification: true,
+      email: user.email // Return email so client knows where to say it was sent
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Registration error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to register user", details: error.message });
+  } finally {
+    client.release();
+  }
+};
+
+// Verify Email OTP
+exports.verifyEmail = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: "Email and OTP are required" });
+    }
+
+    // Check OTP
+    const otpResult = await client.query(
+      "SELECT * FROM email_verifications WHERE email = $1 AND otp = $2 AND expires_at > NOW()",
+      [email, otp]
+    );
+
+    if (otpResult.rows.length === 0) {
+      return res.status(400).json({ error: "Invalid or expired verification code" });
+    }
+
+    // Verify User
+    await client.query("BEGIN");
+    
+    // Mark user verified
+    const userUpdate = await client.query(
+      "UPDATE users SET is_verified = TRUE WHERE email = $1 RETURNING user_id, email, role, full_name, phone, date_of_birth, gender, address",
+      [email]
+    );
+
+    if (userUpdate.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = userUpdate.rows[0];
+
+    // Clean up used OTPs
+    await client.query("DELETE FROM email_verifications WHERE email = $1", [email]);
+
+    await client.query("COMMIT");
+
+    // Auto-login (generate token)
     const token = jwt.sign(
       { userId: user.user_id, email: user.email, role: user.role },
       JWT_SECRET,
@@ -297,27 +369,54 @@ exports.register = async (req, res) => {
 
     const onboarding = await buildOnboardingStatus(user.user_id, user.role);
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        user_id: user.user_id,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role,
-        phone: user.phone,
-        date_of_birth: user.date_of_birth,
-        gender: user.gender,
-        address: user.address,
-      },
-      onboarding,
+    res.json({
+      message: "Email verified successfully",
       token,
+      user,
+      onboarding
     });
+
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("Registration error:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to register user", details: error.message });
+    console.error("Verification error:", error);
+    res.status(500).json({ error: "Verification failed" });
+  } finally {
+    client.release();
+  }
+};
+
+// Resend OTP
+exports.resendOTP = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email required" });
+
+    // Check if user exists
+    const userCheck = await client.query("SELECT is_verified FROM users WHERE email = $1", [email]);
+    if (userCheck.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (userCheck.rows[0].is_verified) {
+      return res.status(400).json({ error: "User already verified" });
+    }
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await client.query(
+      "INSERT INTO email_verifications (email, otp, expires_at) VALUES ($1, $2, $3)",
+      [email, otp, expiresAt]
+    );
+
+    const { sendOTP } = require("../services/emailService");
+    await sendOTP({ to: email, otp });
+
+    res.json({ message: "Verification code sent" });
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    res.status(500).json({ error: "Failed to resend code" });
   } finally {
     client.release();
   }
@@ -349,6 +448,15 @@ exports.login = async (req, res) => {
       return res
         .status(403)
         .json({ error: "Account is deactivated. Please contact support." });
+    }
+
+    // Check if verified
+    if (user.is_verified === false) {
+      return res.status(403).json({ 
+        error: "Email not verified", 
+        requires_verification: true,
+        email: user.email 
+      });
     }
 
     // Verify password

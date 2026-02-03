@@ -1,167 +1,203 @@
-const db = require("../config/database");
+const pool = require("../config/database");
 
-exports.getAllPrescriptions = async (req, res) => {
+exports.createPrescription = async (req, res) => {
+  const client = await pool.connect();
   try {
-    const result = await db.query(`
-      SELECT p.*, a.appt_date, a.appt_time,
-        u_patient.full_name as patient_name,
-        u_doctor.full_name as doctor_name
-      FROM prescriptions p
-      INNER JOIN appointments a ON p.appointment_id = a.appointment_id
-      INNER JOIN patients pat ON a.patient_id = pat.user_id
-      INNER JOIN users u_patient ON pat.user_id = u_patient.user_id
-      INNER JOIN doctors d ON a.doctor_id = d.user_id
-      INNER JOIN users u_doctor ON d.user_id = u_doctor.user_id
-      ORDER BY p.prescription_id DESC
-    `);
-    res.json(result.rows);
+    const { appointment_id, medications, notes } = req.body;
+    // doctor_id comes from authenticated user.
+    // patient_id must be verified from appointment.
+    const doctor_id = req.user.userId;
+
+    if (!appointment_id || !medications || medications.length === 0) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    await client.query("BEGIN");
+
+    // 1. Fetch appointment details to validate doctor and time window
+    const apptRes = await client.query(
+      `SELECT * FROM appointments WHERE appointment_id = $1`,
+      [appointment_id]
+    );
+
+    if (apptRes.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+
+    const appt = apptRes.rows[0];
+
+    // Verify doctor owns this appointment
+    if (appt.doctor_id !== doctor_id) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ error: "Unauthorized access to this appointment" });
+    }
+
+    // 2. Validate Time Window
+    // Appointment start time: appt.appt_date + appt.appt_time
+    // Fix date formatting (avoid toISOString UTC shift)
+    const d = new Date(appt.appt_date);
+    const dateStr = [
+      d.getFullYear(),
+      ('0' + (d.getMonth() + 1)).slice(-2),
+      ('0' + d.getDate()).slice(-2)
+    ].join('-');
+    
+    // appt.appt_time is HH:MM:SS string
+    const apptDateTimeStr = `${dateStr}T${appt.appt_time}`;
+    const startDateTime = new Date(apptDateTimeStr);
+    const endDateTime = new Date(startDateTime.getTime() + 2 * 60 * 60 * 1000); // +2 hours
+    const now = new Date();
+
+    // Check if NOW is between start and end
+    if (now < startDateTime) {
+      // Too early? Maybe allow? But requirement says "from start... upto 2 hours".
+      // Let's stick to strict requirement.
+      await client.query("ROLLBACK");
+      return res.status(403).json({ 
+        error: "Prescription can only be created after appointment start time." 
+      });
+    }
+
+    if (now > endDateTime) {
+      await client.query("ROLLBACK");
+      return res.status(403).json({ 
+        error: "Prescription time window expired (2 hours limit)." 
+      });
+    }
+
+    // 3. Create Prescription
+    const presResult = await client.query(
+      `INSERT INTO prescriptions (appointment_id, doctor_id, patient_id, notes)
+       VALUES ($1, $2, $3, $4)
+       RETURNING prescription_id`,
+      [appointment_id, doctor_id, appt.patient_id, notes || ""]
+    );
+    const prescription_id = presResult.rows[0].prescription_id;
+
+    // 4. Add Medications
+    for (const med of medications) {
+      await client.query(
+        `INSERT INTO prescription_medications (prescription_id, medicine_name, dosage, duration)
+         VALUES ($1, $2, $3, $4)`,
+        [prescription_id, med.medicine_name, med.dosage, med.duration]
+      );
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({ 
+      message: "Prescription created successfully",
+      prescription_id 
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    await client.query("ROLLBACK");
+    console.error("Create Prescription Error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
   }
 };
 
-exports.getPrescriptionById = async (req, res) => {
+exports.getPrescriptionByAppointment = async (req, res) => {
   try {
-    const { id } = req.params;
-    const result = await db.query(
-      "SELECT * FROM prescriptions WHERE prescription_id = $1",
-      [id],
+    const { appointment_id } = req.params;
+    const client = await pool.connect();
+    
+    const presRes = await client.query(
+      `SELECT * FROM prescriptions WHERE appointment_id = $1`,
+      [appointment_id]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Prescription not found" });
+    if (presRes.rows.length === 0) {
+      client.release();
+      return res.json({ exists: false });
     }
 
-    res.json(result.rows[0]);
+    const prescription = presRes.rows[0];
+    const medRes = await client.query(
+      `SELECT * FROM prescription_medications WHERE prescription_id = $1`,
+      [prescription.prescription_id]
+    );
+
+    client.release();
+    res.json({ 
+      exists: true, 
+      ...prescription, 
+      medications: medRes.rows 
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Get Prescription Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 exports.getPrescriptionsByPatient = async (req, res) => {
   try {
     const { patientId } = req.params;
-    const result = await db.query(
-      `SELECT p.*, a.appt_date, 
-        u_doctor.full_name as doctor_name
-      FROM prescriptions p
-      INNER JOIN appointments a ON p.appointment_id = a.appointment_id
-      INNER JOIN doctors d ON a.doctor_id = d.user_id
-      INNER JOIN users u_doctor ON d.user_id = u_doctor.user_id
-      WHERE a.patient_id = $1
-      ORDER BY a.appt_date DESC`,
+    const client = await pool.connect();
+    
+    // Fetch prescriptions with doctor details
+    const presRes = await client.query(
+      `SELECT p.prescription_id, p.appointment_id, p.doctor_id, p.notes, p.created_at,
+              u.full_name as doctor_name
+       FROM prescriptions p
+       JOIN doctors d ON p.doctor_id = d.user_id
+       JOIN users u ON d.user_id = u.user_id
+       WHERE p.patient_id = $1
+       ORDER BY p.created_at DESC`,
       [patientId]
     );
 
-    // Calculate status (Ongoing/Past) and time left
-    const prescriptions = result.rows.map(p => {
-      const startDate = new Date(p.appt_date);
-      const durationDays = p.duration_days || 0;
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + durationDays);
-      
-      const today = new Date();
-      // Reset time parts for accurate day comparison
-      today.setHours(0, 0, 0, 0);
-      endDate.setHours(0, 0, 0, 0);
+    const prescriptions = presRes.rows;
 
-      const isOngoing = today <= endDate;
-      const daysLeft = isOngoing 
-        ? Math.ceil((endDate - today) / (1000 * 60 * 60 * 24)) 
-        : 0;
+    // Fetch medications for each prescription
+    for (let i = 0; i < prescriptions.length; i++) {
+        const medRes = await client.query(
+            `SELECT * FROM prescription_medications WHERE prescription_id = $1`,
+            [prescriptions[i].prescription_id]
+        );
+        prescriptions[i].medications = medRes.rows;
+        
+        // Flatten structure for UI (PatientPrescriptions.jsx expects flat list of meds sometimes, 
+        // but it iterates prescriptions. Let's look at the UI code again.
+        // It maps prescriptions: p.medicine_name... wait. 
+        // The UI assumes each ITEM is a medicine? 
+        // "ongoing.map((p) => ... p.medicine_name" 
+        // Yes, the UI treats the response as a list of MEDICATIONS, not prescriptions.
+    }
+    
+    // UI expects list of MEDICINES with metadata.
+    // Let's flatten it.
+    const flattened = [];
+    const oneMonth = 30 * 24 * 60 * 60 * 1000;
+    
+    for (const p of prescriptions) {
+        const diff = new Date() - new Date(p.created_at);
+        const status = diff < oneMonth ? "ongoing" : "past";
+        const days_left = Math.max(0, 30 - Math.floor(diff / (24 * 60 * 60 * 1000)));
+        const end_date = new Date(new Date(p.created_at).getTime() + oneMonth).toLocaleDateString();
 
-      return {
-        ...p,
-        status: isOngoing ? 'ongoing' : 'past',
-        days_left: daysLeft,
-        end_date: endDate.toISOString().split('T')[0]
-      };
-    });
-
-    res.json(prescriptions);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.getPrescriptionsByAppointment = async (req, res) => {
-  try {
-    const { appointmentId } = req.params;
-    const result = await db.query(
-      "SELECT * FROM prescriptions WHERE appointment_id = $1",
-      [appointmentId],
-    );
-
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.createPrescription = async (req, res) => {
-  try {
-    const {
-      appointment_id,
-      medicine_name,
-      dosage,
-      instructions,
-      duration_days,
-    } = req.body;
-
-    const result = await db.query(
-      `INSERT INTO prescriptions (appointment_id, medicine_name, dosage, instructions, duration_days) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [appointment_id, medicine_name, dosage, instructions, duration_days],
-    );
-
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.updatePrescription = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const {
-      appointment_id,
-      medicine_name,
-      dosage,
-      instructions,
-      duration_days,
-    } = req.body;
-
-    const result = await db.query(
-      `UPDATE prescriptions 
-       SET appointment_id = $1, medicine_name = $2, dosage = $3, instructions = $4, duration_days = $5
-       WHERE prescription_id = $6 RETURNING *`,
-      [appointment_id, medicine_name, dosage, instructions, duration_days, id],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Prescription not found" });
+        for (const med of p.medications) {
+            flattened.push({
+                prescription_id: p.prescription_id, // non-unique if multiple meds per rx
+                medicine_name: med.medicine_name,
+                dosage: med.dosage,
+                instructions: med.duration, // mapping duration to instructions/duration
+                status: status,
+                days_left: days_left,
+                doctor_name: p.doctor_name,
+                end_date: end_date
+            });
+        }
     }
 
-    res.json(result.rows[0]);
+    client.release();
+    res.json(flattened);
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.deletePrescription = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await db.query(
-      "DELETE FROM prescriptions WHERE prescription_id = $1 RETURNING *",
-      [id],
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Prescription not found" });
-    }
-
-    res.json({ message: "Prescription deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Get Patient Prescriptions Error:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

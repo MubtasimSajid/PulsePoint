@@ -41,6 +41,9 @@ export default function Register({ onRegister }) {
   const [error, setError] = useState("");
   const [step, setStep] = useState("initial"); // 'initial', 'user_select', 'form'
 
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [otp, setOtp] = useState("");
+
   const { data: specializations } = useQuery({
     queryKey: ["specializations"],
     queryFn: async () => (await specializationsAPI.getAll()).data,
@@ -50,6 +53,12 @@ export default function Register({ onRegister }) {
   const registerMutation = useMutation({
     mutationFn: async (data) => (await api.post("/auth/register", data)).data,
     onSuccess: (data) => {
+      if (data.requires_verification) {
+        setRegisterEmail(data.email);
+        setStep("otp");
+        return;
+      }
+      
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       if (data.onboarding) {
@@ -79,6 +88,40 @@ export default function Register({ onRegister }) {
         : "";
       setError(msg + details);
     },
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: async (data) => (await api.post("/auth/verify-email", data)).data,
+    onSuccess: (data) => {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      if (data.onboarding) {
+        localStorage.setItem("onboarding", JSON.stringify(data.onboarding));
+      }
+      if (onRegister) onRegister(data.user);
+
+      if (data.user.role === "doctor") {
+        navigate("/doctor-dashboard");
+      } else if (data.user.role === "hospital_admin") {
+        navigate("/hospital-dashboard");
+      } else {
+        navigate("/my-appointments");
+      }
+    },
+    onError: (error) => {
+      const msg = error.response?.data?.error || "Verification failed.";
+      setError(msg);
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: async (data) => (await api.post("/auth/resend-otp", data)).data,
+    onSuccess: () => {
+      alert("Verification code resent to your email.");
+    },
+    onError: (error) => {
+      setError(error.response?.data?.error || "Failed to resend code.");
+    }
   });
 
   const handleSubmit = (e) => {
@@ -293,6 +336,19 @@ export default function Register({ onRegister }) {
     setError("");
   };
 
+  const handleVerify = (e) => {
+    e.preventDefault();
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit code");
+      return;
+    }
+    verifyMutation.mutate({ email: registerEmail, otp });
+  };
+
+  const handleResend = () => {
+    resendMutation.mutate({ email: registerEmail });
+  };
+
   return (
     <div className="auth-page">
       <div className="auth-shell auth-shell--split">
@@ -405,7 +461,7 @@ export default function Register({ onRegister }) {
                       value={formData.full_name}
                       onChange={handleChange}
                       className="auth-input"
-                      placeholder="Dr. Jane Smith"
+                      placeholder="Full Name"
                       required
                     />
                   </label>
@@ -421,7 +477,7 @@ export default function Register({ onRegister }) {
                         value={formData.hospital_name}
                         onChange={handleChange}
                         className="auth-input"
-                        placeholder="e.g., Sunrise Medical Center"
+                        placeholder="Hospital Name"
                         required
                       />
                     </label>
@@ -447,7 +503,7 @@ export default function Register({ onRegister }) {
                         value={formData.hospital_tax_id}
                         onChange={handleChange}
                         className="auth-input"
-                        placeholder="Tax identifier (for financial processing)"
+                        placeholder="Tax Identifier"
                         required
                       />
                     </label>
@@ -580,7 +636,7 @@ export default function Register({ onRegister }) {
                     value={formData.email}
                     onChange={handleChange}
                     className="auth-input"
-                    placeholder="you@example.com"
+                    placeholder="Email"
                     required
                   />
                 </label>
@@ -594,7 +650,7 @@ export default function Register({ onRegister }) {
                       value={formData.phone}
                       onChange={handleChange}
                       className="auth-input"
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="Phone Number"
                       required
                     />
                   </label>
@@ -856,10 +912,61 @@ export default function Register({ onRegister }) {
           </div>
 
           <div className="auth-footer">
-            <p className="auth-demo-note">Already registered?</p>
-            <Link to="/login" className="auth-link-btn">
-              Go to login
-            </Link>
+            {step === "otp" && (
+              <div className="animate-fade-in space-y-6">
+                <div className="text-center mb-6">
+                  <div className="bg-emerald-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                    <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">Verify your email</h3>
+                  <p className="text-slate-400 text-sm">
+                    We sent a 6-digit code to <span className="text-white font-medium">{registerEmail}</span>
+                  </p>
+                </div>
+
+                <label className="auth-field">
+                  <span>Verification Code</span>
+                  <input
+                    type="text" // changed from "number" to avoid spinner
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="auth-input text-center text-2xl tracking-widest font-mono"
+                    placeholder="000000"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={handleVerify}
+                  disabled={verifyMutation.isPending}
+                  className="auth-primary-btn w-full"
+                >
+                  {verifyMutation.isPending ? "Verifying..." : "Verify Email"}
+                </button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendMutation.isPending}
+                    className="text-sm text-slate-400 hover:text-white transition-colors"
+                  >
+                    Didn't receive code? Resend
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-6 text-center text-sm text-slate-500">
+              Already have an account?{" "}
+              <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
+                Sign in
+              </Link>
+            </div>
           </div>
         </div>
       </div>

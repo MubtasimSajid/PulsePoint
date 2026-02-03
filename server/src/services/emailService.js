@@ -74,6 +74,39 @@ async function sendAppointmentEmail({ to, subject, text, html }) {
   return { sent: true, skipped: false, previewUrl };
 }
 
+async function sendOTP({ to, otp }) {
+  const tx = await getTransporter();
+  if (!tx) {
+    return { sent: false, skipped: true };
+  }
+
+  const from =
+    process.env.EMAIL_FROM ||
+    process.env.EMAIL_USER ||
+    (etherealAccount ? etherealAccount.user : undefined);
+
+  const subject = "Your Verification Code - PulsePoint";
+  const text = `Your verification code is: ${otp}. It will expire in 10 minutes.`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+      <h2 style="color: #2c3e50;">Verify your email</h2>
+      <p>Your verification code is:</p>
+      <h1 style="letter-spacing: 5px; background: #eee; padding: 10px; display: inline-block;">${otp}</h1>
+      <p>This code will expire in 10 minutes.</p>
+    </div>
+  `;
+
+  const info = await tx.sendMail({ from, to, subject, text, html });
+
+  const previewUrl = nodemailer.getTestMessageUrl(info);
+  if (previewUrl) {
+    console.info(`OTP Email preview: ${previewUrl}`);
+  }
+
+  return { sent: true, skipped: false, previewUrl };
+}
+
 module.exports = {
   sendAppointmentEmail,
+  sendOTP,
 };

@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { notificationsAPI, paymentAPI } from "../services/api";
 import PatientAppointments from "./PatientAppointments";
 import PatientPrescriptions from "./PatientPrescriptions";
+import PatientMedicalRecords from "./PatientMedicalRecords";
 import PatientMedicalHistory from "./PatientMedicalHistory";
 
 export default function PatientDashboard({ patientId, user }) {
@@ -27,7 +28,8 @@ export default function PatientDashboard({ patientId, user }) {
   const sections = [
     { id: "appointments", label: "Appointments" },
     { id: "medicines", label: "Medicines" },
-    { id: "history", label: "Medical History" },
+    { id: "records", label: "Medical Records" },
+    { id: "history", label: "Medical History (Doctor)" },
   ];
 
   // If on /my-appointments route, show only appointments
@@ -102,6 +104,9 @@ export default function PatientDashboard({ patientId, user }) {
             )}
             {activeSection === "medicines" && (
               <PatientPrescriptions userId={patientId} />
+            )}
+            {activeSection === "records" && (
+              <PatientMedicalRecords userId={patientId} />
             )}
             {activeSection === "history" && (
               <PatientMedicalHistory userId={patientId} />

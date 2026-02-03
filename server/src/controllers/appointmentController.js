@@ -51,7 +51,6 @@ exports.createAppointment = async (req, res) => {
     function formatFriendlyDate(value) {
       if (!value) return "";
 
-      // Prefer YYYY-MM-DD if present to avoid timezone shifts.
       const raw = String(value);
       const isoPrefix = raw.match(/^\d{4}-\d{2}-\d{2}/);
       let dateObj;

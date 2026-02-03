@@ -72,7 +72,7 @@ CREATE TABLE hospitals (
   category VARCHAR(30) CHECK (category IN ('general', 'multi_specialty', 'single_specialty')),
   specialty VARCHAR(100),
   website_url TEXT,
-  location TEXT, -- Stores the main branch address
+  location TEXT,
   branch_names TEXT[],
   branch_addresses TEXT[],
   FOREIGN KEY (admin_user_id) REFERENCES users(user_id)
@@ -151,7 +151,6 @@ CREATE INDEX idx_appointments_patient
 CREATE INDEX idx_medical_history_patient
   ON medical_history (patient_id);
 
--- Accounts and payments
 CREATE TABLE IF NOT EXISTS accounts (
   account_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   owner_type VARCHAR(20) NOT NULL CHECK (owner_type IN ('user', 'hospital')),
@@ -175,7 +174,6 @@ CREATE TABLE IF NOT EXISTS account_transactions (
   FOREIGN KEY (to_account_id) REFERENCES accounts(account_id) ON DELETE SET NULL
 );
 
--- Validate account owner exists
 CREATE OR REPLACE FUNCTION validate_account_owner()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -203,7 +201,6 @@ CREATE TRIGGER accounts_owner_check
   FOR EACH ROW
   EXECUTE FUNCTION validate_account_owner();
 
--- Keep accounts updated_at fresh
 CREATE OR REPLACE FUNCTION touch_account_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -218,7 +215,6 @@ CREATE TRIGGER accounts_touch_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION touch_account_updated_at();
 
--- Prevent overdraft on completed transactions
 CREATE OR REPLACE FUNCTION ensure_account_balance()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -243,7 +239,6 @@ CREATE TRIGGER transactions_balance_check
   FOR EACH ROW
   EXECUTE FUNCTION ensure_account_balance();
 
--- Apply completed transactions to balances
 CREATE OR REPLACE FUNCTION apply_account_transaction()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -265,7 +260,6 @@ CREATE TRIGGER transactions_apply_balance
   FOR EACH ROW
   EXECUTE FUNCTION apply_account_transaction();
 
--- Auto-create a payment transaction when an appointment is completed
 CREATE OR REPLACE FUNCTION create_appointment_payment()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -278,8 +272,6 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- If the application already recorded a payment for this appointment,
-  -- don't create a duplicate transaction.
   IF EXISTS (
     SELECT 1
     FROM account_transactions
@@ -318,7 +310,6 @@ CREATE TRIGGER appointment_payment_trigger
   FOR EACH ROW
   EXECUTE FUNCTION create_appointment_payment();
 
--- Calculate age from date_of_birth
 CREATE OR REPLACE FUNCTION set_user_age_years()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -337,7 +328,6 @@ CREATE TRIGGER users_age_calculation
   FOR EACH ROW
   EXECUTE FUNCTION set_user_age_years();
 
--- Keep user profile timestamps fresh
 CREATE OR REPLACE FUNCTION touch_user_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -352,12 +342,10 @@ CREATE TRIGGER users_touch_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION touch_user_updated_at();
 
--- BMI calculation trigger for patients
 CREATE OR REPLACE FUNCTION calculate_bmi()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.height_cm IS NOT NULL AND NEW.weight_kg IS NOT NULL THEN
-    -- Only compute for realistic values to avoid numeric overflow
     IF NEW.height_cm >= 30 AND NEW.height_cm <= 300 AND NEW.weight_kg > 0 AND NEW.weight_kg <= 500 THEN
       NEW.bmi := LEAST(
         ROUND(NEW.weight_kg / POWER((NEW.height_cm / 100)::numeric, 2), 2),

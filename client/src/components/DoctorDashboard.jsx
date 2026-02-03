@@ -7,6 +7,7 @@ import {
   hospitalsAPI,
   paymentAPI,
 } from "../services/api";
+import PrescriptionModal from "./PrescriptionModal";
 
 export default function DoctorDashboard({ doctorId }) {
   const location = useLocation();
@@ -21,6 +22,7 @@ export default function DoctorDashboard({ doctorId }) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(initialTab);
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [prescribingAppt, setPrescribingAppt] = useState(null);
   const [selectedHospitalName, setSelectedHospitalName] = useState("");
   const [scheduleForm, setScheduleForm] = useState({
     day_of_week: "Monday",
@@ -230,18 +232,20 @@ export default function DoctorDashboard({ doctorId }) {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span
-                          className={`rounded-full text-xs font-bold capitalize ${
-                            appt.status === "completed"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
-                              : appt.status === "cancelled"
-                                ? "bg-red-500/20 text-red-300 border border-red-500/20"
-                                : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
-                          }`}
-                          style={{ padding: "8px 20px" }}
-                        >
-                          {appt.status}
-                        </span>
+                        {appt.status !== "scheduled" && (
+                          <span
+                            className={`rounded-full text-xs font-bold capitalize ${
+                              appt.status === "completed"
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
+                                : appt.status === "cancelled"
+                                  ? "bg-red-500/20 text-red-300 border border-red-500/20"
+                                  : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                            }`}
+                            style={{ padding: "8px 20px", minWidth: "110px", display: "inline-block", textAlign: "center" }}
+                          >
+                            {appt.status}
+                          </span>
+                        )}
 
                         {appt.status !== "cancelled" &&
                           appt.status !== "completed" && (
@@ -259,13 +263,58 @@ export default function DoctorDashboard({ doctorId }) {
                               }}
                               disabled={cancelAppointmentMutation.isPending}
                               className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 disabled:opacity-50 transition-colors rounded-full text-xs font-bold"
-                              style={{ padding: "8px 20px" }}
+                              style={{ padding: "8px 20px", minWidth: "110px", display: "inline-block", textAlign: "center" }}
                             >
                               {cancelAppointmentMutation.isPending
                                 ? "Cancelling..."
                                 : "Cancel"}
                             </button>
                           )}
+                        
+                        {appt.status !== "cancelled" && (() => {
+                          // Robust Date Parsing
+                          const d = new Date(appt.appt_date);
+                          const dateStr = [
+                            d.getFullYear(),
+                            ('0' + (d.getMonth() + 1)).slice(-2),
+                            ('0' + d.getDate()).slice(-2)
+                          ].join('-');
+                          
+                          const apptDateTime = new Date(`${dateStr}T${appt.appt_time}`);
+                          const now = new Date();
+                          const diffMs = now - apptDateTime;
+                          
+                          // Window: 0 to 2 hours
+                          const isTooEarly = diffMs < 0;
+                          const isExpired = diffMs > 7200000;
+                          const isValid = !isTooEarly && !isExpired;
+
+                          let styleClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300";
+                          let titleText = "Create Prescription";
+
+                          if (isTooEarly) {
+                             styleClass = "bg-slate-700/50 text-slate-500 border-slate-700/50 cursor-not-allowed opacity-70";
+                             titleText = `Coming soon (${Math.round(Math.abs(diffMs)/60000)}m)`;
+                          } else if (isExpired) {
+                             styleClass = "bg-amber-900/20 text-amber-500/50 border-amber-500/20 cursor-not-allowed opacity-70";
+                             titleText = "Prescription window expired (2 hours)";
+                          }
+
+                          return (
+                            <button
+                              onClick={() => isValid && setPrescribingAppt(appt)}
+                              disabled={!isValid}
+                              title={titleText}
+                              className={`border transition-colors rounded-full text-xs font-bold flex items-center gap-2 ${styleClass}`}
+                              style={{ padding: "8px 20px", minWidth: "110px", justifyContent: "center" }}
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              Prescribe
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
                   ))
@@ -311,7 +360,7 @@ export default function DoctorDashboard({ doctorId }) {
                         }`}
                         style={{ padding: '16px 32px' }}
                       >
-                        Weekly Recurring
+                        Weekly
                       </button>
                       <button
                         type="button"
@@ -538,6 +587,13 @@ export default function DoctorDashboard({ doctorId }) {
           </div>
         </div>
       </div>
+      
+      {prescribingAppt && (
+        <PrescriptionModal
+          appointment={prescribingAppt}
+          onClose={() => setPrescribingAppt(null)}
+        />
+      )}
     </div>
   );
 }

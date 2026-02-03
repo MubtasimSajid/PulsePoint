@@ -62,6 +62,18 @@ api.interceptors.response.use(
   },
 );
 
+// Auth API
+export const authAPI = {
+  register: (data) => api.post("/auth/register", data),
+  login: (credentials) => api.post("/auth/login", credentials),
+  verifyEmail: (data) => api.post("/auth/verify-email", data),
+  resendOTP: (data) => api.post("/auth/resend-otp", data),
+  getProfile: () => api.get("/auth/profile"),
+  updateProfile: (data) => api.put("/auth/profile", data),
+  changePassword: (data) => api.put("/auth/change-password", data),
+  logout: () => api.post("/auth/logout"),
+};
+
 // Users API
 export const usersAPI = {
   getAll: () => api.get("/users"),
@@ -194,6 +206,12 @@ export const notificationsAPI = {
 };
 
 // Payment API
+export const medicalRecordsAPI = {
+  create: (data) => api.post("/medical-records", data),
+  getAll: () => api.get("/medical-records"),
+  delete: (id) => api.delete(`/medical-records/${id}`),
+};
+
 export const paymentAPI = {
   getBalance: () => api.get("/payment/balance"),
   addFunds: (amount) => api.post("/payment/add-funds", { amount }),

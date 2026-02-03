@@ -6,6 +6,8 @@ const { authenticate } = require("../middleware/auth");
 // Public routes
 router.post("/register", authController.register);
 router.post("/login", authController.login);
+router.post("/verify-email", authController.verifyEmail);
+router.post("/resend-otp", authController.resendOTP);
 
 // Protected routes
 router.get("/profile", authenticate, authController.getProfile);
