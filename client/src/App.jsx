@@ -84,7 +84,7 @@ function Navigation({ user, onLogout }) {
       <div className="container mx-auto pl-4 pr-6">
         <div className="flex items-center justify-between h-18 py-4">
           <Link to="/" className="flex items-center group nav-brand">
-            <span className="text-xl font-bold text-primary tracking-tight">
+            <span className="text-xl font-bold text-primary tracking-tight hover:text-[#3AAFA9] transition-colors">
               PulsePoint
             </span>
           </Link>
@@ -93,7 +93,7 @@ function Navigation({ user, onLogout }) {
             {/* Theme Toggle Button - ALWAYS VISIBLE */}
             <button
               onClick={toggleTheme}
-              className="p-2 mr-2 rounded-xl text-secondary hover:text-white hover:bg-white/10 transition-colors border border-transparent hover:border-white/10"
+              className="p-2 mr-2 rounded-xl text-slate-500 dark:text-secondary hover:text-[#3AAFA9] hover:bg-[#3AAFA9]/10 transition-colors border border-transparent hover:border-[#3AAFA9]/20"
               title={
                 theme === "dark"
                   ? "Switch to Light Mode"
@@ -361,8 +361,8 @@ function Navigation({ user, onLogout }) {
                   </Link>
                 )}
 
-                <div className="ml-4 pl-4 border-l border-white/10 flex items-center gap-4">
-                  <div className="flex items-center gap-4 px-6 py-3 bg-white/5 rounded-2xl border border-white/5">
+                <div className="ml-4 pl-4 border-l border-slate-200/50 dark:border-white/10 flex items-center gap-4">
+                  <div className="flex items-center gap-4 px-6 py-3 bg-slate-100/50 dark:bg-white/5 rounded-2xl border border-slate-200/50 dark:border-white/5">
                     <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
                       {user.full_name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
@@ -370,10 +370,10 @@ function Navigation({ user, onLogout }) {
                       className="text-right hidden sm:block"
                       style={{ paddingRight: "15px" }}
                     >
-                      <p className="text-sm font-medium text-white leading-none mb-1.5">
+                      <p className="text-sm font-medium text-slate-900 dark:text-white leading-none mb-1.5">
                         {user.full_name}
                       </p>
-                      <p className="text-xs text-secondary capitalize leading-none">
+                      <p className="text-xs text-slate-500 dark:text-secondary capitalize leading-none">
                         {user?.role?.replace("_", " ") || "User"}
                       </p>
                     </div>

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind v4: Configure dark mode to work with .dark class on html/body */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* Light Mode (User Provided) */

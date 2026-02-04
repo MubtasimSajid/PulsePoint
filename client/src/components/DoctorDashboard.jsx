@@ -126,10 +126,10 @@ export default function DoctorDashboard({ doctorId }) {
         <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-4">
             <div style={{ marginLeft: "20px" }}>
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-4 text-white">
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-4 text-slate-900 dark:text-white">
                 Doctor Dashboard
               </h1>
-              <p className="text-slate-300 text-lg max-w-xl font-medium leading-loose">
+              <p className="text-slate-600 dark:text-slate-300 text-lg max-w-xl font-medium leading-loose">
                 Manage your practice and patients.
               </p>
             </div>
@@ -157,7 +157,7 @@ export default function DoctorDashboard({ doctorId }) {
         <div className="lg:col-span-12">
           {/* Tabs */}
           <div
-            className="flex items-center gap-6 bg-card/60 border border-slate-600/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10"
+            className="flex items-center gap-6 bg-card/60 border border-slate-200 dark:border-slate-600/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10"
             style={{ padding: "32px 48px" }}
           >
             <button
@@ -184,7 +184,7 @@ export default function DoctorDashboard({ doctorId }) {
             </button>
           </div>
 
-          <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-600/50 p-6 min-h-[800px] !mt-3">
+          <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-600/50 p-6 min-h-[800px] !mt-3">
             {activeTab === "appointments" && (
               <div className="!mt-3 space-y-3">
                 {!appointments || appointments.length === 0 ? (
@@ -197,10 +197,10 @@ export default function DoctorDashboard({ doctorId }) {
                   appointments.map((appt) => (
                     <div
                       key={appt.appointment_id}
-                      className="bg-card p-7 rounded-2xl shadow-sm border border-slate-600/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
+                      className="bg-card p-7 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-600/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="bg-slate-800/50 p-4 rounded-xl text-center min-w-[84px] border border-slate-600/50">
+                        <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-xl text-center min-w-[84px] border border-slate-200 dark:border-slate-600/50">
                           <div className="text-xs font-bold text-slate-400 uppercase">
                             {new Date(appt.appt_date).toLocaleDateString(
                               "en-US",
@@ -209,7 +209,7 @@ export default function DoctorDashboard({ doctorId }) {
                               },
                             )}
                           </div>
-                          <div className="text-xl font-bold text-white">
+                          <div className="text-xl font-bold text-slate-900 dark:text-white">
                             {new Date(appt.appt_date).getDate()}
                           </div>
                           <div className="text-xs text-slate-400">
@@ -217,7 +217,7 @@ export default function DoctorDashboard({ doctorId }) {
                           </div>
                         </div>
                         <div>
-                          <h3 className="font-bold text-white text-lg">
+                          <h3 className="font-bold text-slate-900 dark:text-white text-lg">
                             {appt.patient_name}
                           </h3>
                           <p className="text-sm text-slate-400 font-medium mb-1">
@@ -225,7 +225,7 @@ export default function DoctorDashboard({ doctorId }) {
                           </p>
                           <p className="text-xs text-slate-400 flex items-center gap-1">
                             {/* Add other details if available */}
-                            <span className="font-semibold text-slate-300">
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">
                                Patient
                             </span>
                           </p>
@@ -236,10 +236,10 @@ export default function DoctorDashboard({ doctorId }) {
                           <span
                             className={`rounded-full text-xs font-bold capitalize ${
                               appt.status === "completed"
-                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
+                                ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20"
                                 : appt.status === "cancelled"
-                                  ? "bg-red-500/20 text-red-300 border border-red-500/20"
-                                  : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                                  ? "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20"
+                                  : "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20"
                             }`}
                             style={{ padding: "8px 20px", minWidth: "110px", display: "inline-block", textAlign: "center" }}
                           >
@@ -542,7 +542,7 @@ export default function DoctorDashboard({ doctorId }) {
                               : schedule.day_of_week}
                           </span>
                           {schedule.schedule_type === 'single' && (
-                             <span className="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+                             <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
                                 Single
                              </span>
                           )}

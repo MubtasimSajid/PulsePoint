@@ -40,7 +40,7 @@ export default function PatientMedicalHistory({ userId }) {
       {history.map((record) => (
         <div
           key={record.history_id}
-          className="bg-white/5 border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-colors"
+          className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl p-6 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-colors"
         >
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -52,26 +52,26 @@ export default function PatientMedicalHistory({ userId }) {
                   day: "numeric",
                 })}
               </p>
-              <h3 className="text-lg font-bold text-white">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 Dr. {record.doctor_name || getDoctorName(record.doctor_id)}
               </h3>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div className="bg-slate-900/50 rounded-lg p-4 border border-white/5">
+            <div className="bg-white/50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200/50 dark:border-slate-700/50">
               <h4 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-2">
                 Diagnosis
               </h4>
-              <p className="text-slate-200">{record.diagnosis}</p>
+              <p className="text-slate-700 dark:text-slate-200">{record.diagnosis}</p>
             </div>
 
             {record.notes && (
-              <div className="bg-slate-900/50 rounded-lg p-4 border border-white/5">
+              <div className="bg-white/50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200/50 dark:border-slate-700/50">
                 <h4 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-2">
                   Notes
                 </h4>
-                <p className="text-slate-300 text-sm leading-relaxed">
+                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
                   {record.notes}
                 </p>
               </div>

@@ -36,7 +36,7 @@ export default function PatientDashboard({ patientId, user }) {
   if (isMyAppointmentsRoute) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-        <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-600/50 p-6 min-h-[800px]">
+        <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 min-h-[800px]">
           <PatientAppointments userId={patientId} />
         </div>
       </div>
@@ -51,10 +51,10 @@ export default function PatientDashboard({ patientId, user }) {
         <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-4">
             <div style={{ marginLeft: '20px' }}>
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-16 text-white">
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-16 text-slate-900 dark:text-white">
                 Welcome Back, {user?.full_name?.split(" ")[0] || "User"}
               </h1>
-              <p className="text-slate-300 text-lg max-w-xl font-medium leading-loose">
+              <p className="text-slate-600 dark:text-slate-300 text-lg max-w-xl font-medium leading-loose">
                 Ready to take control of your health today?
               </p>
             </div>
@@ -81,7 +81,7 @@ export default function PatientDashboard({ patientId, user }) {
         {/* Main Content Area */}
         <div className="lg:col-span-12">
           {/* Tabs */}
-          <div className="flex items-center gap-6 bg-card/60 border border-slate-600/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10" style={{ padding: '32px 48px' }}>
+          <div className="flex items-center gap-6 bg-card/60 border border-slate-200/50 dark:border-slate-700/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10" style={{ padding: '32px 48px' }}>
             {sections.map((section) => (
               <button
                 key={section.id}
@@ -98,7 +98,7 @@ export default function PatientDashboard({ patientId, user }) {
             ))}
           </div>
 
-          <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-600/50 p-6 min-h-[800px] !mt-3">
+          <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 min-h-[800px] !mt-3">
             {activeSection === "appointments" && (
               <PatientAppointments userId={patientId} />
             )}

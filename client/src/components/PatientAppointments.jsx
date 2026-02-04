@@ -55,16 +55,16 @@ export default function PatientAppointments({ userId }) {
           {appointments.map((appt) => (
             <div
               key={appt.appointment_id}
-              className="bg-card p-7 rounded-2xl shadow-sm border border-slate-600/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
+              className="bg-card p-7 rounded-2xl shadow-sm border border-slate-200/50 dark:border-slate-700/50 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-all hover:translate-y-[-2px]"
             >
               <div className="flex items-start gap-4">
-                <div className="bg-slate-800/50 p-4 rounded-xl text-center min-w-[84px] border border-slate-600/50">
+                <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md p-4 rounded-xl text-center min-w-[84px] border border-slate-200/50 dark:border-slate-700/50">
                   <div className="text-xs font-bold text-slate-400 uppercase">
                     {new Date(appt.appt_date).toLocaleDateString("en-US", {
                       month: "short",
                     })}
                   </div>
-                  <div className="text-xl font-bold text-white">
+                  <div className="text-xl font-bold text-slate-900 dark:text-white">
                     {new Date(appt.appt_date).getDate()}
                   </div>
                   <div className="text-xs text-slate-400">
@@ -72,14 +72,14 @@ export default function PatientAppointments({ userId }) {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-lg">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-lg">
                     Dr. {appt.doctor_name}
                   </h3>
                   <p className="text-sm text-slate-400 font-medium mb-1">
                     {appt.department_name}
                   </p>
                   <p className="text-xs text-slate-400 flex items-center gap-1">
-                    <span className="font-semibold text-slate-300">
+                    <span className="font-semibold text-slate-600 dark:text-slate-300">
                       {appt.hospital_name || appt.chamber_name}
                     </span>
                     <span className="text-slate-500 mx-1">•</span>
@@ -91,10 +91,10 @@ export default function PatientAppointments({ userId }) {
                 <span
                   className={`rounded-full text-xs font-bold capitalize ${
                     appt.status === "completed"
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/20"
+                      ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20"
                       : appt.status === "cancelled"
-                        ? "bg-red-500/20 text-red-300 border border-red-500/20"
-                        : "bg-blue-500/20 text-blue-300 border border-blue-500/20"
+                        ? "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20"
+                        : "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20"
                   }`}
                   style={{ padding: '8px 20px' }}
                 >
