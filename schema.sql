@@ -10,6 +10,7 @@ CREATE TABLE users (
   password_hash VARCHAR(255),
   role VARCHAR(20) DEFAULT 'patient' CHECK (role IN ('patient', 'doctor', 'hospital_admin', 'admin')),
   is_active BOOLEAN DEFAULT TRUE,
+  is_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -103,7 +104,8 @@ CREATE TABLE appointments (
   hospital_id INT,
   chamber_id INT,
   department_id INT,
-  appt_date DATE NOT NULL,
+  branch_name VARCHAR(150),
+  appt_date DATE NOT N~ULL,
   appt_time TIME NOT NULL,
   status VARCHAR(20) DEFAULT 'scheduled',
   note TEXT,
@@ -141,6 +143,32 @@ CREATE TABLE medical_history (
   FOREIGN KEY (patient_id) REFERENCES patients(user_id) ON DELETE CASCADE,
   FOREIGN KEY (doctor_id) REFERENCES doctors(user_id)
 );
+
+CREATE TABLE IF NOT EXISTS medical_records (
+  record_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  patient_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  record_type VARCHAR(50) NOT NULL,
+  record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  description TEXT,
+  file_url TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (patient_id) REFERENCES patients(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_medical_records_patient
+  ON medical_records(patient_id);
+
+CREATE TABLE IF NOT EXISTS email_verifications (
+  id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  otp VARCHAR(10) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_email_verifications_email
+  ON email_verifications(email);
 
 CREATE INDEX idx_appointments_doctor_date
   ON appointments (doctor_id, appt_date);

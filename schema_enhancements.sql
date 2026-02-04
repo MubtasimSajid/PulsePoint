@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS doctor_schedules (
   doctor_id INT NOT NULL,
   facility_id INT, -- References either hospital_id or chamber_id
   facility_type VARCHAR(10) CHECK (facility_type IN ('hospital', 'chamber')),
+  branch_name VARCHAR(150),
+  schedule_type VARCHAR(10) DEFAULT 'weekly' CHECK (schedule_type IN ('weekly', 'single')),
+  specific_date DATE,
   day_of_week VARCHAR(10) CHECK (day_of_week IN ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')),
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
@@ -14,6 +17,19 @@ CREATE TABLE IF NOT EXISTS doctor_schedules (
   is_active BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (doctor_id) REFERENCES doctors(user_id) ON DELETE CASCADE
 );
+
+-- Backward-compatible upgrades for existing databases
+ALTER TABLE doctor_schedules ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);
+ALTER TABLE doctor_schedules
+  ADD COLUMN IF NOT EXISTS schedule_type VARCHAR(10) DEFAULT 'weekly' CHECK (schedule_type IN ('weekly', 'single'));
+ALTER TABLE doctor_schedules ADD COLUMN IF NOT EXISTS specific_date DATE;
+
+ALTER TABLE doctor_schedules DROP CONSTRAINT IF EXISTS check_schedule_type_dates;
+ALTER TABLE doctor_schedules ADD CONSTRAINT check_schedule_type_dates
+  CHECK (
+    (schedule_type = 'weekly') OR
+    (schedule_type = 'single' AND specific_date IS NOT NULL)
+  );
 
 -- Time Slots (individual bookable slots)
 CREATE TABLE IF NOT EXISTS appointment_slots (
@@ -24,13 +40,21 @@ CREATE TABLE IF NOT EXISTS appointment_slots (
   slot_time TIME NOT NULL,
   facility_id INT,
   facility_type VARCHAR(10) CHECK (facility_type IN ('hospital', 'chamber')),
+  branch_name VARCHAR(150),
   status VARCHAR(20) DEFAULT 'free' CHECK (status IN ('free', 'booked', 'blocked', 'cancelled')),
   appointment_id INT,
   FOREIGN KEY (schedule_id) REFERENCES doctor_schedules(schedule_id) ON DELETE CASCADE,
   FOREIGN KEY (doctor_id) REFERENCES doctors(user_id) ON DELETE CASCADE,
   FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id) ON DELETE SET NULL,
-  UNIQUE(doctor_id, slot_date, slot_time, facility_type)
+  UNIQUE(doctor_id, slot_date, slot_time, facility_type, branch_name)
 );
+
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS branch_name VARCHAR(150);
+
+ALTER TABLE appointment_slots DROP CONSTRAINT IF EXISTS appointment_slots_doctor_id_slot_date_slot_time_facility_ty_key;
+ALTER TABLE appointment_slots DROP CONSTRAINT IF EXISTS appointment_slots_unique_slot;
+ALTER TABLE appointment_slots ADD CONSTRAINT appointment_slots_unique_slot UNIQUE(doctor_id, slot_date, slot_time, facility_type, branch_name);
 
 -- Triage Notes (pre-appointment information)
 CREATE TABLE IF NOT EXISTS triage_notes (
@@ -139,6 +163,36 @@ BEGIN
   IF NOT FOUND THEN
     RETURN;
   END IF;
+
+  -- Handle 'single' schedules (one specific date)
+  IF v_schedule.schedule_type = 'single' THEN
+    IF v_schedule.specific_date >= p_start_date AND v_schedule.specific_date <= p_end_date THEN
+      v_current_date := v_schedule.specific_date;
+      v_current_time := v_schedule.start_time;
+
+      WHILE v_current_time < v_schedule.end_time LOOP
+        INSERT INTO appointment_slots (
+          schedule_id, doctor_id, slot_date, slot_time,
+          facility_id, facility_type, branch_name, status
+        )
+        VALUES (
+          v_schedule.schedule_id,
+          v_schedule.doctor_id,
+          v_current_date,
+          v_current_time,
+          v_schedule.facility_id,
+          v_schedule.facility_type,
+          v_schedule.branch_name,
+          'free'
+        )
+        ON CONFLICT (doctor_id, slot_date, slot_time, facility_type, branch_name) DO NOTHING;
+
+        v_current_time := v_current_time + (v_schedule.slot_duration_minutes || ' minutes')::INTERVAL;
+      END LOOP;
+    END IF;
+
+    RETURN;
+  END IF;
   
   -- Loop through dates
   v_current_date := p_start_date;
@@ -152,7 +206,7 @@ BEGIN
         -- Insert slot if it doesn't exist
         INSERT INTO appointment_slots (
           schedule_id, doctor_id, slot_date, slot_time, 
-          facility_id, facility_type, status
+          facility_id, facility_type, branch_name, status
         )
         VALUES (
           v_schedule.schedule_id,
@@ -161,9 +215,10 @@ BEGIN
           v_current_time,
           v_schedule.facility_id,
           v_schedule.facility_type,
+          v_schedule.branch_name,
           'free'
         )
-        ON CONFLICT (doctor_id, slot_date, slot_time, facility_type) DO NOTHING;
+        ON CONFLICT (doctor_id, slot_date, slot_time, facility_type, branch_name) DO NOTHING;
         
         -- Increment time by slot duration
         v_current_time := v_current_time + (v_schedule.slot_duration_minutes || ' minutes')::INTERVAL;
