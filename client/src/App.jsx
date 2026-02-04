@@ -40,8 +40,10 @@ function ThemeProvider({ children }) {
     const root = window.document.documentElement;
     if (theme === "light") {
       root.classList.add("light-mode");
+      root.classList.remove("dark");
     } else {
       root.classList.remove("light-mode");
+      root.classList.add("dark");
     }
     localStorage.setItem("theme", theme);
   }, [theme]);
