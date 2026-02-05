@@ -963,7 +963,7 @@ export default function Register({ onRegister }) {
             
             <div className="mt-6 text-center text-sm text-slate-500">
               Already have an account?{" "}
-              <Link to="/login" className="text-indigo-400 hover:text-indigo-300">
+              <Link to="/login" className="text-[#3AAFA9] hover:text-[#2d8a84]">
                 Sign in
               </Link>
             </div>

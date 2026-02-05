@@ -20,6 +20,7 @@ export default function HospitalDashboard() {
 
   return (
     <div
+      className="animate-fade-in"
       style={{
         maxWidth: "1280px",
         margin: "0 auto",
@@ -28,26 +29,25 @@ export default function HospitalDashboard() {
         flexDirection: "column",
         gap: "48px",
       }}
-      className="animate-fade-in"
     >
       {/* Hero Header */}
       <div
+        className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border border-slate-200/50 dark:border-slate-700/50"
         style={{
           position: "relative",
           overflow: "hidden",
           borderRadius: "24px",
-          background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
-          boxShadow: "0 25px 50px -12px rgba(99, 102, 241, 0.2)",
+          boxShadow: "0 25px 50px -12px rgba(0,0,0,0.15)",
         }}
       >
         <div
+          className="bg-white/30 dark:bg-white/10"
           style={{
             position: "absolute",
             top: 0,
             right: 0,
             width: "256px",
             height: "256px",
-            background: "rgba(255,255,255,0.1)",
             borderRadius: "50%",
             filter: "blur(48px)",
             transform: "translate(48px, -48px)",
@@ -67,20 +67,20 @@ export default function HospitalDashboard() {
         >
           <div style={{ marginLeft: "20px" }}>
             <h1
+              className="text-slate-900 dark:text-white"
               style={{
                 fontSize: "48px",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
                 lineHeight: 1.2,
                 marginBottom: "16px",
-                color: "#f8fafc",
               }}
             >
               Hospital Administration
             </h1>
             <p
+              className="text-slate-600 dark:text-slate-300"
               style={{
-                color: "#cbd5e1",
                 fontSize: "18px",
                 maxWidth: "560px",
                 fontWeight: 500,
@@ -102,18 +102,17 @@ export default function HospitalDashboard() {
             }}
           >
             <div
+              className="bg-white/70 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-600/50"
               style={{
-                background: "rgba(30, 41, 59, 0.8)",
                 backdropFilter: "blur(12px)",
                 borderRadius: "16px",
                 padding: "24px",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
-                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)",
+                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
               }}
             >
               <p
+                className="text-slate-500 dark:text-slate-400"
                 style={{
-                  color: "#94a3b8",
                   fontSize: "12px",
                   fontWeight: 500,
                   marginBottom: "4px",
@@ -124,24 +123,24 @@ export default function HospitalDashboard() {
                 Total Doctors
               </p>
               <p
-                style={{ fontSize: "30px", fontWeight: 700, color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontSize: "30px", fontWeight: 700 }}
               >
                 {stats?.doctor_count ?? 0}
               </p>
             </div>
             <div
+              className="bg-white/70 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-600/50"
               style={{
-                background: "rgba(30, 41, 59, 0.8)",
                 backdropFilter: "blur(12px)",
                 borderRadius: "16px",
                 padding: "24px",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
-                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)",
+                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
               }}
             >
               <p
+                className="text-slate-500 dark:text-slate-400"
                 style={{
-                  color: "#94a3b8",
                   fontSize: "12px",
                   fontWeight: 500,
                   marginBottom: "4px",
@@ -152,24 +151,24 @@ export default function HospitalDashboard() {
                 Total Patients
               </p>
               <p
-                style={{ fontSize: "30px", fontWeight: 700, color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontSize: "30px", fontWeight: 700 }}
               >
                 {stats?.patient_count ?? 0}
               </p>
             </div>
             <div
+              className="bg-white/70 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-600/50"
               style={{
-                background: "rgba(30, 41, 59, 0.8)",
                 backdropFilter: "blur(12px)",
                 borderRadius: "16px",
                 padding: "24px",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
-                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)",
+                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
               }}
             >
               <p
+                className="text-slate-500 dark:text-slate-400"
                 style={{
-                  color: "#94a3b8",
                   fontSize: "12px",
                   fontWeight: 500,
                   marginBottom: "4px",
@@ -180,24 +179,24 @@ export default function HospitalDashboard() {
                 Branches
               </p>
               <p
-                style={{ fontSize: "30px", fontWeight: 700, color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontSize: "30px", fontWeight: 700 }}
               >
                 {stats?.branch_count ?? 0}
               </p>
             </div>
             <div
+              className="bg-white/70 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-600/50"
               style={{
-                background: "rgba(30, 41, 59, 0.8)",
                 backdropFilter: "blur(12px)",
                 borderRadius: "16px",
                 padding: "24px",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
-                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)",
+                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
               }}
             >
               <p
+                className="text-slate-500 dark:text-slate-400"
                 style={{
-                  color: "#94a3b8",
                   fontSize: "12px",
                   fontWeight: 500,
                   marginBottom: "4px",
@@ -208,7 +207,8 @@ export default function HospitalDashboard() {
                 Total Balance
               </p>
               <p
-                style={{ fontSize: "30px", fontWeight: 700, color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontSize: "30px", fontWeight: 700 }}
               >
                 {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
               </p>
@@ -225,20 +225,19 @@ export default function HospitalDashboard() {
         }}
       >
         <div
+          className="bg-white/70 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-600/50"
           style={{
-            background: "rgba(30, 41, 59, 0.5)",
             backdropFilter: "blur(24px)",
             borderRadius: "16px",
-            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-            border: "1px solid rgba(100, 116, 139, 0.5)",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.1)",
             padding: "32px",
           }}
         >
           <h2
+            className="text-slate-900 dark:text-white"
             style={{
               fontSize: "20px",
               fontWeight: 700,
-              color: "#f8fafc",
               marginBottom: "24px",
             }}
           >
@@ -252,69 +251,69 @@ export default function HospitalDashboard() {
             }}
           >
             <button
+              className="bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-600/50 hover:bg-slate-200/80 dark:hover:bg-slate-800/50"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                background: "rgba(15, 23, 42, 0.5)",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
             >
               <span
-                style={{ fontWeight: 700, fontSize: "14px", color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontWeight: 700, fontSize: "14px" }}
               >
                 Add Doctor
               </span>
             </button>
             <button
+              className="bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-600/50 hover:bg-slate-200/80 dark:hover:bg-slate-800/50"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                background: "rgba(15, 23, 42, 0.5)",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
             >
               <span
-                style={{ fontWeight: 700, fontSize: "14px", color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontWeight: 700, fontSize: "14px" }}
               >
                 Manage Departments
               </span>
             </button>
             <button
+              className="bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-600/50 hover:bg-slate-200/80 dark:hover:bg-slate-800/50"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                background: "rgba(15, 23, 42, 0.5)",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
             >
               <span
-                style={{ fontWeight: 700, fontSize: "14px", color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontWeight: 700, fontSize: "14px" }}
               >
                 View Reports
               </span>
             </button>
             <button
+              className="bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-600/50 hover:bg-slate-200/80 dark:hover:bg-slate-800/50"
               style={{
                 padding: "24px",
                 borderRadius: "12px",
-                background: "rgba(15, 23, 42, 0.5)",
-                border: "1px solid rgba(100, 116, 139, 0.5)",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "all 0.2s",
               }}
             >
               <span
-                style={{ fontWeight: 700, fontSize: "14px", color: "#f8fafc" }}
+                className="text-slate-900 dark:text-white"
+                style={{ fontWeight: 700, fontSize: "14px" }}
               >
                 Settings
               </span>
@@ -323,20 +322,19 @@ export default function HospitalDashboard() {
         </div>
 
         <div
+          className="bg-white/70 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-600/50"
           style={{
-            background: "rgba(30, 41, 59, 0.5)",
             backdropFilter: "blur(24px)",
             borderRadius: "16px",
-            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
-            border: "1px solid rgba(100, 116, 139, 0.5)",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.1)",
             padding: "32px",
           }}
         >
           <h2
+            className="text-slate-900 dark:text-white"
             style={{
               fontSize: "20px",
               fontWeight: 700,
-              color: "#f8fafc",
               marginBottom: "24px",
             }}
           >
@@ -361,6 +359,7 @@ export default function HospitalDashboard() {
                 return (
                   <div
                     key={item.appointment_id ?? idx}
+                    className="border-slate-200/50 dark:border-slate-600/50"
                     style={{
                       display: "flex",
                       gap: "24px",
@@ -368,7 +367,7 @@ export default function HospitalDashboard() {
                       paddingBottom: "24px",
                       borderBottom:
                         idx < recentActivity.length - 1
-                          ? "1px solid rgba(100, 116, 139, 0.5)"
+                          ? "1px solid"
                           : "none",
                     }}
                   >
@@ -383,10 +382,10 @@ export default function HospitalDashboard() {
                     ></div>
                     <div>
                       <p
+                        className="text-slate-900 dark:text-white"
                         style={{
                           fontSize: "14px",
                           fontWeight: 500,
-                          color: "#f8fafc",
                         }}
                       >
                         Appointment scheduled with Dr. {item.doctor_name}
@@ -394,7 +393,7 @@ export default function HospitalDashboard() {
                           ? ` • Patient: ${item.patient_name}`
                           : ""}
                       </p>
-                      <p style={{ fontSize: "12px", color: "#94a3b8" }}>
+                      <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: "12px" }}>
                         {dateLabel}
                         {dateLabel && timeLabel ? " • " : ""}
                         {timeLabel}
@@ -405,7 +404,7 @@ export default function HospitalDashboard() {
                 );
               })
             ) : (
-              <p style={{ fontSize: "14px", color: "#94a3b8" }}>
+              <p className="text-slate-500 dark:text-slate-400" style={{ fontSize: "14px" }}>
                 No recent activity yet.
               </p>
             )}

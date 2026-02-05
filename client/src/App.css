@@ -253,7 +253,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
-  color: #a5b4fc;
+  color: #3AAFA9;
   margin-bottom: 4px;
 }
 
@@ -309,18 +309,18 @@ body {
   padding: 14px;
   border-radius: 14px;
   border: none;
-  background: linear-gradient(120deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(120deg, #3AAFA9 0%, #2d8a84 100%);
   color: #fff;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(58, 175, 169, 0.3);
   transition: all var(--transition-fast);
 }
 
 .auth-primary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 20px rgba(58, 175, 169, 0.4);
 }
 
 .auth-primary-btn:disabled {
@@ -442,6 +442,11 @@ body {
   pointer-events: none;
 }
 
+/* Hide teal glow in light mode */
+/* :root:not(.dark) .auth-hero::after {
+  display: none;
+} */
+
 .auth-badge {
   display: inline-block;
   padding: 10px 18px;
@@ -475,6 +480,89 @@ body {
   .auth-hero {
     display: none;
   }
+}
+
+/* Light mode overrides for auth components */
+:root:not(.dark) .auth-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #1e293b;
+}
+
+:root:not(.dark) .auth-card h2 {
+  color: #1e293b;
+}
+
+:root:not(.dark) .auth-eyebrow {
+  color: #3AAFA9;
+}
+
+:root:not(.dark) .auth-field span {
+  color: #475569;
+}
+
+:root:not(.dark) .auth-input {
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #1e293b;
+}
+
+:root:not(.dark) .auth-input::placeholder {
+  color: #94a3b8;
+}
+
+:root:not(.dark) .auth-input:focus {
+  border-color: #3AAFA9;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+:root:not(.dark) .auth-secondary-btn {
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #334155;
+}
+
+:root:not(.dark) .auth-secondary-btn:hover {
+  background: rgba(241, 245, 249, 1);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+:root:not(.dark) .auth-divider {
+  color: #94a3b8;
+}
+
+:root:not(.dark) .auth-divider::before,
+:root:not(.dark) .auth-divider::after {
+  background: rgba(148, 163, 184, 0.3);
+}
+
+:root:not(.dark) .auth-link-btn {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #475569;
+}
+
+:root:not(.dark) .auth-link-btn:hover {
+  background: rgba(248, 250, 252, 0.8);
+  color: #1e293b;
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+:root:not(.dark) .auth-badge {
+  background: rgba(58, 175, 169, 0.15);
+  border: 1px solid rgba(58, 175, 169, 0.4);
+  color: #2d8a84;
+}
+
+:root:not(.dark) .auth-title {
+  color: #1e293b;
+}
+
+:root:not(.dark) .auth-subtitle {
+  color: #64748b;
+}
+
+:root:not(.dark) .auth-shell {
+  color: #64748b;
 }
 
 /* Premium Scrollbar */

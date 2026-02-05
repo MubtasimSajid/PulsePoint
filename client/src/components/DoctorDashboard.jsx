@@ -8,6 +8,7 @@ import {
   paymentAPI,
 } from "../services/api";
 import PrescriptionModal from "./PrescriptionModal";
+import PatientRecordLookup from "./PatientRecordLookup";
 
 export default function DoctorDashboard({ doctorId }) {
   const location = useLocation();
@@ -182,6 +183,17 @@ export default function DoctorDashboard({ doctorId }) {
             >
               Manage Schedule
             </button>
+            <button
+              onClick={() => setActiveTab("patients")}
+              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
+                activeTab === "patients"
+                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              }`}
+              style={{ padding: "20px 48px" }}
+            >
+              Patient Records
+            </button>
           </div>
 
           <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200 dark:border-slate-600/50 p-6 min-h-[800px] !mt-3">
@@ -262,7 +274,7 @@ export default function DoctorDashboard({ doctorId }) {
                                 });
                               }}
                               disabled={cancelAppointmentMutation.isPending}
-                              className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:text-red-300 disabled:opacity-50 transition-colors rounded-full text-xs font-bold"
+                              className="bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20 hover:bg-red-200 dark:hover:bg-red-500/20 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 transition-colors rounded-full text-xs font-bold"
                               style={{ padding: "8px 20px", minWidth: "110px", display: "inline-block", textAlign: "center" }}
                             >
                               {cancelAppointmentMutation.isPending
@@ -289,14 +301,14 @@ export default function DoctorDashboard({ doctorId }) {
                           const isExpired = diffMs > 7200000;
                           const isValid = !isTooEarly && !isExpired;
 
-                          let styleClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 hover:text-emerald-300";
+                          let styleClass = "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 hover:text-emerald-800 dark:hover:text-emerald-300";
                           let titleText = "Create Prescription";
 
                           if (isTooEarly) {
-                             styleClass = "bg-slate-700/50 text-slate-500 border-slate-700/50 cursor-not-allowed opacity-70";
+                             styleClass = "bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700/50 cursor-not-allowed opacity-70";
                              titleText = `Coming soon (${Math.round(Math.abs(diffMs)/60000)}m)`;
                           } else if (isExpired) {
-                             styleClass = "bg-amber-900/20 text-amber-500/50 border-amber-500/20 cursor-not-allowed opacity-70";
+                             styleClass = "bg-amber-100 dark:bg-amber-900/20 text-amber-500 dark:text-amber-500/50 border-amber-200 dark:border-amber-500/20 cursor-not-allowed opacity-70";
                              titleText = "Prescription window expired (2 hours)";
                           }
 
@@ -583,6 +595,10 @@ export default function DoctorDashboard({ doctorId }) {
                   )}
                 </div>
               </div>
+            )}
+
+            {activeTab === "patients" && (
+              <PatientRecordLookup />
             )}
           </div>
         </div>
