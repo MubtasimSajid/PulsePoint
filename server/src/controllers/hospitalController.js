@@ -62,11 +62,11 @@ exports.getMyHospitalStats = async (req, res) => {
 
     const balanceResult = canonicalHospitalId
       ? await db.query(
-          `SELECT COALESCE(balance, 0) as total_balance
+        `SELECT COALESCE(balance, 0) as total_balance
            FROM accounts
            WHERE owner_type = 'hospital' AND owner_id = $1`,
-          [canonicalHospitalId],
-        )
+        [canonicalHospitalId],
+      )
       : { rows: [{ total_balance: 0 }] };
 
     res.json({
@@ -257,6 +257,197 @@ exports.getMyRecentActivity = async (req, res) => {
     );
 
     res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get doctors for the logged-in hospital admin
+exports.getMyDoctors = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (role !== "hospital_admin" && role !== "admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const result = await db.query(
+      `SELECT 
+         u.user_id,
+         u.full_name,
+         u.email,
+         u.phone,
+         d.doctor_code,
+         d.specializations,
+         d.experience_years,
+         hd.consultation_fee,
+         hd.hospital_id,
+         h.name as hospital_name
+       FROM hospital_doctors hd
+       JOIN hospitals h ON h.hospital_id = hd.hospital_id
+       JOIN doctors d ON d.user_id = hd.doctor_id
+       JOIN users u ON u.user_id = d.user_id
+       WHERE h.admin_user_id = $1
+       ORDER BY u.full_name`,
+      [userId],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Add a doctor to hospital
+exports.addDoctorToHospital = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (role !== "hospital_admin" && role !== "admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { doctor_id, consultation_fee } = req.body;
+
+    if (!doctor_id) {
+      return res.status(400).json({ error: "Doctor ID is required" });
+    }
+
+    // Get the hospital for this admin
+    const hospitalRes = await db.query(
+      "SELECT hospital_id FROM hospitals WHERE admin_user_id = $1 LIMIT 1",
+      [userId],
+    );
+
+    if (hospitalRes.rows.length === 0) {
+      return res.status(404).json({ error: "No hospital found for this admin" });
+    }
+
+    const hospitalId = hospitalRes.rows[0].hospital_id;
+
+    // Check if doctor already exists in this hospital
+    const existingRes = await db.query(
+      "SELECT * FROM hospital_doctors WHERE hospital_id = $1 AND doctor_id = $2",
+      [hospitalId, doctor_id],
+    );
+
+    if (existingRes.rows.length > 0) {
+      return res.status(400).json({ error: "Doctor already added to this hospital" });
+    }
+
+    // Add doctor to hospital
+    const result = await db.query(
+      `INSERT INTO hospital_doctors (hospital_id, doctor_id, consultation_fee)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [hospitalId, doctor_id, consultation_fee || 500],
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Remove a doctor from hospital
+exports.removeDoctorFromHospital = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (role !== "hospital_admin" && role !== "admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { doctorId } = req.params;
+
+    // Get the hospital for this admin
+    const hospitalRes = await db.query(
+      "SELECT hospital_id FROM hospitals WHERE admin_user_id = $1 LIMIT 1",
+      [userId],
+    );
+
+    if (hospitalRes.rows.length === 0) {
+      return res.status(404).json({ error: "No hospital found for this admin" });
+    }
+
+    const hospitalId = hospitalRes.rows[0].hospital_id;
+
+    const result = await db.query(
+      "DELETE FROM hospital_doctors WHERE hospital_id = $1 AND doctor_id = $2 RETURNING *",
+      [hospitalId, doctorId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Doctor not found in this hospital" });
+    }
+
+    res.json({ message: "Doctor removed from hospital successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Update a doctor's consultation fee
+exports.updateDoctorFee = async (req, res) => {
+  try {
+    const userId = req.user?.userId;
+    const role = req.user?.role;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+
+    if (role !== "hospital_admin" && role !== "admin") {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const { doctorId } = req.params;
+    const { consultation_fee } = req.body;
+
+    if (consultation_fee === undefined) {
+      return res.status(400).json({ error: "Consultation fee is required" });
+    }
+
+    // Get the hospital for this admin
+    const hospitalRes = await db.query(
+      "SELECT hospital_id FROM hospitals WHERE admin_user_id = $1 LIMIT 1",
+      [userId],
+    );
+
+    if (hospitalRes.rows.length === 0) {
+      return res.status(404).json({ error: "No hospital found for this admin" });
+    }
+
+    const hospitalId = hospitalRes.rows[0].hospital_id;
+
+    const result = await db.query(
+      `UPDATE hospital_doctors 
+       SET consultation_fee = $1
+       WHERE hospital_id = $2 AND doctor_id = $3
+       RETURNING *`,
+      [consultation_fee, hospitalId, doctorId],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Doctor not found in this hospital" });
+    }
+
+    res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

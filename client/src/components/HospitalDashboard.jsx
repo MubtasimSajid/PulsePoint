@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { hospitalsAPI, paymentAPI } from "../services/api";
+import StaffManagement from "./StaffManagement";
 
 export default function HospitalDashboard() {
   const { data: stats } = useQuery({
@@ -319,6 +320,19 @@ export default function HospitalDashboard() {
               </span>
             </button>
           </div>
+        </div>
+
+        {/* Staff Management Section */}
+        <div
+          className="bg-white/70 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-600/50"
+          style={{
+            backdropFilter: "blur(24px)",
+            borderRadius: "16px",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.1)",
+            padding: "32px",
+          }}
+        >
+          <StaffManagement />
         </div>
 
         <div

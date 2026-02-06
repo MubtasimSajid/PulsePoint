@@ -124,6 +124,12 @@ export const hospitalsAPI = {
   getMyStats: () => api.get("/hospitals/my/stats"),
   getMyRecentActivity: (params = {}) =>
     api.get("/hospitals/my/recent-activity", { params }),
+  getMyDoctors: () => api.get("/hospitals/my/doctors"),
+  addDoctor: (doctorId, consultationFee) =>
+    api.post("/hospitals/my/doctors", { doctor_id: doctorId, consultation_fee: consultationFee }),
+  updateDoctorFee: (doctorId, consultationFee) =>
+    api.put(`/hospitals/my/doctors/${doctorId}`, { consultation_fee: consultationFee }),
+  removeDoctor: (doctorId) => api.delete(`/hospitals/my/doctors/${doctorId}`),
   create: (data) => api.post("/hospitals", data),
   update: (id, data) => api.put(`/hospitals/${id}`, data),
   delete: (id) => api.delete(`/hospitals/${id}`),

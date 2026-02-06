@@ -10,6 +10,10 @@ router.get(
   authenticate,
   hospitalController.getMyRecentActivity,
 );
+router.get("/my/doctors", authenticate, hospitalController.getMyDoctors);
+router.post("/my/doctors", authenticate, hospitalController.addDoctorToHospital);
+router.put("/my/doctors/:doctorId", authenticate, hospitalController.updateDoctorFee);
+router.delete("/my/doctors/:doctorId", authenticate, hospitalController.removeDoctorFromHospital);
 router.get("/:id", hospitalController.getHospitalById);
 router.get("/:id/doctors", hospitalController.getHospitalDoctors);
 router.post("/", hospitalController.createHospital);
