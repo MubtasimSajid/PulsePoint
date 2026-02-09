@@ -17,9 +17,11 @@ exports.getDoctorSchedules = async (req, res) => {
           WHEN ds.facility_type = 'hospital' THEN 
              COALESCE(
                (
-                 SELECT ba 
-                 FROM unnest(h.branch_names, h.branch_addresses) AS b(bn, ba) 
-                 WHERE b.bn = ds.branch_name 
+                 SELECT ba.address
+                 FROM unnest(h.branch_names) WITH ORDINALITY AS bn(name, idx)
+                 LEFT JOIN unnest(h.branch_addresses) WITH ORDINALITY AS ba(address, idx)
+                   ON ba.idx = bn.idx
+                 WHERE bn.name = ds.branch_name
                  LIMIT 1
                ), 
                ds.branch_name, -- Fallback to branch name if address not found
@@ -67,7 +69,7 @@ exports.createDoctorSchedule = async (req, res) => {
       branch_name,
       schedule_type, // 'weekly' or 'single'
       specific_date, // required if schedule_type is 'single'
-      day_of_week,   // required if schedule_type is 'weekly'
+      day_of_week, // required if schedule_type is 'weekly'
       start_time,
       end_time,
       slot_duration_minutes,
@@ -78,24 +80,30 @@ exports.createDoctorSchedule = async (req, res) => {
       return res.status(400).json({ error: "doctor_id is required" });
     }
 
-    const type = schedule_type || 'weekly';
+    const type = schedule_type || "weekly";
 
-    if (type === 'single' && !specific_date) {
-        return res.status(400).json({ error: "Specific date is required for single schedule" });
-    }
-    
-    if (type === 'single') {
-        const today = new Date();
-        const checkDate = new Date(specific_date);
-        // Compare YYYY-MM-DD strings to avoid timezone confusion, assuming input is YYYY-MM-DD
-        const todayStr = today.toISOString().split('T')[0];
-        if (specific_date <= todayStr) {
-             return res.status(400).json({ error: "Single schedule date must be in the future" });
-        }
+    if (type === "single" && !specific_date) {
+      return res
+        .status(400)
+        .json({ error: "Specific date is required for single schedule" });
     }
 
-    if (type === 'weekly' && !day_of_week) {
-        return res.status(400).json({ error: "Day of week is required for weekly schedule" });
+    if (type === "single") {
+      const today = new Date();
+      const checkDate = new Date(specific_date);
+      // Compare YYYY-MM-DD strings to avoid timezone confusion, assuming input is YYYY-MM-DD
+      const todayStr = today.toISOString().split("T")[0];
+      if (specific_date <= todayStr) {
+        return res
+          .status(400)
+          .json({ error: "Single schedule date must be in the future" });
+      }
+    }
+
+    if (type === "weekly" && !day_of_week) {
+      return res
+        .status(400)
+        .json({ error: "Day of week is required for weekly schedule" });
     }
 
     const result = await db.query(
@@ -110,8 +118,8 @@ exports.createDoctorSchedule = async (req, res) => {
         facility_type,
         branch_name || null,
         type,
-        type === 'single' ? specific_date : null,
-        type === 'weekly' ? day_of_week : null,
+        type === "single" ? specific_date : null,
+        type === "weekly" ? day_of_week : null,
         start_time,
         end_time,
         slot_duration_minutes || 30,
@@ -181,9 +189,11 @@ exports.getAvailableSlots = async (req, res) => {
           WHEN s.facility_type = 'hospital' THEN 
              COALESCE(
                (
-                 SELECT ba 
-                 FROM unnest(h.branch_names, h.branch_addresses) AS b(bn, ba) 
-                 WHERE b.bn = s.branch_name 
+                 SELECT ba.address
+                 FROM unnest(h.branch_names) WITH ORDINALITY AS bn(name, idx)
+                 LEFT JOIN unnest(h.branch_addresses) WITH ORDINALITY AS ba(address, idx)
+                   ON ba.idx = bn.idx
+                 WHERE bn.name = s.branch_name
                  LIMIT 1
                ), 
                s.branch_name,
@@ -284,7 +294,7 @@ exports.bookSlot = async (req, res) => {
       "Oct",
       "Nov",
       "Dec",
-      "Dec" // Duplicate Dec? Assuming 12 months.
+      "Dec", // Duplicate Dec? Assuming 12 months.
     ][dateObj.getMonth()];
     const day = String(dateObj.getDate()).padStart(2, "0");
     const year = dateObj.getFullYear();
@@ -322,7 +332,12 @@ exports.bookSlot = async (req, res) => {
               CASE 
                 WHEN s.facility_type = 'hospital' THEN 
                    COALESCE(
-                     (SELECT ba FROM unnest(h.branch_names, h.branch_addresses) AS b(bn, ba) WHERE b.bn = s.branch_name LIMIT 1),
+                     (SELECT ba.address
+                      FROM unnest(h.branch_names) WITH ORDINALITY AS bn(name, idx)
+                      LEFT JOIN unnest(h.branch_addresses) WITH ORDINALITY AS ba(address, idx)
+                        ON ba.idx = bn.idx
+                      WHERE bn.name = s.branch_name
+                      LIMIT 1),
                      h.location
                    )
                 ELSE c.address

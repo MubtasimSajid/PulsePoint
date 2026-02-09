@@ -95,27 +95,27 @@ export default function Dashboard() {
         {stats.map((stat, index) => (
           <div
             key={index}
-            style={{ 
-              position: 'relative', 
-              background: 'rgba(30, 41, 59, 0.7)', 
-              borderRadius: '16px', 
-              padding: '24px', 
-              border: '1px solid rgba(100, 116, 139, 0.5)', 
+            style={{
+              position: 'relative',
+              background: 'rgba(30, 41, 59, 0.7)',
+              borderRadius: '16px',
+              padding: '24px',
+              border: '1px solid rgba(100, 116, 139, 0.5)',
               overflow: 'hidden',
               transition: 'all 0.3s',
               backdropFilter: 'blur(12px)'
             }}
           >
             <div style={{ position: 'relative' }}>
-              <div style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                width: '56px', 
-                height: '56px', 
-                background: '#3AAFA9', 
-                borderRadius: '12px', 
-                marginBottom: '16px', 
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '56px',
+                height: '56px',
+                background: '#3AAFA9',
+                borderRadius: '12px',
+                marginBottom: '16px',
                 color: 'white',
                 boxShadow: '0 4px 14px rgba(58, 175, 169, 0.3)'
               }}>
@@ -145,7 +145,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-        
+
         {upcomingAppointments.length > 0 ? (
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -192,10 +192,10 @@ export default function Dashboard() {
                       </div>
                     </td>
                     <td style={{ padding: '20px 24px', color: '#cbd5e1', fontWeight: 500 }}>
-                      {new Date(appointment.appt_date).toLocaleDateString('en-US', { 
-                        weekday: 'short', 
-                        month: 'short', 
-                        day: 'numeric' 
+                      {new Date(appointment.appt_date).toLocaleDateString('en-US', {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric'
                       })}
                     </td>
                     <td style={{ padding: '20px 24px', color: '#cbd5e1', fontWeight: 500 }}>
@@ -203,22 +203,22 @@ export default function Dashboard() {
                     </td>
                     <td style={{ padding: '20px 24px' }}>
                       <span
-                        style={{ 
-                          display: 'inline-flex', 
-                          alignItems: 'center', 
-                          gap: '6px', 
-                          padding: '6px 16px', 
-                          fontSize: '12px', 
-                          fontWeight: 700, 
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 16px',
+                          fontSize: '12px',
+                          fontWeight: 700,
                           borderRadius: '9999px',
                           background: appointment.status === 'scheduled' ? 'rgba(58, 175, 169, 0.2)' : appointment.status === 'completed' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(244, 63, 94, 0.2)',
                           color: appointment.status === 'scheduled' ? '#3AAFA9' : appointment.status === 'completed' ? '#818cf8' : '#fb7185',
                           border: `1px solid ${appointment.status === 'scheduled' ? 'rgba(58, 175, 169, 0.3)' : appointment.status === 'completed' ? 'rgba(99, 102, 241, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`
                         }}
                       >
-                        <span style={{ 
-                          width: '6px', 
-                          height: '6px', 
+                        <span style={{
+                          width: '6px',
+                          height: '6px',
                           borderRadius: '50%',
                           background: appointment.status === 'scheduled' ? '#3AAFA9' : appointment.status === 'completed' ? '#818cf8' : '#fb7185'
                         }}></span>

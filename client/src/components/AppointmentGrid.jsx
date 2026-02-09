@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { schedulesAPI, paymentAPI } from "../services/api";
 
@@ -28,7 +28,7 @@ export default function AppointmentGrid({
 
   // Fetch doctor's available slots
   const { data: slots, isLoading } = useQuery({
-    queryKey: ["doctorSlots", doctor.user_id],
+    queryKey: ["doctorSlots", doctor?.user_id],
     queryFn: async () =>
       (
         await schedulesAPI.getAvailableSlots(doctor.user_id, {
@@ -36,6 +36,14 @@ export default function AppointmentGrid({
           end_date: endDate.toISOString().split("T")[0],
         })
       ).data,
+    enabled: !!doctor?.user_id,
+  });
+
+  const { data: schedules } = useQuery({
+    queryKey: ["doctorSchedules", doctor?.user_id],
+    queryFn: async () =>
+      (await schedulesAPI.getDoctorSchedules(doctor.user_id)).data,
+    enabled: !!doctor?.user_id,
   });
 
   // Fetch Patient Balance
@@ -65,6 +73,12 @@ export default function AppointmentGrid({
         ).values(),
       )
     : [];
+
+  useEffect(() => {
+    if (!selectedBranchKey && branches.length > 0) {
+      setSelectedBranchKey(branches[0].key);
+    }
+  }, [branches, selectedBranchKey]);
 
   // Filter slots by selected branch
   const filteredSlots = selectedBranchKey
@@ -140,7 +154,8 @@ export default function AppointmentGrid({
     if (
       paymentMethod === "wallet" &&
       walletData &&
-      parseFloat(walletData.balance) < parseFloat(doctor.consultation_fee || 0) * 1.1
+      parseFloat(walletData.balance) <
+        parseFloat(doctor.consultation_fee || 0) * 1.1
     ) {
       alert("Insufficient balance! Please add funds or choose MFS.");
       return;
@@ -172,67 +187,117 @@ export default function AppointmentGrid({
 
   if (isLoading)
     return (
-      <div style={{ fontSize: '14px', color: '#94a3b8', padding: '16px' }}>Loading schedule...</div>
+      <div style={{ fontSize: "14px", color: "#94a3b8", padding: "16px" }}>
+        Loading schedule...
+      </div>
     );
 
   return (
     <div
-      style={{ 
-        background: 'transparent', 
-        borderRadius: '16px', 
-        padding: compact ? '16px' : '32px',
-        border: 'none'
+      style={{
+        background: "transparent",
+        borderRadius: "16px",
+        padding: compact ? "16px" : "32px",
+        border: "none",
       }}
     >
       {!compact && (
-        <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px', color: '#f8fafc' }}>
+        <h2
+          style={{
+            fontSize: "24px",
+            fontWeight: 700,
+            marginBottom: "24px",
+            color: "#f8fafc",
+          }}
+        >
           Available Slots for Dr. {doctor.full_name}
         </h2>
       )}
 
-      <div style={{ marginBottom: '32px', marginLeft: '16px', marginTop: '24px' }}>
-        <label style={{ display: 'block', fontSize: '14px', fontWeight: 600, color: '#94a3b8', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div
+        style={{ marginBottom: "32px", marginLeft: "16px", marginTop: "24px" }}
+      >
+        <label
+          style={{
+            display: "block",
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "#94a3b8",
+            marginBottom: "16px",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+          }}
+        >
           Select Location
         </label>
         {branches.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(2, 1fr)",
+              gap: "16px",
+            }}
+          >
             {branches.map((branch) => (
               <button
                 key={branch.key}
                 onClick={() => setSelectedBranchKey(branch.key)}
                 style={{
-                  padding: '20px',
-                  borderRadius: '16px',
-                  textAlign: 'left',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  cursor: 'pointer',
-                  background: selectedBranchKey === branch.key ? 'rgba(58, 175, 169, 0.15)' : 'rgba(30, 41, 59, 0.5)',
-                  border: selectedBranchKey === branch.key ? '1px solid rgba(58, 175, 169, 0.5)' : '1px solid rgba(100, 116, 139, 0.3)',
-                  boxShadow: selectedBranchKey === branch.key ? '0 4px 14px rgba(58, 175, 169, 0.2)' : 'none'
+                  padding: "20px",
+                  borderRadius: "16px",
+                  textAlign: "left",
+                  transition: "all 0.2s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  cursor: "pointer",
+                  background:
+                    selectedBranchKey === branch.key
+                      ? "rgba(58, 175, 169, 0.15)"
+                      : "rgba(30, 41, 59, 0.5)",
+                  border:
+                    selectedBranchKey === branch.key
+                      ? "1px solid rgba(58, 175, 169, 0.5)"
+                      : "1px solid rgba(100, 116, 139, 0.3)",
+                  boxShadow:
+                    selectedBranchKey === branch.key
+                      ? "0 4px 14px rgba(58, 175, 169, 0.2)"
+                      : "none",
                 }}
               >
                 <div
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: selectedBranchKey === branch.key ? '#3AAFA9' : 'rgba(100, 116, 139, 0.3)',
-                    color: selectedBranchKey === branch.key ? 'white' : '#94a3b8'
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background:
+                      selectedBranchKey === branch.key
+                        ? "#3AAFA9"
+                        : "rgba(100, 116, 139, 0.3)",
+                    color:
+                      selectedBranchKey === branch.key ? "white" : "#94a3b8",
                   }}
                 >
-                  <span style={{ fontSize: '14px', fontWeight: 700 }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700 }}>
                     {branch.type === "hospital" ? "H" : "C"}
                   </span>
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, color: selectedBranchKey === branch.key ? '#3AAFA9' : '#f8fafc' }}>{branch.name}</div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      color:
+                        selectedBranchKey === branch.key
+                          ? "#3AAFA9"
+                          : "#f8fafc",
+                    }}
+                  >
+                    {branch.name}
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#94a3b8" }}>
                     {branch.location || "General Location"}
                   </div>
                 </div>
@@ -240,40 +305,92 @@ export default function AppointmentGrid({
             ))}
           </div>
         ) : (
-          <p style={{ color: '#64748b', fontStyle: 'italic' }}>No available locations found.</p>
+          <p style={{ color: "#64748b", fontStyle: "italic" }}>
+            {schedules && schedules.length === 0
+              ? "This doctor has not published a schedule yet."
+              : "No slots available in the next 4 weeks."}
+          </p>
         )}
       </div>
 
       {/* Slot Grid */}
       {selectedBranchKey ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px', maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }} className="custom-scrollbar">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "40px",
+            maxHeight: "500px",
+            overflowY: "auto",
+            paddingRight: "8px",
+          }}
+          className="custom-scrollbar"
+        >
           {Object.keys(slotsByDate).length > 0 ? (
             Object.keys(slotsByDate).map((date) => (
               <div key={date} className="animate-fade-in">
-                <h3 style={{ fontWeight: 600, color: '#f8fafc', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3AAFA9' }}></span>
+                <h3
+                  style={{
+                    fontWeight: 600,
+                    color: "#f8fafc",
+                    marginBottom: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: "#3AAFA9",
+                    }}
+                  ></span>
                   {new Date(date).toLocaleDateString("en-US", {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
                   })}
                 </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '16px' }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(6, 1fr)",
+                    gap: "16px",
+                  }}
+                >
                   {slotsByDate[date].map((slot) => (
                     <button
                       key={slot.slot_id}
                       onClick={() => handleSlotClick(slot)}
                       disabled={slot.status !== "free"}
                       style={{
-                        padding: '8px 4px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
+                        padding: "8px 4px",
+                        borderRadius: "8px",
+                        fontSize: "14px",
                         fontWeight: 500,
-                        transition: 'all 0.2s',
-                        cursor: slot.status === 'free' ? 'pointer' : 'not-allowed',
-                        background: slot.status === 'free' ? 'rgba(58, 175, 169, 0.2)' : slot.status === 'booked' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(100, 116, 139, 0.2)',
-                        color: slot.status === 'free' ? '#3AAFA9' : slot.status === 'booked' ? '#fb7185' : '#64748b',
-                        border: slot.status === 'free' ? '1px solid rgba(58, 175, 169, 0.3)' : slot.status === 'booked' ? '1px solid rgba(244, 63, 94, 0.3)' : '1px solid rgba(100, 116, 139, 0.3)'
+                        transition: "all 0.2s",
+                        cursor:
+                          slot.status === "free" ? "pointer" : "not-allowed",
+                        background:
+                          slot.status === "free"
+                            ? "rgba(58, 175, 169, 0.2)"
+                            : slot.status === "booked"
+                              ? "rgba(244, 63, 94, 0.2)"
+                              : "rgba(100, 116, 139, 0.2)",
+                        color:
+                          slot.status === "free"
+                            ? "#3AAFA9"
+                            : slot.status === "booked"
+                              ? "#fb7185"
+                              : "#64748b",
+                        border:
+                          slot.status === "free"
+                            ? "1px solid rgba(58, 175, 169, 0.3)"
+                            : slot.status === "booked"
+                              ? "1px solid rgba(244, 63, 94, 0.3)"
+                              : "1px solid rgba(100, 116, 139, 0.3)",
                       }}
                       title={`${slot.status}`}
                     >
@@ -284,7 +401,16 @@ export default function AppointmentGrid({
               </div>
             ))
           ) : (
-            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '32px', background: 'rgba(30, 41, 59, 0.3)', borderRadius: '12px', border: '1px dashed rgba(100, 116, 139, 0.3)' }}>
+            <p
+              style={{
+                color: "#94a3b8",
+                textAlign: "center",
+                padding: "32px",
+                background: "rgba(30, 41, 59, 0.3)",
+                borderRadius: "12px",
+                border: "1px dashed rgba(100, 116, 139, 0.3)",
+              }}
+            >
               No open slots at this location for the next 4 weeks.
             </p>
           )}
@@ -339,13 +465,21 @@ export default function AppointmentGrid({
                 <div className="flex justify-between">
                   <span className="text-slate-400">Service Fee (10%)</span>
                   <span className="text-white font-medium">
-                    {(parseFloat(doctor.consultation_fee || 0) * 0.1).toFixed(2)} BDT
+                    {(parseFloat(doctor.consultation_fee || 0) * 0.1).toFixed(
+                      2,
+                    )}{" "}
+                    BDT
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
-                  <span className="text-slate-400 font-semibold">Total Fee</span>
+                  <span className="text-slate-400 font-semibold">
+                    Total Fee
+                  </span>
                   <span className="text-[#A38D5D] font-bold text-lg">
-                    {(parseFloat(doctor.consultation_fee || 0) * 1.1).toFixed(2)} BDT
+                    {(parseFloat(doctor.consultation_fee || 0) * 1.1).toFixed(
+                      2,
+                    )}{" "}
+                    BDT
                   </span>
                 </div>
               </div>
@@ -398,7 +532,8 @@ export default function AppointmentGrid({
                         Balance:{" "}
                         <span
                           className={
-                            parseFloat(walletData?.balance) < parseFloat(doctor.consultation_fee || 0) * 1.1
+                            parseFloat(walletData?.balance) <
+                            parseFloat(doctor.consultation_fee || 0) * 1.1
                               ? "text-rose-400"
                               : "text-emerald-400"
                           }
@@ -504,22 +639,37 @@ export default function AppointmentGrid({
                 onClick={handleBooking}
                 disabled={bookSlotMutation.isPending}
                 style={{
-                  padding: '10px 24px',
-                  borderRadius: '9999px',
+                  padding: "10px 24px",
+                  borderRadius: "9999px",
                   fontWeight: 700,
-                  fontSize: '14px',
-                  transition: 'all 0.2s',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: bookSlotMutation.isPending ? 'rgba(100, 116, 139, 0.3)' : 'rgba(58, 175, 169, 0.2)',
-                  color: bookSlotMutation.isPending ? '#94a3b8' : '#3AAFA9',
-                  border: bookSlotMutation.isPending ? '1px solid rgba(100, 116, 139, 0.5)' : '1px solid rgba(58, 175, 169, 0.3)',
-                  cursor: bookSlotMutation.isPending ? 'not-allowed' : 'pointer',
-                  opacity: bookSlotMutation.isPending ? 0.6 : 1
+                  fontSize: "14px",
+                  transition: "all 0.2s",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: bookSlotMutation.isPending
+                    ? "rgba(100, 116, 139, 0.3)"
+                    : "rgba(58, 175, 169, 0.2)",
+                  color: bookSlotMutation.isPending ? "#94a3b8" : "#3AAFA9",
+                  border: bookSlotMutation.isPending
+                    ? "1px solid rgba(100, 116, 139, 0.5)"
+                    : "1px solid rgba(58, 175, 169, 0.3)",
+                  cursor: bookSlotMutation.isPending
+                    ? "not-allowed"
+                    : "pointer",
+                  opacity: bookSlotMutation.isPending ? 0.6 : 1,
                 }}
               >
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: bookSlotMutation.isPending ? '#94a3b8' : '#3AAFA9' }}></span>
+                <span
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: bookSlotMutation.isPending
+                      ? "#94a3b8"
+                      : "#3AAFA9",
+                  }}
+                ></span>
                 {bookSlotMutation.isPending ? "Processing..." : `Pay & Confirm`}
               </button>
             </div>

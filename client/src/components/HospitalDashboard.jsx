@@ -361,10 +361,10 @@ export default function HospitalDashboard() {
               recentActivity.map((item, idx) => {
                 const dateLabel = item?.appt_date
                   ? new Date(item.appt_date).toLocaleDateString(undefined, {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                    })
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })
                   : "";
                 const timeLabel = item?.appt_time
                   ? String(item.appt_time).substring(0, 5)

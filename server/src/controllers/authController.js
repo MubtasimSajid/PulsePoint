@@ -154,9 +154,43 @@ exports.register = async (req, res) => {
         specialization_ids ||
         specializations ||
         (specialization_id ? [specialization_id] : []);
-      const specializationList = Array.isArray(specializationListRaw)
+      let specializationList = Array.isArray(specializationListRaw)
         ? specializationListRaw
         : [specializationListRaw].filter(Boolean);
+
+      // Resolve specialization names to IDs
+      const resolvedSpecIds = [];
+      for (const spec of specializationList) {
+        if (!spec) continue;
+
+        // If it's already a number (or numeric string), assume it's an ID
+        if (!isNaN(spec) && !isNaN(parseFloat(spec))) {
+          resolvedSpecIds.push(spec);
+          continue;
+        }
+
+        // It's a string name, try to find it
+        const specName = spec.trim();
+        const existingSpec = await client.query(
+          "SELECT spec_id FROM specializations WHERE spec_name = $1",
+          [specName]
+        );
+
+        if (existingSpec.rows.length > 0) {
+          resolvedSpecIds.push(existingSpec.rows[0].spec_id);
+        } else {
+          // Create new specialization
+          // Note: dept_id is nullable, so we can create without it for now
+          // or we could try to find a department with the same name if we wanted to be fancy
+          const newSpec = await client.query(
+            "INSERT INTO specializations (spec_name) VALUES ($1) RETURNING spec_id",
+            [specName]
+          );
+          resolvedSpecIds.push(newSpec.rows[0].spec_id);
+        }
+      }
+
+      specializationList = resolvedSpecIds;
       const primarySpecialization =
         specializationList.length > 0 ? specializationList[0] : null;
 
@@ -341,7 +375,7 @@ exports.verifyEmail = async (req, res) => {
 
     // Verify User
     await client.query("BEGIN");
-    
+
     // Mark user verified
     const userUpdate = await client.query(
       "UPDATE users SET is_verified = TRUE WHERE email = $1 RETURNING user_id, email, role, full_name, phone, date_of_birth, gender, address",
@@ -452,10 +486,10 @@ exports.login = async (req, res) => {
 
     // Check if verified
     if (user.is_verified === false) {
-      return res.status(403).json({ 
-        error: "Email not verified", 
+      return res.status(403).json({
+        error: "Email not verified",
         requires_verification: true,
-        email: user.email 
+        email: user.email
       });
     }
 

@@ -73,12 +73,12 @@ export default function DoctorDashboard({ doctorId }) {
 
   const hospitalNames = hospitals
     ? Array.from(
-        new Set(
-          hospitals
-            .map((h) => h?.name)
-            .filter((name) => typeof name === "string" && name.trim()),
-        ),
-      ).sort((a, b) => a.localeCompare(b))
+      new Set(
+        hospitals
+          .map((h) => h?.name)
+          .filter((name) => typeof name === "string" && name.trim()),
+      ),
+    ).sort((a, b) => a.localeCompare(b))
     : [];
 
   const hospitalBranches = selectedHospitalName
@@ -163,33 +163,30 @@ export default function DoctorDashboard({ doctorId }) {
           >
             <button
               onClick={() => setActiveTab("appointments")}
-              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
-                activeTab === "appointments"
-                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${activeTab === "appointments"
+                ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
               style={{ padding: "20px 48px" }}
             >
               Appointments
             </button>
             <button
               onClick={() => setActiveTab("schedule")}
-              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
-                activeTab === "schedule"
-                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${activeTab === "schedule"
+                ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
               style={{ padding: "20px 48px" }}
             >
               Manage Schedule
             </button>
             <button
               onClick={() => setActiveTab("patients")}
-              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
-                activeTab === "patients"
-                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              }`}
+              className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${activeTab === "patients"
+                ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
               style={{ padding: "20px 48px" }}
             >
               Patient Records
@@ -238,7 +235,7 @@ export default function DoctorDashboard({ doctorId }) {
                           <p className="text-xs text-slate-400 flex items-center gap-1">
                             {/* Add other details if available */}
                             <span className="font-semibold text-slate-600 dark:text-slate-300">
-                               Patient
+                              Patient
                             </span>
                           </p>
                         </div>
@@ -246,13 +243,12 @@ export default function DoctorDashboard({ doctorId }) {
                       <div className="flex items-center gap-3">
                         {appt.status !== "scheduled" && (
                           <span
-                            className={`rounded-full text-xs font-bold capitalize ${
-                              appt.status === "completed"
-                                ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20"
-                                : appt.status === "cancelled"
-                                  ? "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20"
-                                  : "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20"
-                            }`}
+                            className={`rounded-full text-xs font-bold capitalize ${appt.status === "completed"
+                              ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20"
+                              : appt.status === "cancelled"
+                                ? "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20"
+                                : "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20"
+                              }`}
                             style={{ padding: "8px 20px", minWidth: "110px", display: "inline-block", textAlign: "center" }}
                           >
                             {appt.status}
@@ -282,7 +278,7 @@ export default function DoctorDashboard({ doctorId }) {
                                 : "Cancel"}
                             </button>
                           )}
-                        
+
                         {appt.status !== "cancelled" && (() => {
                           // Robust Date Parsing
                           const d = new Date(appt.appt_date);
@@ -291,11 +287,11 @@ export default function DoctorDashboard({ doctorId }) {
                             ('0' + (d.getMonth() + 1)).slice(-2),
                             ('0' + d.getDate()).slice(-2)
                           ].join('-');
-                          
+
                           const apptDateTime = new Date(`${dateStr}T${appt.appt_time}`);
                           const now = new Date();
                           const diffMs = now - apptDateTime;
-                          
+
                           // Window: 0 to 2 hours
                           const isTooEarly = diffMs < 0;
                           const isExpired = diffMs > 7200000;
@@ -305,11 +301,11 @@ export default function DoctorDashboard({ doctorId }) {
                           let titleText = "Create Prescription";
 
                           if (isTooEarly) {
-                             styleClass = "bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700/50 cursor-not-allowed opacity-70";
-                             titleText = `Coming soon (${Math.round(Math.abs(diffMs)/60000)}m)`;
+                            styleClass = "bg-slate-100 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700/50 cursor-not-allowed opacity-70";
+                            titleText = `Coming soon (${Math.round(Math.abs(diffMs) / 60000)}m)`;
                           } else if (isExpired) {
-                             styleClass = "bg-amber-100 dark:bg-amber-900/20 text-amber-500 dark:text-amber-500/50 border-amber-200 dark:border-amber-500/20 cursor-not-allowed opacity-70";
-                             titleText = "Prescription window expired (2 hours)";
+                            styleClass = "bg-amber-100 dark:bg-amber-900/20 text-amber-500 dark:text-amber-500/50 border-amber-200 dark:border-amber-500/20 cursor-not-allowed opacity-70";
+                            titleText = "Prescription window expired (2 hours)";
                           }
 
                           return (
@@ -355,7 +351,7 @@ export default function DoctorDashboard({ doctorId }) {
                   </button>
                 </div>
 
-                    {showScheduleForm && (
+                {showScheduleForm && (
                   <form
                     onSubmit={handleCreateSchedule}
                     className="bg-card/60 backdrop-blur-sm p-6 rounded-xl border border-slate-600/50"
@@ -364,24 +360,22 @@ export default function DoctorDashboard({ doctorId }) {
                     <div className="flex items-center gap-6 bg-card/60 border border-slate-600/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mb-6" style={{ padding: '24px 32px' }}>
                       <button
                         type="button"
-                        onClick={() => setScheduleForm({...scheduleForm, schedule_type: 'weekly'})}
-                        className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
-                          (scheduleForm.schedule_type || 'weekly') === 'weekly' 
-                            ? 'bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                        }`}
+                        onClick={() => setScheduleForm({ ...scheduleForm, schedule_type: 'weekly' })}
+                        className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${(scheduleForm.schedule_type || 'weekly') === 'weekly'
+                          ? 'bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
                         style={{ padding: '16px 32px' }}
                       >
                         Weekly
                       </button>
                       <button
                         type="button"
-                        onClick={() => setScheduleForm({...scheduleForm, schedule_type: 'single'})}
-                        className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
-                          scheduleForm.schedule_type === 'single' 
-                            ? 'bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                        }`}
+                        onClick={() => setScheduleForm({ ...scheduleForm, schedule_type: 'single' })}
+                        className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${scheduleForm.schedule_type === 'single'
+                          ? 'bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                          }`}
                         style={{ padding: '16px 32px' }}
                       >
                         Single Day
@@ -392,7 +386,7 @@ export default function DoctorDashboard({ doctorId }) {
                       {scheduleForm.schedule_type === 'single' ? (
                         <input
                           type="date"
-                          className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                          className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9] [color-scheme:dark]"
                           style={{ height: "60px", paddingLeft: "25px" }}
                           value={scheduleForm.specific_date || ''}
                           min={(() => {
@@ -441,7 +435,7 @@ export default function DoctorDashboard({ doctorId }) {
                       )}
                       <input
                         type="time"
-                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9] [color-scheme:dark]"
                         style={{ height: "60px", paddingLeft: "25px" }}
                         value={scheduleForm.start_time}
                         onChange={(e) =>
@@ -453,7 +447,7 @@ export default function DoctorDashboard({ doctorId }) {
                       />
                       <input
                         type="time"
-                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9]"
+                        className="bg-slate-800/50 border border-slate-600/50 rounded-lg px-4 py-3 text-foreground outline-none focus:border-[#3AAFA9] [color-scheme:dark]"
                         style={{ height: "60px", paddingLeft: "25px" }}
                         value={scheduleForm.end_time}
                         onChange={(e) =>
@@ -508,11 +502,11 @@ export default function DoctorDashboard({ doctorId }) {
                         <option value="" className="bg-slate-800 text-white">
                           Select Branch
                         </option>
-                        {hospitalBranches.flatMap((h) => 
-                           // If new array format exists, use it. Detailed fallback for older data.
-                           (h.branch_names && h.branch_names.length > 0) 
-                             ? h.branch_names.map(bn => ({ name: bn, id: bn }))
-                             : (h.location ? [{ name: h.location, id: h.location }] : [])
+                        {hospitalBranches.flatMap((h) =>
+                          // If new array format exists, use it. Detailed fallback for older data.
+                          (h.branch_names && h.branch_names.length > 0)
+                            ? h.branch_names.map(bn => ({ name: bn, id: bn }))
+                            : (h.location ? [{ name: h.location, id: h.location }] : [])
                         ).map((b, idx) => (
                           <option
                             key={`${b.id}-${idx}`}
@@ -549,14 +543,14 @@ export default function DoctorDashboard({ doctorId }) {
                             className="bg-[#3AAFA9]/20 text-[#3AAFA9] border border-[#3AAFA9]/30 rounded-full text-xs font-bold uppercase tracking-wide"
                             style={{ padding: "4px 12px" }}
                           >
-                            {schedule.schedule_type === 'single' 
-                              ? new Date(schedule.specific_date).toLocaleDateString() 
+                            {schedule.schedule_type === 'single'
+                              ? new Date(schedule.specific_date).toLocaleDateString()
                               : schedule.day_of_week}
                           </span>
                           {schedule.schedule_type === 'single' && (
-                             <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
-                                Single
-                             </span>
+                            <span className="bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 rounded-full text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+                              Single
+                            </span>
                           )}
                           <span className="text-slate-500 mx-1">•</span>
                           <span className="text-slate-400 font-medium">
@@ -603,7 +597,7 @@ export default function DoctorDashboard({ doctorId }) {
           </div>
         </div>
       </div>
-      
+
       {prescribingAppt && (
         <PrescriptionModal
           appointment={prescribingAppt}

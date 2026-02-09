@@ -105,7 +105,7 @@ CREATE TABLE appointments (
   chamber_id INT,
   department_id INT,
   branch_name VARCHAR(150),
-  appt_date DATE NOT N~ULL,
+  appt_date DATE NOT NULL,
   appt_time TIME NOT NULL,
   status VARCHAR(20) DEFAULT 'scheduled',
   note TEXT,

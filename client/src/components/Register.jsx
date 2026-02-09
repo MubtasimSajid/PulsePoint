@@ -44,12 +44,6 @@ export default function Register({ onRegister }) {
   const [registerEmail, setRegisterEmail] = useState("");
   const [otp, setOtp] = useState("");
 
-  const { data: specializations } = useQuery({
-    queryKey: ["specializations"],
-    queryFn: async () => (await specializationsAPI.getAll()).data,
-    enabled: formData.role === "doctor",
-  });
-
   const registerMutation = useMutation({
     mutationFn: async (data) => (await api.post("/auth/register", data)).data,
     onSuccess: (data) => {
@@ -58,7 +52,7 @@ export default function Register({ onRegister }) {
         setStep("otp");
         return;
       }
-      
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       if (data.onboarding) {
@@ -254,15 +248,15 @@ export default function Register({ onRegister }) {
         dataToSend.hospital_branch_addresses,
       )
         ? dataToSend.hospital_branch_addresses.map((v) =>
-            typeof v === "string" ? v.trim() : "",
-          )
+          typeof v === "string" ? v.trim() : "",
+        )
         : [];
       dataToSend.hospital_branch_names = Array.isArray(
         dataToSend.hospital_branch_names,
       )
         ? dataToSend.hospital_branch_names.map((v) =>
-            typeof v === "string" ? v.trim() : "",
-          )
+          typeof v === "string" ? v.trim() : "",
+        )
         : [];
     }
 
@@ -810,7 +804,7 @@ export default function Register({ onRegister }) {
                     </label>
 
                     <label className="auth-field">
-                      <span>Specialization</span>
+                      <span>Department</span>
                       <select
                         name="specialization_id"
                         value={formData.specialization_id}
@@ -818,9 +812,21 @@ export default function Register({ onRegister }) {
                         className="auth-input"
                       >
                         <option value="">Select Department</option>
-                        {specializations?.map((spec) => (
-                          <option key={spec.spec_id} value={spec.spec_id}>
-                            {spec.spec_name}
+                        {[
+                          "Cardiology",
+                          "Neurology",
+                          "Pediatrics",
+                          "Orthopedics",
+                          "General Medicine",
+                          "Gynecology",
+                          "Dermatology",
+                          "ENT",
+                          "Ophthalmology",
+                          "Dental",
+                          "Surgery",
+                        ].map((dept) => (
+                          <option key={dept} value={dept}>
+                            {dept}
                           </option>
                         ))}
                       </select>
@@ -960,7 +966,7 @@ export default function Register({ onRegister }) {
                 </div>
               </div>
             )}
-            
+
             <div className="mt-6 text-center text-sm text-slate-500">
               Already have an account?{" "}
               <Link to="/login" className="text-[#3AAFA9] hover:text-[#2d8a84]">
