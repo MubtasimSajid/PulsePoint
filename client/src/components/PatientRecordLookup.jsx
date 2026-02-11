@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { patientsAPI, medicalHistoryAPI, prescriptionsAPI, appointmentsAPI } from "../services/api";
+import {
+  patientsAPI,
+  medicalHistoryAPI,
+  prescriptionsAPI,
+  appointmentsAPI,
+} from "../services/api";
 
 export default function PatientRecordLookup() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,39 +20,51 @@ export default function PatientRecordLookup() {
   // Fetch selected patient's medical history
   const { data: medicalHistory, isLoading: historyLoading } = useQuery({
     queryKey: ["patient-medical-history", selectedPatient?.user_id],
-    queryFn: async () => (await medicalHistoryAPI.getByPatient(selectedPatient.user_id)).data,
+    queryFn: async () =>
+      (await medicalHistoryAPI.getByPatient(selectedPatient.user_id)).data,
     enabled: !!selectedPatient?.user_id,
   });
 
   // Fetch selected patient's prescriptions
   const { data: prescriptions, isLoading: prescriptionsLoading } = useQuery({
     queryKey: ["patient-prescriptions", selectedPatient?.user_id],
-    queryFn: async () => (await prescriptionsAPI.getByPatient(selectedPatient.user_id)).data,
+    queryFn: async () =>
+      (await prescriptionsAPI.getByPatient(selectedPatient.user_id)).data,
     enabled: !!selectedPatient?.user_id,
   });
 
   // Fetch selected patient's appointments
   const { data: appointments, isLoading: appointmentsLoading } = useQuery({
     queryKey: ["patient-appointments", selectedPatient?.user_id],
-    queryFn: async () => (await appointmentsAPI.getByPatient(selectedPatient.user_id)).data,
+    queryFn: async () =>
+      (await appointmentsAPI.getByPatient(selectedPatient.user_id)).data,
     enabled: !!selectedPatient?.user_id,
   });
 
   // Filter patients by search query
-  const filteredPatients = patients?.filter((p) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      p.full_name?.toLowerCase().includes(query) ||
-      p.email?.toLowerCase().includes(query)
-    );
-  }) || [];
+  const filteredPatients =
+    patients?.filter((p) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        p.full_name?.toLowerCase().includes(query) ||
+        p.email?.toLowerCase().includes(query) ||
+        p.phone?.toLowerCase().includes(query)
+      );
+    }) || [];
+
+  const historyCount = medicalHistory?.length || 0;
+  const prescriptionsCount = prescriptions?.length || 0;
+  const appointmentsCount = appointments?.length || 0;
+  const lastVisitDate = medicalHistory?.[0]?.visit_date
+    ? new Date(medicalHistory[0].visit_date).toLocaleDateString()
+    : null;
 
   return (
     <div className="animate-fade-in">
       {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1">
           <svg
             className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"
             fill="none"
@@ -69,6 +86,15 @@ export default function PatientRecordLookup() {
             className="w-full pl-12 pr-4 py-3 bg-white/70 dark:bg-slate-800/70 border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#3AAFA9]/50 focus:border-[#3AAFA9] transition-all"
           />
         </div>
+        {selectedPatient && (
+          <button
+            type="button"
+            onClick={() => setSelectedPatient(null)}
+            className="inline-flex items-center justify-center h-10 px-4 text-sm font-semibold rounded-xl border border-slate-200/70 dark:border-slate-700/60 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-700/60 transition-colors"
+          >
+            Clear Selection
+          </button>
+        )}
       </div>
 
       {/* Main Content */}
@@ -169,6 +195,27 @@ export default function PatientRecordLookup() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: "History", value: historyCount },
+                  { label: "Prescriptions", value: prescriptionsCount },
+                  { label: "Appointments", value: appointmentsCount },
+                  { label: "Last Visit", value: lastVisitDate || "—" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl p-4"
+                  >
+                    <p className="text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
+                      {stat.label}
+                    </p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
               {/* Medical History */}
               <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-xl p-6">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -180,7 +227,9 @@ export default function PatientRecordLookup() {
                     <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
                   </div>
                 ) : !medicalHistory || medicalHistory.length === 0 ? (
-                  <p className="text-slate-400 dark:text-slate-500">No medical history records</p>
+                  <p className="text-slate-400 dark:text-slate-500">
+                    No medical history records
+                  </p>
                 ) : (
                   <div className="space-y-3 max-h-48 overflow-y-auto">
                     {medicalHistory.map((record) => (
@@ -194,7 +243,8 @@ export default function PatientRecordLookup() {
                             {record.diagnosis}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {new Date(record.visit_date).toLocaleDateString()} • Dr. {record.doctor_name || "Unknown"}
+                            {new Date(record.visit_date).toLocaleDateString()} •
+                            Dr. {record.doctor_name || "Unknown"}
                           </p>
                         </div>
                       </div>
@@ -214,7 +264,9 @@ export default function PatientRecordLookup() {
                     <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
                   </div>
                 ) : !prescriptions || prescriptions.length === 0 ? (
-                  <p className="text-slate-400 dark:text-slate-500">No prescriptions</p>
+                  <p className="text-slate-400 dark:text-slate-500">
+                    No prescriptions
+                  </p>
                 ) : (
                   <div className="space-y-3 max-h-48 overflow-y-auto">
                     {prescriptions.map((rx) => (
@@ -225,19 +277,24 @@ export default function PatientRecordLookup() {
                         <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            {rx.medication_name || rx.medicines?.[0]?.name || "Prescription"}
+                            {rx.medication_name ||
+                              rx.medicines?.[0]?.name ||
+                              "Prescription"}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {rx.created_at && new Date(rx.created_at).toLocaleDateString()}
+                            {rx.created_at &&
+                              new Date(rx.created_at).toLocaleDateString()}
                             {rx.doctor_name && ` • Dr. ${rx.doctor_name}`}
                           </p>
                         </div>
                         {rx.status && (
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            rx.status === "ongoing" 
-                              ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                              : "bg-slate-100 dark:bg-slate-700 text-slate-500"
-                          }`}>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              rx.status === "ongoing"
+                                ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                                : "bg-slate-100 dark:bg-slate-700 text-slate-500"
+                            }`}
+                          >
                             {rx.status}
                           </span>
                         )}
@@ -258,7 +315,9 @@ export default function PatientRecordLookup() {
                     <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
                   </div>
                 ) : !appointments || appointments.length === 0 ? (
-                  <p className="text-slate-400 dark:text-slate-500">No appointments</p>
+                  <p className="text-slate-400 dark:text-slate-500">
+                    No appointments
+                  </p>
                 ) : (
                   <div className="space-y-3 max-h-48 overflow-y-auto">
                     {appointments.slice(0, 10).map((appt) => (
@@ -269,21 +328,25 @@ export default function PatientRecordLookup() {
                         <div className="w-2 h-2 mt-2 bg-amber-500 rounded-full flex-shrink-0"></div>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-slate-900 dark:text-white">
-                            {appt.appt_date && new Date(appt.appt_date).toLocaleDateString()}
-                            {appt.appt_time && ` at ${String(appt.appt_time).substring(0, 5)}`}
+                            {appt.appt_date &&
+                              new Date(appt.appt_date).toLocaleDateString()}
+                            {appt.appt_time &&
+                              ` at ${String(appt.appt_time).substring(0, 5)}`}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
                             {appt.doctor_name && `Dr. ${appt.doctor_name}`}
                             {appt.hospital_name && ` • ${appt.hospital_name}`}
                           </p>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded-full capitalize ${
-                          appt.status === "completed"
-                            ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                            : appt.status === "cancelled"
-                            ? "bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400"
-                            : "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-                        }`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full capitalize ${
+                            appt.status === "completed"
+                              ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                              : appt.status === "cancelled"
+                                ? "bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400"
+                                : "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                          }`}
+                        >
                           {appt.status}
                         </span>
                       </div>

@@ -419,16 +419,16 @@ export default function AppointmentGrid({
 
       {/* Booking Modal */}
       {showBookingModal && selectedSlot && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm overflow-y-auto h-full w-full z-[100] flex items-center justify-center p-4">
-          <div className="relative bg-slate-900 border border-white/10 w-full max-w-lg shadow-2xl rounded-2xl animate-fade-in overflow-hidden">
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/80 backdrop-blur-sm overflow-y-auto h-full w-full z-[100] flex items-center justify-center p-4">
+          <div className="relative bg-white text-slate-900 border border-slate-200 dark:bg-slate-900 dark:text-white dark:border-white/10 w-full max-w-lg shadow-2xl rounded-2xl animate-fade-in overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4 border-b border-white/10 flex justify-between items-center">
-              <h3 className="text-xl font-bold text-white">
+            <div className="bg-slate-50 dark:bg-gradient-to-r dark:from-slate-800 dark:to-slate-900 px-6 py-4 border-b border-slate-200 dark:border-white/10 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                 Confirm Appointment
               </h3>
               <button
                 onClick={closeBookingModal}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
               >
                 ✕
               </button>
@@ -436,43 +436,53 @@ export default function AppointmentGrid({
 
             <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
               {/* Summary */}
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2">
+              <div className="bg-slate-50 dark:bg-white/5 rounded-xl p-4 border border-slate-200 dark:border-white/10 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Doctor</span>
-                  <span className="text-white font-medium">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Doctor
+                  </span>
+                  <span className="text-slate-900 dark:text-white font-medium">
                     {doctor.full_name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Date & Time</span>
-                  <span className="text-white font-medium">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Date & Time
+                  </span>
+                  <span className="text-slate-900 dark:text-white font-medium">
                     {new Date(selectedSlot.slot_date).toLocaleDateString()} at{" "}
                     {selectedSlot.slot_time.substring(0, 5)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Location</span>
-                  <span className="text-white font-medium">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Location
+                  </span>
+                  <span className="text-slate-900 dark:text-white font-medium">
                     {selectedSlot.facility_name}
                   </span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
-                  <span className="text-slate-400">Consultation Fee</span>
-                  <span className="text-white font-medium">
+                <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Consultation Fee
+                  </span>
+                  <span className="text-slate-900 dark:text-white font-medium">
                     {parseFloat(doctor.consultation_fee || 0).toFixed(2)} BDT
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Service Fee (10%)</span>
-                  <span className="text-white font-medium">
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Service Fee (10%)
+                  </span>
+                  <span className="text-slate-900 dark:text-white font-medium">
                     {(parseFloat(doctor.consultation_fee || 0) * 0.1).toFixed(
                       2,
                     )}{" "}
                     BDT
                   </span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
-                  <span className="text-slate-400 font-semibold">
+                <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-white/10 mt-2">
+                  <span className="text-slate-600 dark:text-slate-400 font-semibold">
                     Total Fee
                   </span>
                   <span className="text-[#A38D5D] font-bold text-lg">
@@ -486,11 +496,11 @@ export default function AppointmentGrid({
 
               {/* Triage Form */}
               <div className="space-y-4">
-                <h4 className="font-bold text-white text-sm uppercase tracking-wide">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wide">
                   Triage Info
                 </h4>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">
+                  <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
                     Symptoms (Optional)
                   </label>
                   <textarea
@@ -501,7 +511,7 @@ export default function AppointmentGrid({
                         symptoms: e.target.value,
                       })
                     }
-                    className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-[#A38D5D] focus:outline-none"
+                    className="w-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:border-[#A38D5D] focus:outline-none"
                     placeholder="Briefly describe your symptoms..."
                     rows="2"
                   />
@@ -510,12 +520,12 @@ export default function AppointmentGrid({
 
               {/* Payment Method */}
               <div className="space-y-3">
-                <h4 className="font-bold text-white text-sm uppercase tracking-wide">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm uppercase tracking-wide">
                   Payment Method
                 </h4>
 
                 <label
-                  className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === "wallet" ? "bg-[#A38D5D]/10 border-[#A38D5D]" : "bg-slate-800 border-white/10 hover:border-white/30"}`}
+                  className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === "wallet" ? "bg-[#A38D5D]/10 border-[#A38D5D]" : "bg-slate-50 border-slate-200 hover:border-slate-300 dark:bg-slate-800 dark:border-white/10 dark:hover:border-white/30"}`}
                 >
                   <div className="flex items-center gap-3">
                     <input
@@ -527,8 +537,10 @@ export default function AppointmentGrid({
                       className="text-[#A38D5D] focus:ring-[#A38D5D]"
                     />
                     <div>
-                      <div className="font-bold text-white">My Wallet</div>
-                      <div className="text-xs text-slate-400">
+                      <div className="font-bold text-slate-900 dark:text-white">
+                        My Wallet
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
                         Balance:{" "}
                         <span
                           className={
@@ -544,7 +556,7 @@ export default function AppointmentGrid({
                     </div>
                   </div>
                   <svg
-                    className="w-6 h-6 text-slate-300"
+                    className="w-6 h-6 text-slate-500 dark:text-slate-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -566,7 +578,7 @@ export default function AppointmentGrid({
                 </label>
 
                 <label
-                  className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === "mfs" ? "bg-[#A38D5D]/10 border-[#A38D5D]" : "bg-slate-800 border-white/10 hover:border-white/30"}`}
+                  className={`flex items-center justify-between p-4 rounded-xl border cursor-pointer transition-all ${paymentMethod === "mfs" ? "bg-[#A38D5D]/10 border-[#A38D5D]" : "bg-slate-50 border-slate-200 hover:border-slate-300 dark:bg-slate-800 dark:border-white/10 dark:hover:border-white/30"}`}
                 >
                   <div className="flex items-center gap-3">
                     <input
@@ -578,16 +590,16 @@ export default function AppointmentGrid({
                       className="text-[#A38D5D] focus:ring-[#A38D5D]"
                     />
                     <div>
-                      <div className="font-bold text-white">
+                      <div className="font-bold text-slate-900 dark:text-white">
                         Mobile Banking (Bkash/Nagad)
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
                         Pay directly via phone
                       </div>
                     </div>
                   </div>
                   <svg
-                    className="w-6 h-6 text-slate-300"
+                    className="w-6 h-6 text-slate-500 dark:text-slate-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -609,17 +621,17 @@ export default function AppointmentGrid({
                 </label>
 
                 {paymentMethod === "mfs" && (
-                  <div className="bg-slate-800 border border-white/10 rounded-xl p-4">
-                    <label className="block text-xs text-slate-400 mb-1">
+                  <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl p-4">
+                    <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
                       MFS Transaction ID (optional)
                     </label>
                     <input
                       value={mfsTransactionId}
                       onChange={(e) => setMfsTransactionId(e.target.value)}
                       placeholder="e.g. BKASH123..."
-                      className="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-white focus:border-[#A38D5D] focus:outline-none"
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:border-[#A38D5D] focus:outline-none"
                     />
-                    <p className="text-xs text-slate-500 mt-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-2">
                       For demo, MFS is simulated as a wallet top-up + payment.
                     </p>
                   </div>
@@ -628,10 +640,10 @@ export default function AppointmentGrid({
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-white/10 flex justify-end gap-3 bg-slate-800/50">
+            <div className="p-6 border-t border-slate-200 dark:border-white/10 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800/50">
               <button
                 onClick={closeBookingModal}
-                className="px-5 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors font-medium"
+                className="px-5 py-2.5 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/5 transition-colors font-medium"
               >
                 Cancel
               </button>

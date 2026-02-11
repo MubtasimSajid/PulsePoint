@@ -25,6 +25,7 @@ import DoctorProfile from "./components/DoctorProfile";
 import DoctorDashboard from "./components/DoctorDashboard";
 import HospitalDashboard from "./components/HospitalDashboard";
 import PatientMedicalHistory from "./components/PatientMedicalHistory";
+import Wallet from "./components/Wallet";
 
 // Theme Context
 const ThemeContext = createContext();
@@ -339,6 +340,22 @@ function Navigation({ user, onLogout }) {
                   </svg>
                   History
                 </Link>
+                <Link to="/wallet" className="nav-link flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2m0-8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2m-4-5h4"
+                    />
+                  </svg>
+                  Wallet
+                </Link>
                 {(user?.role === "patient" || user?.role === "doctor") && (
                   <Link
                     to="/profile"
@@ -559,6 +576,14 @@ function App() {
                       ) : (
                         <MedicalHistory />
                       )}
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/wallet"
+                  element={
+                    <ProtectedRoute>
+                      <Wallet />
                     </ProtectedRoute>
                   }
                 />

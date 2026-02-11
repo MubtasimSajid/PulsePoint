@@ -397,16 +397,58 @@ exports.bookSlot = async (req, res) => {
 
     const appointment = appointmentResult.rows[0];
 
-    // Note: Payment is automatically handled by the DB trigger 'trigger_handle_booking_payment'
-    // which splits payment between doctor and hospital (if applicable) when appointment is inserted.
-    // The trigger checks patient balance and creates 'completed' or 'pending' transactions accordingly.
-    // For MFS payments, we still need to add funds first before the trigger can process the payment.
+    // Handle payment at booking time.
     const method = (payment_method || "wallet").toLowerCase();
-    if (fee > 0 && method === "mfs") {
+    const hospitalFee =
+      slot.facility_type === "hospital" ? Number(fee || 0) * 0.1 : 0;
+    const totalFee = Number(fee || 0) + hospitalFee;
+
+    const ensureUserAccount = async (userId) => {
+      const existing = await client.query(
+        "SELECT account_id FROM accounts WHERE owner_type = 'user' AND owner_id = $1",
+        [userId],
+      );
+      if (existing.rows.length > 0) return existing.rows[0].account_id;
+
+      const created = await client.query(
+        "INSERT INTO accounts (owner_type, owner_id) VALUES ('user', $1) ON CONFLICT (owner_type, owner_id) DO NOTHING RETURNING account_id",
+        [userId],
+      );
+      if (created.rows.length > 0) return created.rows[0].account_id;
+
+      const after = await client.query(
+        "SELECT account_id FROM accounts WHERE owner_type = 'user' AND owner_id = $1",
+        [userId],
+      );
+      return after.rows[0]?.account_id;
+    };
+
+    const ensureHospitalAccount = async (hospitalId) => {
+      if (!hospitalId) return null;
+      const existing = await client.query(
+        "SELECT account_id FROM accounts WHERE owner_type = 'hospital' AND owner_id = $1",
+        [hospitalId],
+      );
+      if (existing.rows.length > 0) return existing.rows[0].account_id;
+
+      const created = await client.query(
+        "INSERT INTO accounts (owner_type, owner_id) VALUES ('hospital', $1) ON CONFLICT (owner_type, owner_id) DO NOTHING RETURNING account_id",
+        [hospitalId],
+      );
+      if (created.rows.length > 0) return created.rows[0].account_id;
+
+      const after = await client.query(
+        "SELECT account_id FROM accounts WHERE owner_type = 'hospital' AND owner_id = $1",
+        [hospitalId],
+      );
+      return after.rows[0]?.account_id;
+    };
+
+    if (totalFee > 0 && method === "mfs") {
       const { processDeposit } = require("./paymentController");
       try {
         const txnId = mfs_transaction_id ? String(mfs_transaction_id) : "";
-        await processDeposit(patientUserId, fee, null, null, client, {
+        await processDeposit(patientUserId, totalFee, null, null, client, {
           description: `MFS top-up for appointment ${appointment.appointment_id}${txnId ? ` (${txnId})` : ""}`,
         });
       } catch (err) {
@@ -415,11 +457,61 @@ exports.bookSlot = async (req, res) => {
           .status(400)
           .json({ error: "MFS top-up failed: " + err.message });
       }
-    } else if (fee > 0 && method !== "wallet") {
+    } else if (totalFee > 0 && method !== "wallet") {
       await client.query("ROLLBACK");
       return res.status(400).json({ error: "Invalid payment_method" });
     }
-    // Wallet payment is automatically handled by the DB trigger after appointment INSERT
+
+    if (totalFee > 0) {
+      const patientAccountId = await ensureUserAccount(patientUserId);
+      const doctorAccountId = await ensureUserAccount(doctorUserId);
+
+      if (!patientAccountId || !doctorAccountId) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Missing account for payment" });
+      }
+
+      try {
+        await client.query(
+          `INSERT INTO account_transactions
+           (from_account_id, to_account_id, amount, status, description)
+           VALUES ($1, $2, $3, 'completed', $4)`,
+          [
+            patientAccountId,
+            doctorAccountId,
+            fee,
+            `Doctor fee for appointment ${appointment.appointment_id}`,
+          ],
+        );
+
+        if (hospitalFee > 0) {
+          const hospitalAccountId = await ensureHospitalAccount(
+            slot.facility_id,
+          );
+          if (!hospitalAccountId) {
+            await client.query("ROLLBACK");
+            return res.status(400).json({ error: "Missing hospital account" });
+          }
+
+          await client.query(
+            `INSERT INTO account_transactions
+             (from_account_id, to_account_id, amount, status, description)
+             VALUES ($1, $2, $3, 'completed', $4)`,
+            [
+              patientAccountId,
+              hospitalAccountId,
+              hospitalFee,
+              `Hospital fee (10%) for appointment ${appointment.appointment_id}`,
+            ],
+          );
+        }
+      } catch (err) {
+        await client.query("ROLLBACK");
+        return res
+          .status(400)
+          .json({ error: "Payment failed: " + err.message });
+      }
+    }
 
     // Update slot status
     await client.query(

@@ -50,7 +50,7 @@ export default function PatientDashboard({ patientId, user }) {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
         <div className="relative p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-4">
-            <div style={{ marginLeft: '20px' }}>
+            <div style={{ marginLeft: "20px" }}>
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-relaxed mb-16 text-slate-900 dark:text-white">
                 Welcome Back, {user?.full_name?.split(" ")[0] || "User"}
               </h1>
@@ -62,15 +62,19 @@ export default function PatientDashboard({ patientId, user }) {
 
           <div className="flex items-center gap-4">
             {/* Balance */}
-            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-700/50" style={{ padding: '8px 12px' }}>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Balance</p>
+            <div
+              className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-700/50"
+              style={{ padding: "8px 12px" }}
+            >
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Balance
+              </p>
               <p className="text-lg font-bold leading-tight text-slate-900 dark:text-white">
                 {wallet ? `${wallet.currency} ${wallet.balance}` : "..."}
               </p>
             </div>
 
             {/* Notification Bell */}
-
           </div>
         </div>
 
@@ -81,7 +85,10 @@ export default function PatientDashboard({ patientId, user }) {
         {/* Main Content Area */}
         <div className="lg:col-span-12">
           {/* Tabs */}
-          <div className="flex items-center gap-6 bg-card/60 border border-slate-200/50 dark:border-slate-700/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-16 md:mt-20 mb-10" style={{ padding: '32px 48px' }}>
+          <div
+            className="flex items-center gap-6 bg-card/60 border border-slate-200/50 dark:border-slate-700/50 rounded-xl w-fit backdrop-blur-sm overflow-x-auto max-w-full mt-12 md:mt-16 mb-8"
+            style={{ padding: "24px 36px" }}
+          >
             {sections.map((section) => (
               <button
                 key={section.id}
@@ -89,9 +96,9 @@ export default function PatientDashboard({ patientId, user }) {
                 className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
                   activeSection === section.id
                     ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/50"
                 }`}
-                style={{ padding: '20px 48px' }}
+                style={{ padding: "16px 36px" }}
               >
                 {section.label}
               </button>
