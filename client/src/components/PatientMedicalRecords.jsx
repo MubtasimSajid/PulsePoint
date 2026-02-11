@@ -34,7 +34,7 @@ export default function PatientMedicalRecords({ userId }) {
     onError: (error) => {
       alert(
         "Failed to create record: " +
-          (error.response?.data?.error || error.message),
+        (error.response?.data?.error || error.message),
       );
     },
   });
@@ -71,33 +71,26 @@ export default function PatientMedicalRecords({ userId }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          My Medical Records
-        </h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center justify-center h-10 px-4 text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition"
-        >
-          + Add Record
-        </button>
-      </div>
+
 
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <span className="p-2 rounded-lg bg-teal-500/10 text-teal-400">📄</span>
               Add New Record
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
-                  Title *
+                <label className="block text-sm font-medium text-slate-400 mb-1.5">
+                  Title <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-900 dark:text-white"
+                  placeholder="e.g., Blood Test Report"
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition-colors"
                   value={formData.title}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
@@ -105,13 +98,13 @@ export default function PatientMedicalRecords({ userId }) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
-                    Type *
+                  <label className="block text-sm font-medium text-slate-400 mb-1.5">
+                    Type <span className="text-red-400">*</span>
                   </label>
                   <select
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-900 dark:text-white"
+                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-teal-500/50 transition-colors appearance-none"
                     value={formData.record_type}
                     onChange={(e) =>
                       setFormData({ ...formData, record_type: e.target.value })
@@ -124,12 +117,12 @@ export default function PatientMedicalRecords({ userId }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  <label className="block text-sm font-medium text-slate-400 mb-1.5">
                     Date
                   </label>
                   <input
                     type="date"
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-900 dark:text-white"
+                    className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-teal-500/50 transition-colors"
                     value={formData.record_date}
                     onChange={(e) =>
                       setFormData({ ...formData, record_date: e.target.value })
@@ -139,11 +132,12 @@ export default function PatientMedicalRecords({ userId }) {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-sm font-medium text-slate-400 mb-1.5">
                   Description
                 </label>
                 <textarea
-                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-900 dark:text-white h-24"
+                  placeholder="Add any relevant notes..."
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 transition-colors h-24 resize-none"
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
@@ -152,13 +146,13 @@ export default function PatientMedicalRecords({ userId }) {
               </div>
 
               <div>
-                <label className="block text-sm text-slate-600 dark:text-slate-400 mb-1">
+                <label className="block text-sm font-medium text-slate-400 mb-1.5">
                   File Link (URL)
                 </label>
                 <input
                   type="url"
                   placeholder="https://example.com/file.pdf"
-                  className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-slate-900 dark:text-white"
+                  className="w-full bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 focus:outline-none focus:border-teal-500/50 transition-colors"
                   value={formData.file_url}
                   onChange={(e) =>
                     setFormData({ ...formData, file_url: e.target.value })
@@ -166,18 +160,18 @@ export default function PatientMedicalRecords({ userId }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-white/5">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="inline-flex items-center justify-center h-10 px-4 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
+                  className="px-5 py-2.5 text-sm font-semibold text-slate-400 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createMutation.isPending}
-                  className="inline-flex items-center justify-center h-10 px-4 text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition"
+                  className="px-6 py-2.5 text-sm font-bold bg-[#3AAFA9] hover:bg-[#2d9d97] text-white rounded-xl shadow-lg shadow-[#3AAFA9]/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {createMutation.isPending ? "Saving..." : "Save Record"}
                 </button>
@@ -187,31 +181,55 @@ export default function PatientMedicalRecords({ userId }) {
         </div>
       )}
 
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+            My Medical Records
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            Keep track of your reports, prescriptions, and lab results
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm(true)}
+          className="inline-flex items-center justify-center gap-2 h-10 px-4 text-sm font-bold bg-[#3AAFA9] hover:bg-[#2d9d97] text-white rounded-xl shadow-lg shadow-[#3AAFA9]/20 transition-all transform hover:translate-y-[-1px]"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+          Add Record
+        </button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         {records?.map((record) => (
           <div
             key={record.record_id}
-            className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-5 hover:border-emerald-500/30 transition group relative shadow-sm"
+            className="group bg-white dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5 hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:border-[#3AAFA9]/30 transition-all duration-300 relative shadow-sm"
           >
             <button
               onClick={() => deleteMutation.mutate(record.record_id)}
-              className="absolute top-4 right-4 text-slate-500 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition"
+              className="absolute top-4 right-4 text-slate-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg"
               title="Delete Record"
             >
-              🗑️
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
             </button>
             <div className="flex items-start gap-4">
-              <div className="text-3xl">{getIcon(record.record_type)}</div>
-              <div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-lg">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition-transform">
+                {getIcon(record.record_type)}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg leading-tight">
                   {record.title}
                 </h3>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-wide font-bold mt-1">
-                  {record.record_type} •{" "}
-                  {new Date(record.record_date).toLocaleDateString()}
-                </p>
+                <div className="flex items-center gap-2 mt-1.5 mb-2">
+                  <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/50 text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                    {record.record_type}
+                  </span>
+                  <span className="text-xs text-slate-400 font-medium">
+                    {new Date(record.record_date).toLocaleDateString()}
+                  </span>
+                </div>
                 {record.description && (
-                  <p className="text-slate-600 dark:text-slate-400 text-sm mt-2 line-clamp-2">
+                  <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 leading-relaxed">
                     {record.description}
                   </p>
                 )}
@@ -220,9 +238,10 @@ export default function PatientMedicalRecords({ userId }) {
                     href={record.file_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-block mt-3 text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                    className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[#3AAFA9] hover:underline"
                   >
-                    View Document →
+                    View Document
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                   </a>
                 )}
               </div>
@@ -230,11 +249,25 @@ export default function PatientMedicalRecords({ userId }) {
           </div>
         ))}
         {records?.length === 0 && (
-          <div className="col-span-full text-center py-12 text-slate-600 dark:text-slate-500 bg-slate-100/80 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-            You haven't added any records yet.
+          <div className="col-span-full flex flex-col items-center justify-center py-16 text-center bg-slate-50/50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700/50">
+            <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4 shadow-sm">
+              <span className="text-3xl grayscale opacity-50">📁</span>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">No records found</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm max-w-sm">
+              Upload your medical reports, prescriptions, and lab results to keep them organized and accessible.
+            </p>
+            <button
+              onClick={() => setShowForm(true)}
+              className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold bg-[#3AAFA9] hover:bg-[#2d9d97] text-white rounded-xl shadow-lg shadow-[#3AAFA9]/20 transition-all transform hover:translate-y-[-1px]"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+              Add your first record
+            </button>
           </div>
         )}
       </div>
     </div>
   );
 }
+

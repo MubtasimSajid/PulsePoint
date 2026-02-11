@@ -9,7 +9,7 @@ import PatientMedicalHistory from "./PatientMedicalHistory";
 
 export default function PatientDashboard({ patientId, user }) {
   const location = useLocation();
-  const isMyAppointmentsRoute = location.pathname === "/my-appointments";
+  const isMedicalRecordsRoute = location.pathname === "/medical-records";
   const [activeSection, setActiveSection] = useState("appointments"); // appointments, medicines, history
 
   const { data: unreadCount } = useQuery({
@@ -28,16 +28,15 @@ export default function PatientDashboard({ patientId, user }) {
   const sections = [
     { id: "appointments", label: "Appointments" },
     { id: "medicines", label: "Medicines" },
-    { id: "records", label: "Medical Records" },
     { id: "history", label: "Medical History (Doctor)" },
   ];
 
-  // If on /my-appointments route, show only appointments
-  if (isMyAppointmentsRoute) {
+  // If on /medical-records route, show only medical records
+  if (isMedicalRecordsRoute) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
         <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-6 min-h-[800px]">
-          <PatientAppointments userId={patientId} />
+          <PatientMedicalRecords userId={patientId} />
         </div>
       </div>
     );
@@ -93,11 +92,10 @@ export default function PatientDashboard({ patientId, user }) {
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
-                className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${
-                  activeSection === section.id
-                    ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/50"
-                }`}
+                className={`rounded-md font-semibold text-base transition-all duration-200 whitespace-nowrap ${activeSection === section.id
+                  ? "bg-[#3AAFA9] text-white shadow-lg shadow-[#3AAFA9]/30"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800/50"
+                  }`}
                 style={{ padding: "16px 36px" }}
               >
                 {section.label}
@@ -111,9 +109,6 @@ export default function PatientDashboard({ patientId, user }) {
             )}
             {activeSection === "medicines" && (
               <PatientPrescriptions userId={patientId} />
-            )}
-            {activeSection === "records" && (
-              <PatientMedicalRecords userId={patientId} />
             )}
             {activeSection === "history" && (
               <PatientMedicalHistory userId={patientId} />

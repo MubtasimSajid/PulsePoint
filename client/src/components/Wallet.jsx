@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { paymentAPI } from "../services/api";
 
@@ -36,62 +36,96 @@ export default function Wallet() {
 
   if (isLoading)
     return (
-      <div className="p-8 text-center text-slate-500">Loading wallet...</div>
+      <div className="p-8 text-center text-muted-foreground">Loading wallet...</div>
     );
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8 animate-fade-in">
       {/* Balance Card */}
-      <div className="bg-primary rounded-3xl p-8 text-primary-foreground shadow-xl shadow-primary/20">
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <p className="text-primary-foreground/80 font-medium mb-1">Total Balance</p>
-            <h2 className="text-5xl font-bold tracking-tight">
+      <div
+        className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50"
+        style={{ padding: "32px" }}
+      >
+        <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <p className="text-muted-foreground" style={{ fontSize: "14px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>Total Balance</p>
+              <div
+                className="bg-[#3AAFA9]/10 border border-[#3AAFA9]/30"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "20px",
+                  padding: "0 10px",
+                  borderRadius: "999px"
+                }}
+              >
+                <span className="text-[#3AAFA9]" style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", lineHeight: 1 }}>Active</span>
+              </div>
+            </div>
+            <h2 className="text-foreground" style={{ fontSize: "48px", fontWeight: 700, lineHeight: 1, margin: 0 }}>
               {wallet?.currency} {wallet?.balance}
             </h2>
           </div>
-          <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-            <span className="text-sm font-medium">Active Account</span>
-          </div>
-        </div>
 
-        {/* Add Funds Form */}
-        <form onSubmit={handleAddFunds} className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="block text-sm text-primary-foreground/80 mb-2">
-              Add Funds
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-foreground/60">
-                ৳
-              </span>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 pl-10 py-3 focus:outline-none focus:border-white/50 transition-colors text-white placeholder-white/30"
-                min="0"
-              />
+          {/* Add Funds Form */}
+          <form onSubmit={handleAddFunds} style={{ display: "flex", gap: "12px", alignItems: "flex-end", flexWrap: "nowrap" }}>
+            <div style={{ position: "relative", width: "160px" }}>
+              <label className="text-muted-foreground" style={{ display: "block", fontSize: "11px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>
+                Add Funds
+              </label>
+              <div style={{ position: "relative" }}>
+                <span className="text-muted-foreground" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "14px" }}>
+                  ৳
+                </span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="bg-muted/50 border border-border text-foreground placeholder-muted-foreground focus:border-[#3AAFA9]"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px 10px 32px",
+                    borderRadius: "12px",
+                    outline: "none",
+                    fontSize: "14px",
+                    transition: "all 0.2s"
+                  }}
+                  min="0"
+                />
+              </div>
             </div>
-          </div>
-          <button
-            type="submit"
-            disabled={addFundsMutation.isPending}
-            className="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
-          >
-            {addFundsMutation.isPending ? "Adding..." : "Add Funds"}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={addFundsMutation.isPending}
+              className="bg-[#3AAFA9] hover:bg-[#2d9d97] text-white"
+              style={{
+                height: "42px",
+                padding: "0 24px",
+                borderRadius: "12px",
+                fontSize: "14px",
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                boxShadow: "0 4px 6px -1px rgba(58, 175, 169, 0.2)"
+              }}
+            >
+              {addFundsMutation.isPending ? "..." : "Add"}
+            </button>
+          </form>
+        </div>
         {error && <p className="text-red-400 mt-3 text-sm">{error}</p>}
       </div>
 
       {/* Transactions */}
-      <div className="bg-card rounded-3xl p-8 shadow-sm border border-border">
+      <div className="bg-card/50 backdrop-blur-xl rounded-2xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-8">
         <h3 className="text-xl font-bold text-foreground mb-6">
           Recent Transactions
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {wallet?.transactions?.length === 0 ? (
             <p className="text-muted-foreground text-center py-8">
               No transactions yet
@@ -100,7 +134,7 @@ export default function Wallet() {
             wallet?.transactions?.map((tx) => (
               <div
                 key={tx.transaction_id || tx.txn_id}
-                className="flex items-center justify-between p-4 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100"
+                className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/30 transition-colors border border-slate-200/50 dark:border-slate-700/50"
               >
                 <div className="flex items-center gap-4">
                   {(() => {
@@ -110,11 +144,10 @@ export default function Wallet() {
                       tx.type === "refund";
                     return (
                       <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          isCredit
-                            ? "bg-emerald-100 text-emerald-600"
-                            : "bg-rose-100 text-rose-600"
-                        }`}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center ${isCredit
+                          ? "bg-emerald-500/15 text-emerald-500"
+                          : "bg-rose-500/15 text-rose-500"
+                          }`}
                       >
                         <svg
                           className="w-5 h-5"
@@ -159,9 +192,8 @@ export default function Wallet() {
                       tx.type === "refund";
                     return (
                       <p
-                        className={`font-bold ${
-                          isCredit ? "text-emerald-600" : "text-slate-900"
-                        }`}
+                        className={`font-bold ${isCredit ? "text-emerald-500" : "text-foreground"
+                          }`}
                       >
                         {isCredit ? "+" : "-"} {wallet.currency} {tx.amount}
                       </p>

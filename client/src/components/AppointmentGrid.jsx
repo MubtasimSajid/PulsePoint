@@ -56,22 +56,22 @@ export default function AppointmentGrid({
   // Identify unique branches
   const branches = slots
     ? Array.from(
-        new Map(
-          slots.map((s) => {
-            const key = `${s.facility_type}-${s.facility_id}-${s.branch_name || "default"}`;
-            return [
+      new Map(
+        slots.map((s) => {
+          const key = `${s.facility_type}-${s.facility_id}-${s.branch_name || "default"}`;
+          return [
+            key,
+            {
               key,
-              {
-                key,
-                name: s.facility_name,
-                type: s.facility_type,
-                location: s.branch_name || s.location || "Unknown", // Prefer branch name
-                branch_name: s.branch_name,
-              },
-            ];
-          }),
-        ).values(),
-      )
+              name: s.facility_name,
+              type: s.facility_type,
+              location: s.branch_name || s.location || "Unknown", // Prefer branch name
+              branch_name: s.branch_name,
+            },
+          ];
+        }),
+      ).values(),
+    )
     : [];
 
   useEffect(() => {
@@ -83,9 +83,9 @@ export default function AppointmentGrid({
   // Filter slots by selected branch
   const filteredSlots = selectedBranchKey
     ? slots.filter((s) => {
-        const key = `${s.facility_type}-${s.facility_id}-${s.branch_name || "default"}`;
-        return key === selectedBranchKey;
-      })
+      const key = `${s.facility_type}-${s.facility_id}-${s.branch_name || "default"}`;
+      return key === selectedBranchKey;
+    })
     : [];
 
   // Book slot mutation
@@ -155,7 +155,7 @@ export default function AppointmentGrid({
       paymentMethod === "wallet" &&
       walletData &&
       parseFloat(walletData.balance) <
-        parseFloat(doctor.consultation_fee || 0) * 1.1
+      parseFloat(doctor.consultation_fee || 0) * 1.1
     ) {
       alert("Insufficient balance! Please add funds or choose MFS.");
       return;
@@ -545,7 +545,7 @@ export default function AppointmentGrid({
                         <span
                           className={
                             parseFloat(walletData?.balance) <
-                            parseFloat(doctor.consultation_fee || 0) * 1.1
+                              parseFloat(doctor.consultation_fee || 0) * 1.1
                               ? "text-rose-400"
                               : "text-emerald-400"
                           }
